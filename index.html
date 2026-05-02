@@ -1,390 +1,393 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXUS RESTORED HUD</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NEXUS HUD SYSTEM</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;}
-
-body{
-  font-family:Arial;
-  color:cyan;
-  overflow:hidden;
-  background:black;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-/* VIDEO BACKGROUND */
-#bgvid{
-  position:fixed;
-  inset:0;
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  z-index:-6;
+body {
+  font-family: Arial;
+  color: cyan;
+  overflow: hidden;
+  background: black;
 }
 
-.overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.6);
-  z-index:-5;
+/* 🎥 VIDEO BACKGROUND */
+#bgvid {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -5;
+}
+
+.video-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: -4;
 }
 
 /* GRID */
-body::after{
-  content:"";
-  position:fixed;
-  inset:0;
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
   background-image:
     linear-gradient(rgba(0,255,255,0.05) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0,255,255,0.05) 1px, transparent 1px);
-  background-size:40px 40px;
-  animation:grid 6s linear infinite;
-  z-index:-4;
+  background-size: 40px 40px;
+  animation: grid 6s linear infinite;
+  z-index: -3;
 }
 
-@keyframes grid{
-  from{transform:translateY(0);}
-  to{transform:translateY(40px);}
+@keyframes grid {
+  from { transform: translateY(0); }
+  to { transform: translateY(40px); }
 }
 
-/* BOOT INTRO */
-#boot{
-  position:fixed;
-  inset:0;
-  background:black;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
-  z-index:9999;
-  color:cyan;
-  animation:boot 2.8s forwards;
+/* BOOT */
+#boot {
+  position: fixed;
+  inset: 0;
+  background: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: boot 2.5s forwards;
 }
 
-@keyframes boot{
-  0%{opacity:1}
-  80%{opacity:1}
-  100%{opacity:0;visibility:hidden}
+@keyframes boot {
+  0% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
 }
 
 /* LAYOUT */
-.container{
-  display:grid;
-  grid-template-columns:260px 1fr 320px;
-  height:100vh;
-  padding:20px;
-  gap:20px;
+.container {
+  display: grid;
+  grid-template-columns: 260px 1fr 320px;
+  height: 100vh;
+  padding: 20px;
+  gap: 20px;
 }
 
 /* MENU */
-.menu{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.menu-item{
-  padding:12px;
-  border:1px solid rgba(0,255,255,0.3);
-  background:rgba(0,0,0,0.4);
-  cursor:pointer;
-  transition:0.2s;
+.menu-item {
+  padding: 12px;
+  border: 1px solid rgba(0,255,255,0.3);
+  background: rgba(0,0,0,0.4);
+  cursor: pointer;
+  transition: 0.2s;
 }
 
-.menu-item:hover{
-  transform:translateX(5px);
-  box-shadow:0 0 15px cyan;
+.menu-item:hover {
+  transform: translateX(5px);
+  box-shadow: 0 0 15px cyan;
 }
 
-/* CENTER PAGES */
-.center{
-  position:relative;
+/* PAGES */
+.center {
+  position: relative;
 }
 
-.page{
-  position:absolute;
-  inset:0;
-  opacity:0;
-  transform:translateX(40px);
-  pointer-events:none;
-  transition:0.35s ease;
+.page {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 42px;
+  opacity: 0;
+  transition: 0.25s;
+  pointer-events: none;
 }
 
-.page.active{
-  opacity:1;
-  transform:translateX(0);
-  pointer-events:all;
-}
-
-/* DASHBOARD */
-#dashboard{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:40px;
-}
-
-/* PROFILE SPLIT UI */
-.split{
-  display:flex;
-  width:100%;
-  height:100%;
-}
-
-.split div{
-  width:50%;
-  position:relative;
-  cursor:pointer;
-  overflow:hidden;
-  transition:0.3s;
-}
-
-.split div:hover{
-  transform:scale(1.02);
-  filter:brightness(1.2);
-}
-
-.split img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-
-.split span{
-  position:absolute;
-  bottom:20px;
-  left:20px;
-  font-size:20px;
+.page.active {
+  opacity: 1;
+  pointer-events: all;
 }
 
 /* RIGHT PANEL */
-.panel{
-  display:flex;
-  flex-direction:column;
-  gap:15px;
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
-.card{
-  padding:15px;
-  border:1px solid rgba(0,255,255,0.2);
-  background:rgba(0,0,0,0.4);
+.card {
+  padding: 15px;
+  border: 1px solid rgba(0,255,255,0.2);
+  background: rgba(0,0,0,0.4);
 }
 
-.bar{
-  height:10px;
-  background:rgba(255,255,255,0.1);
-  margin-top:8px;
-  overflow:hidden;
+.bar {
+  height: 10px;
+  background: rgba(255,255,255,0.1);
+  margin-top: 8px;
 }
 
-.fill{
-  height:100%;
-  width:0%;
-  background:cyan;
-  transition:width 0.6s ease;
-}
-
-/* BGM UI */
-.bgm-ui{
-  position:fixed;
-  bottom:10px;
-  left:10px;
-  padding:10px;
-  border:1px solid cyan;
-  background:rgba(0,0,0,0.6);
-  z-index:999;
+.fill {
+  height: 100%;
+  width: 0%;
+  background: cyan;
 }
 
 /* VISUALIZER */
-#visualizer{
-  position:fixed;
-  bottom:0;
-  right:0;
-  width:260px;
-  height:100px;
-  border:1px solid cyan;
-  background:rgba(0,0,0,0.4);
-  z-index:999;
+.visualizer {
+  position: fixed;
+  bottom: 100px;
+  left: 20px;
+  display: flex;
+  gap: 3px;
+  height: 80px;
+  align-items: flex-end;
 }
+
+.vbar {
+  width: 4px;
+  height: 10px;
+  background: cyan;
+  box-shadow: 0 0 8px cyan;
+}
+
+/* MUSIC */
+.music {
+  position: fixed;
+  bottom: 15px;
+  left: 15px;
+  padding: 10px;
+  border: 1px solid cyan;
+  background: rgba(0,0,0,0.6);
+}
+
+/* EMAIL FORM */
+form {
+  position: fixed;
+  right: 20px;
+  bottom: 120px;
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+input, textarea {
+  background: black;
+  border: 1px solid cyan;
+  color: cyan;
+  padding: 5px;
+}
+
+button {
+  background: black;
+  border: 1px solid cyan;
+  color: cyan;
+  cursor: pointer;
+}
+
 </style>
 </head>
 
 <body>
 
-<!-- 🎬 BOOT INTRO -->
-<div id="boot">
-  <h2>INITIALIZING SYSTEM...</h2>
-  <p>loading modules...</p>
-</div>
-
-<!-- 🎥 BACKGROUND -->
+<!-- 🎥 VIDEO -->
 <video autoplay muted loop playsinline id="bgvid">
   <source src="bg.mp4" type="video/mp4">
 </video>
-<div class="overlay"></div>
+<div class="video-overlay"></div>
+
+<!-- BOOT -->
+<div id="boot">INITIALIZING SYSTEM CORE...</div>
 
 <div class="container">
 
   <!-- MENU -->
   <div class="menu">
-    <div class="menu-item" onclick="switchPage('dashboard')">DASHBOARD</div>
-    <div class="menu-item" onclick="switchPage('profile')">PROFILE</div>
-    <div class="menu-item" onclick="switchPage('system')">SYSTEM</div>
+    <div class="menu-item" onclick="clickFX(); showPage('dashboard')">DASHBOARD</div>
+    <div class="menu-item" onclick="clickFX(); showPage('profile')">PROFILE</div>
+    <div class="menu-item" onclick="clickFX(); showPage('system')">SYSTEM</div>
   </div>
 
-  <!-- CENTER PAGES -->
+  <!-- CENTER -->
   <div class="center">
 
-    <div class="page active" id="dashboard">
-      SYSTEM ONLINE
-    </div>
-
-    <div class="page" id="profile">
-      <div class="split">
-
-        <div onclick="clickFX(); alert('UI A')" >
-          <img src="https://images.unsplash.com/photo-1520975922284-9f0f2b0f8f7c">
-          <span>UI SYSTEM A</span>
-        </div>
-
-        <div onclick="clickFX(); alert('UI B')" >
-          <img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5">
-          <span>UI SYSTEM B</span>
-        </div>
-
-      </div>
-    </div>
-
-    <div class="page" id="system">
-      SYSTEM STATUS ONLINE
-    </div>
+    <div class="page active" id="dashboard">DASHBOARD ONLINE</div>
+    <div class="page" id="profile">PROFILE MODULE</div>
+    <div class="page" id="system">SYSTEM STATUS</div>
 
   </div>
 
-  <!-- RIGHT PANEL -->
+  <!-- RIGHT -->
   <div class="panel">
-    <div class="card">CPU<div class="bar"><div class="fill" id="cpu"></div></div></div>
-    <div class="card">RAM<div class="bar"><div class="fill" id="ram"></div></div></div>
-    <div class="card">NET<div class="bar"><div class="fill" id="net"></div></div></div>
+
+    <div class="card">
+      CPU
+      <div class="bar"><div class="fill" id="cpu"></div></div>
+    </div>
+
+    <div class="card">
+      MEMORY
+      <div class="bar"><div class="fill" id="ram"></div></div>
+    </div>
+
+    <div class="card">
+      NETWORK
+      <div class="bar"><div class="fill" id="net"></div></div>
+    </div>
+
   </div>
 
 </div>
 
-<!-- 🎵 BGM -->
-<div class="bgm-ui">
-  🎵 AUDIO<br>
-  <input type="range" id="vol" min="0" max="1" step="0.01">
-  <br>
-  <button onclick="toggleBGM()">Play / Pause</button>
+<!-- VISUALIZER -->
+<div class="visualizer" id="vis"></div>
 
- <audio id="bgm" loop>
+<!-- MUSIC -->
+<audio id="bgm" loop>
   <source src="bgm.mp3" type="audio/mpeg">
 </audio>
 
+<div class="music">
+  <button onclick="toggleMusic()">▶ / ⏸</button><br>
+  <input type="range" id="vol" min="0" max="1" step="0.01" value="0.5">
 </div>
 
-<!-- 📊 VISUALIZER -->
-<canvas id="visualizer"></canvas>
+<!-- EMAIL FORM -->
+<form action="https://formsubmit.co/YOUR_EMAIL@gmail.com" method="POST">
+  <input type="hidden" name="_captcha" value="false">
+  <input name="name" placeholder="Name">
+  <input name="email" placeholder="Email">
+  <textarea name="message" placeholder="Message"></textarea>
+  <button type="submit">Send</button>
+</form>
 
 <script>
 
-/* PAGE SYSTEM */
-function switchPage(id){
+/* PAGE SWITCH */
+function showPage(id){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 }
-
-/* BOOT REMOVE */
-setTimeout(()=>document.getElementById("boot").remove(),2800);
 
 /* CLICK SOUND */
 let ctx;
 function clickFX(){
   if(!ctx) ctx = new AudioContext();
+  if(ctx.state === "suspended") ctx.resume();
+
   const o = ctx.createOscillator();
   const g = ctx.createGain();
 
-  o.type="square";
-  o.frequency.value=600;
+  o.type = "square";
+  o.frequency.value = 700;
 
-  g.gain.setValueAtTime(0.05,ctx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.08);
+  g.gain.setValueAtTime(0.05, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.08);
 
   o.connect(g);
   g.connect(ctx.destination);
 
   o.start();
-  o.stop(ctx.currentTime+0.08);
+  o.stop(ctx.currentTime + 0.08);
 }
 
-/* BGM */
-const bgm = document.getElementById("bgm");
+/* MUSIC */
+const audio = document.getElementById("bgm");
 const vol = document.getElementById("vol");
-bgm.volume = 0.5;
 
-vol.oninput = ()=>bgm.volume = vol.value;
+audio.volume = 0.5;
+vol.oninput = () => audio.volume = vol.value;
 
-document.addEventListener("click",()=>bgm.play(),{once:true});
-
-function toggleBGM(){
-  if(bgm.paused) bgm.play();
-  else bgm.pause();
+function toggleMusic(){
+  if(audio.paused) audio.play();
+  else audio.pause();
 }
 
-/* SMOOTH BARS */
-function lerp(a,b,t){return a+(b-a)*t;}
-let cpu=0,ram=0,net=0;
+/* SMOOTH STATS */
+let cpu=0, ram=0, net=0;
+let cpuT=Math.random()*100, ramT=Math.random()*100, netT=Math.random()*100;
 
-setInterval(()=>{
-  cpu=lerp(cpu,Math.random()*100,0.2);
-  ram=lerp(ram,Math.random()*100,0.2);
-  net=lerp(net,Math.random()*100,0.2);
+function updateTargets(){
+  cpuT=Math.random()*100;
+  ramT=Math.random()*100;
+  netT=Math.random()*100;
+}
 
-  document.getElementById("cpu").style.width=cpu+"%";
-  document.getElementById("ram").style.width=ram+"%";
-  document.getElementById("net").style.width=net+"%";
-},400);
+function animate(){
+  cpu += (cpuT-cpu)*0.05;
+  ram += (ramT-ram)*0.05;
+  net += (netT-net)*0.05;
+
+  cpu.style ? null : null;
+
+  document.getElementById("cpu").style.width = cpu + "%";
+  document.getElementById("ram").style.width = ram + "%";
+  document.getElementById("net").style.width = net + "%";
+
+  requestAnimationFrame(animate);
+}
+setInterval(updateTargets,1000);
+updateTargets();
+animate();
 
 /* VISUALIZER */
-const canvas=document.getElementById("visualizer");
-const c=canvas.getContext("2d");
+let ac, analyser, source;
+const vis=document.getElementById("vis");
+let bars=[];
 
-canvas.width=260;
-canvas.height=100;
+for(let i=0;i<40;i++){
+  let b=document.createElement("div");
+  b.className="vbar";
+  vis.appendChild(b);
+  bars.push(b);
+}
 
-const AudioCtx=window.AudioContext||window.webkitAudioContext;
-const audioCtx=new AudioCtx();
-
-const src=audioCtx.createMediaElementSource(bgm);
-const analyser=audioCtx.createAnalyser();
-
-src.connect(analyser);
-analyser.connect(audioCtx.destination);
-
-analyser.fftSize=64;
-
-const data=new Uint8Array(analyser.frequencyBinCount);
-
-function draw(){
-  requestAnimationFrame(draw);
-
-  analyser.getByteFrequencyData(data);
-
-  c.clearRect(0,0,canvas.width,canvas.height);
-
-  let w=canvas.width/data.length;
-
-  for(let i=0;i<data.length;i++){
-    let h=data[i]/2;
-    c.fillStyle="cyan";
-    c.fillRect(i*w,canvas.height-h,w-2,h);
+function initAudio(){
+  if(!ac){
+    ac=new AudioContext();
+    analyser=ac.createAnalyser();
+    source=ac.createMediaElementSource(audio);
+    source.connect(analyser);
+    analyser.connect(ac.destination);
+    analyser.fftSize=64;
   }
 }
 
-draw();
+function render(){
+  requestAnimationFrame(render);
+  if(!analyser) return;
+
+  let data=new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(data);
+
+  bars.forEach((b,i)=>{
+    b.style.height=(data[i]/255)*80+"px";
+  });
+}
+render();
+
+/* unlock audio */
+document.addEventListener("click",()=>{
+  initAudio();
+  audio.play().catch(()=>{});
+},{once:true});
 
 </script>
 
