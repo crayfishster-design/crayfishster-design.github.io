@@ -19,7 +19,7 @@ body {
   background: black;
 }
 
-/* 🎥 VIDEO BACKGROUND */
+/* 🎥 BACKGROUND VIDEO */
 #bgvid {
   position: fixed;
   inset: 0;
@@ -101,20 +101,18 @@ body::after {
   box-shadow: 0 0 15px cyan;
 }
 
-/* CENTER PAGES */
+/* CENTER */
 .center {
   position: relative;
-  width: 100%;
-  height: 100%;
 }
 
 .page {
   position: absolute;
   inset: 0;
   opacity: 0;
-  transform: translateX(60px);
+  transform: translateX(50px);
   pointer-events: none;
-  transition: all 0.45s ease;
+  transition: 0.4s ease;
 }
 
 .page.active {
@@ -123,17 +121,12 @@ body::after {
   pointer-events: all;
 }
 
-.page.exit {
-  opacity: 0;
-  transform: translateX(-60px);
-}
-
 /* DASHBOARD */
 #dashboard {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 42px;
+  font-size: 40px;
 }
 
 /* PROFILE SPLIT */
@@ -149,7 +142,6 @@ body::after {
   position: relative;
   cursor: pointer;
   overflow: hidden;
-  transition: 0.3s;
 }
 
 .split-item:hover {
@@ -167,8 +159,7 @@ body::after {
   position: absolute;
   bottom: 20px;
   left: 20px;
-  font-size: 24px;
-  text-shadow: 0 0 10px black;
+  font-size: 22px;
 }
 
 /* RIGHT PANEL */
@@ -196,6 +187,31 @@ body::after {
   background: cyan;
 }
 
+/* 🎵 BGM UI */
+.bgm-ui {
+  position: fixed;
+  bottom: 15px;
+  left: 15px;
+  padding: 12px;
+  background: rgba(0,0,0,0.6);
+  border: 1px solid cyan;
+  backdrop-filter: blur(10px);
+  z-index: 999;
+  color: cyan;
+}
+
+.bgm-ui input {
+  width: 140px;
+  margin: 8px 0;
+}
+
+.bgm-ui button {
+  background: transparent;
+  border: 1px solid cyan;
+  color: cyan;
+  padding: 6px;
+  cursor: pointer;
+}
 </style>
 </head>
 
@@ -208,7 +224,7 @@ body::after {
 <div class="overlay"></div>
 
 <!-- BOOT -->
-<div id="boot">INITIALIZING SYSTEM CORE...</div>
+<div id="boot">INITIALIZING SYSTEM...</div>
 
 <div class="container">
 
@@ -223,7 +239,7 @@ body::after {
   <div class="center">
 
     <div class="page active" id="dashboard">
-      SYSTEM DASHBOARD ONLINE
+      SYSTEM ONLINE
     </div>
 
     <div class="page" id="profile">
@@ -242,63 +258,47 @@ body::after {
       </div>
     </div>
 
-    <div class="page" id="system">
-      SYSTEM STATUS ONLINE
-    </div>
-
-    <div class="page" id="ui1">
-      UI SYSTEM A LOADED
-    </div>
-
-    <div class="page" id="ui2">
-      UI SYSTEM B LOADED
-    </div>
+    <div class="page" id="system">SYSTEM STATUS</div>
+    <div class="page" id="ui1">UI SYSTEM A</div>
+    <div class="page" id="ui2">UI SYSTEM B</div>
 
   </div>
 
   <!-- RIGHT -->
   <div class="panel">
 
-    <div class="card">
-      CPU
-      <div class="bar"><div class="fill" id="cpu"></div></div>
-    </div>
-
-    <div class="card">
-      RAM
-      <div class="bar"><div class="fill" id="ram"></div></div>
-    </div>
-
-    <div class="card">
-      NET
-      <div class="bar"><div class="fill" id="net"></div></div>
-    </div>
+    <div class="card">CPU <div class="bar"><div class="fill" id="cpu"></div></div></div>
+    <div class="card">RAM <div class="bar"><div class="fill" id="ram"></div></div></div>
+    <div class="card">NET <div class="bar"><div class="fill" id="net"></div></div></div>
 
   </div>
 
+</div>
+
+<!-- 🎵 BGM UI -->
+<div class="bgm-ui">
+  🎵 BGM SYSTEM
+
+  <br>
+  <input type="range" id="vol" min="0" max="1" step="0.01" value="0.5">
+  <br>
+  <button onclick="toggleBGM()">Play / Pause</button>
+
+  <audio id="bgm" loop>
+    <source src="bgm.mp3" type="audio/mpeg">
+  </audio>
 </div>
 
 <script>
 
 let current = "dashboard";
 
-/* PAGE SYSTEM */
+/* PAGE SWITCH */
 function showPage(id){
   if(id === current) return;
 
-  const old = document.getElementById(current);
-  const next = document.getElementById(id);
-
-  if(old){
-    old.classList.remove("active");
-    old.classList.add("exit");
-  }
-
-  next.classList.add("active");
-
-  setTimeout(()=>{
-    if(old) old.classList.remove("exit");
-  }, 400);
+  document.getElementById(current).classList.remove("active");
+  document.getElementById(id).classList.add("active");
 
   current = id;
 }
@@ -325,7 +325,27 @@ function clickFX(){
   o.stop(ctx.currentTime + 0.08);
 }
 
-/* SYSTEM STATS */
+/* BGM */
+const bgm = document.getElementById("bgm");
+const vol = document.getElementById("vol");
+
+bgm.volume = 0.5;
+
+/* autoplay fix */
+document.addEventListener("click", () => {
+  bgm.play().catch(()=>{});
+}, { once:true });
+
+vol.addEventListener("input", () => {
+  bgm.volume = vol.value;
+});
+
+function toggleBGM(){
+  if(bgm.paused) bgm.play();
+  else bgm.pause();
+}
+
+/* SYSTEM BARS */
 function rand(){ return Math.random()*100; }
 
 setInterval(()=>{
