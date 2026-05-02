@@ -144,10 +144,10 @@ body::after {
 
   <!-- MENU -->
   <div class="menu">
-    <div class="menu-item" onclick="uiClick(); showPage('dashboard')">DASHBOARD</div>
-    <div class="menu-item" onclick="uiClick(); showPage('profile')">PROFILE</div>
-    <div class="menu-item" onclick="uiClick(); showPage('projects')">PROJECTS</div>
-    <div class="menu-item" onclick="uiClick(); showPage('settings')">SETTINGS</div>
+    <div class="menu-item" onclick="clickFX(); showPage('dashboard')">DASHBOARD</div>
+    <div class="menu-item" onclick="clickFX(); showPage('profile')">PROFILE</div>
+    <div class="menu-item" onclick="clickFX(); showPage('projects')">PROJECTS</div>
+    <div class="menu-item" onclick="clickFX(); showPage('settings')">SETTINGS</div>
   </div>
 
   <!-- CENTER -->
@@ -197,29 +197,38 @@ body::after {
 
 </div>
 
-<!-- AUDIO (IMPORTANT: preload + no autoplay) -->
-<audio id="clickSound" preload="auto">
-  <source src="https://assets.mixkit.co/sfx/preview/mixkit-interface-click-1126.mp3" type="audio/mpeg">
-</audio>
-
 <script>
 
-let audioUnlocked = false;
+/* =========================
+   REAL OPERA GX STYLE SOUND
+   (Web Audio API - ALWAYS WORKS)
+========================= */
 
-/* unlock audio after first interaction (browser requirement) */
-document.body.addEventListener("click", () => {
-  audioUnlocked = true;
-});
+let audioCtx;
 
-/* CLICK SOUND */
-function uiClick() {
-  const sound = document.getElementById("clickSound");
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+}
 
-  if (!audioUnlocked) return;
+function clickFX() {
+  initAudio();
 
-  sound.currentTime = 0;
-  sound.volume = 0.35;
-  sound.play().catch(() => {});
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.type = "square";
+  osc.frequency.value = 700; // click tone
+
+  gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.08);
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.08);
 }
 
 /* PAGE SWITCH */
@@ -228,7 +237,7 @@ function showPage(id) {
   document.getElementById(id).classList.add('active');
 }
 
-/* FAKE STATS */
+/* FAKE SYSTEM STATS */
 function rand(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
