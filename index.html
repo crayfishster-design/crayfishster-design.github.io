@@ -22,7 +22,8 @@ body {
 /* 🎥 VIDEO BACKGROUND */
 #bgvid {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -72,7 +73,7 @@ body::after {
   100% { opacity: 0; visibility: hidden; }
 }
 
-/* HUD */
+/* LAYOUT */
 .container {
   display: grid;
   grid-template-columns: 260px 1fr 320px;
@@ -101,16 +102,26 @@ body::after {
   box-shadow: 0 0 15px cyan;
 }
 
-/* CENTER */
+/* PAGES */
 .center {
+  position: relative;
+}
+
+.page {
+  position: absolute;
+  inset: 0;
   display: flex;
   justify-content: center;
   align-items: center;
+  font-size: 42px;
+  opacity: 0;
+  transition: 0.25s;
+  pointer-events: none;
 }
 
-.title {
-  font-size: 42px;
-  text-shadow: 0 0 10px cyan;
+.page.active {
+  opacity: 1;
+  pointer-events: all;
 }
 
 /* RIGHT PANEL */
@@ -138,17 +149,69 @@ body::after {
   background: cyan;
 }
 
-/* =========================
-   PROFILE SPLIT OVERLAY
-========================= */
-#profileUI {
+/* VISUALIZER */
+.visualizer {
+  position: fixed;
+  bottom: 100px;
+  left: 20px;
+  display: flex;
+  gap: 3px;
+  height: 80px;
+  align-items: flex-end;
+}
+
+.vbar {
+  width: 4px;
+  height: 10px;
+  background: cyan;
+  box-shadow: 0 0 8px cyan;
+}
+
+/* MUSIC */
+.music {
+  position: fixed;
+  bottom: 15px;
+  left: 15px;
+  padding: 10px;
+  border: 1px solid cyan;
+  background: rgba(0,0,0,0.6);
+}
+
+/* EMAIL FORM */
+form {
+  position: fixed;
+  right: 20px;
+  bottom: 120px;
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+input, textarea {
+  background: black;
+  border: 1px solid cyan;
+  color: cyan;
+  padding: 5px;
+}
+
+button {
+  background: black;
+  border: 1px solid cyan;
+  color: cyan;
+  cursor: pointer;
+}
+
+/* ================= PROFILE SPLIT UI ================= */
+
+#splitUI {
   position: fixed;
   inset: 0;
   display: none;
-  z-index: 100;
+  z-index: 50;
 }
 
-.half {
+.split {
   width: 50%;
   height: 100%;
   float: left;
@@ -157,27 +220,26 @@ body::after {
   overflow: hidden;
 }
 
-.half video {
+.split video {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.half .label {
+.split span {
   position: absolute;
   bottom: 30px;
   left: 30px;
   font-size: 28px;
-  color: cyan;
   text-shadow: 0 0 10px cyan;
 }
 
-/* FULLSCREEN MODE AFTER CLICK */
+/* FULLSCREEN MODE */
 .fullscreen {
   position: fixed;
   inset: 0;
   display: none;
-  z-index: 200;
+  z-index: 100;
 }
 
 .fullscreen video {
@@ -186,13 +248,13 @@ body::after {
   object-fit: cover;
 }
 
-.backBtn {
+.back {
   position: absolute;
   top: 20px;
   left: 20px;
   padding: 10px;
   border: 1px solid cyan;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0,0,0,0.5);
   cursor: pointer;
 }
 
@@ -201,8 +263,8 @@ body::after {
 
 <body>
 
-<!-- BACKGROUND VIDEO -->
-<video autoplay muted loop id="bgvid">
+<!-- 🎥 VIDEO -->
+<video autoplay muted loop playsinline id="bgvid">
   <source src="bg.mp4" type="video/mp4">
 </video>
 <div class="video-overlay"></div>
@@ -210,22 +272,22 @@ body::after {
 <!-- BOOT -->
 <div id="boot">INITIALIZING SYSTEM CORE...</div>
 
-<!-- MAIN HUD -->
 <div class="container">
 
-  <!-- LEFT -->
+  <!-- MENU -->
   <div class="menu">
-    <div class="menu-item">DASHBOARD</div>
-
-    <!-- THIS IS THE ONLY CHANGED FUNCTION -->
-    <div class="menu-item" onclick="openProfile()">PROFILE</div>
-
-    <div class="menu-item">SYSTEM</div>
+    <div class="menu-item" onclick="clickFX(); showPage('dashboard')">DASHBOARD</div>
+    <div class="menu-item" onclick="clickFX(); showPage('profile')">PROFILE</div>
+    <div class="menu-item" onclick="clickFX(); showPage('system')">SYSTEM</div>
   </div>
 
   <!-- CENTER -->
   <div class="center">
-    <div class="title">SYSTEM ONLINE</div>
+
+    <div class="page active" id="dashboard">DASHBOARD ONLINE</div>
+    <div class="page" id="profile">PROFILE MODULE</div>
+    <div class="page" id="system">SYSTEM STATUS</div>
+
   </div>
 
   <!-- RIGHT -->
@@ -250,76 +312,133 @@ body::after {
 
 </div>
 
-<!-- PROFILE SPLIT UI -->
-<div id="profileUI">
+<!-- SPLIT PROFILE UI -->
+<div id="splitUI">
 
-  <div class="half" onclick="openMode('A')">
+  <div class="split" onclick="openMode('A')">
     <video autoplay muted loop>
       <source src="modeA.mp4">
     </video>
-    <div class="label">MODE A</div>
+    <span>PROFILE A</span>
   </div>
 
-  <div class="half" onclick="openMode('B')">
+  <div class="split" onclick="openMode('B')">
     <video autoplay muted loop>
       <source src="modeB.mp4">
     </video>
-    <div class="label">MODE B</div>
+    <span>PROFILE B</span>
   </div>
 
 </div>
 
-<!-- FULLSCREEN MODE A -->
+<!-- FULLSCREEN MODES -->
 <div id="modeA" class="fullscreen">
   <video autoplay muted loop>
     <source src="modeA.mp4">
   </video>
-  <div class="backBtn" onclick="back()">BACK</div>
+  <div class="back" onclick="back()">BACK</div>
 </div>
 
-<!-- FULLSCREEN MODE B -->
 <div id="modeB" class="fullscreen">
   <video autoplay muted loop>
     <source src="modeB.mp4">
   </video>
-  <div class="backBtn" onclick="back()">BACK</div>
+  <div class="back" onclick="back()">BACK</div>
 </div>
+
+<!-- VISUALIZER -->
+<div class="visualizer" id="vis"></div>
+
+<!-- MUSIC -->
+<audio id="bgm" loop>
+  <source src="bgm.mp3" type="audio/mpeg">
+</audio>
+
+<div class="music">
+  <button onclick="toggleMusic()">▶ / ⏸</button><br>
+  <input type="range" id="vol" min="0" max="1" step="0.01" value="0.5">
+</div>
+
+<!-- EMAIL -->
+<form action="https://formsubmit.co/YOUR_EMAIL@gmail.com" method="POST">
+  <input type="hidden" name="_captcha" value="false">
+  <input name="name" placeholder="Name">
+  <input name="email" placeholder="Email">
+  <textarea name="message" placeholder="Message"></textarea>
+  <button type="submit">Send</button>
+</form>
 
 <script>
 
-/* PROFILE OPEN */
-function openProfile(){
-  document.querySelector(".container").style.display = "none";
-  document.getElementById("profileUI").style.display = "block";
+/* PAGE SWITCH */
+function showPage(id){
+
+  if(id === "profile"){
+    document.querySelector(".container").style.display = "none";
+    document.getElementById("splitUI").style.display = "block";
+    return;
+  }
+
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
 }
 
-/* OPEN MODE */
+/* PROFILE MODES */
 function openMode(m){
-  document.getElementById("profileUI").style.display = "none";
-
-  if(m === "A") document.getElementById("modeA").style.display = "block";
-  if(m === "B") document.getElementById("modeB").style.display = "block";
+  document.getElementById("splitUI").style.display = "none";
+  document.getElementById("modeA").style.display = (m==="A") ? "block" : "none";
+  document.getElementById("modeB").style.display = (m==="B") ? "block" : "none";
 }
 
-/* BACK */
 function back(){
   document.getElementById("modeA").style.display = "none";
   document.getElementById("modeB").style.display = "none";
   document.querySelector(".container").style.display = "grid";
 }
 
-/* FAKE STATS (SMOOTH) */
-let cpu=0, ram=0, net=0;
+/* CLICK SOUND */
+let ctx;
+function clickFX(){
+  if(!ctx) ctx = new AudioContext();
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
 
+  o.type="square";
+  o.frequency.value=700;
+
+  g.gain.setValueAtTime(0.05,ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.08);
+
+  o.connect(g);
+  g.connect(ctx.destination);
+
+  o.start();
+  o.stop(ctx.currentTime+0.08);
+}
+
+/* MUSIC */
+const audio=document.getElementById("bgm");
+const vol=document.getElementById("vol");
+audio.volume=0.5;
+
+vol.oninput=()=>audio.volume=vol.value;
+
+function toggleMusic(){
+  audio.paused ? audio.play() : audio.pause();
+}
+
+/* STATS */
+let cpu=0,ram=0,net=0;
 setInterval(()=>{
-  cpu += (Math.random()*100 - cpu)*0.1;
-  ram += (Math.random()*100 - ram)*0.1;
-  net += (Math.random()*100 - net)*0.1;
+  cpu+=(Math.random()*100-cpu)*0.1;
+  ram+=(Math.random()*100-ram)*0.1;
+  net+=(Math.random()*100-net)*0.1;
 
-  document.getElementById("cpu").style.width = cpu + "%";
-  document.getElementById("ram").style.width = ram + "%";
-  document.getElementById("net").style.width = net + "%";
-}, 500);
+  cpu.style?0:0;
+  document.getElementById("cpu").style.width=cpu+"%";
+  document.getElementById("ram").style.width=ram+"%";
+  document.getElementById("net").style.width=net+"%";
+},500);
 
 </script>
 
