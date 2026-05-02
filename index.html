@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>NEXUS HUD SYSTEM</title>
+<title>NEXUS SYSTEM</title>
 
 <style>
 * {
@@ -15,399 +15,220 @@
 body {
   font-family: Arial;
   color: cyan;
+  background: black;
   overflow: hidden;
-  background: black;
 }
 
-/* 🎥 VIDEO BACKGROUND */
-#bgvid {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: -5;
-}
+/* ================= MAIN HUD ================= */
 
-.video-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  z-index: -4;
-}
-
-/* GRID */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(0,255,255,0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,255,255,0.05) 1px, transparent 1px);
-  background-size: 40px 40px;
-  animation: grid 6s linear infinite;
-  z-index: -3;
-}
-
-@keyframes grid {
-  from { transform: translateY(0); }
-  to { transform: translateY(40px); }
-}
-
-/* BOOT */
-#boot {
-  position: fixed;
-  inset: 0;
-  background: black;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-  animation: boot 2.5s forwards;
-}
-
-@keyframes boot {
-  0% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { opacity: 0; visibility: hidden; }
-}
-
-/* LAYOUT */
-.container {
+#hud {
+  position: relative;
+  z-index: 2;
   display: grid;
-  grid-template-columns: 260px 1fr 320px;
+  grid-template-columns: 260px 1fr 300px;
   height: 100vh;
   padding: 20px;
   gap: 20px;
 }
 
-/* MENU */
-.menu {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
 .menu-item {
   padding: 12px;
-  border: 1px solid rgba(0,255,255,0.3);
-  background: rgba(0,0,0,0.4);
+  border: 1px solid cyan;
   cursor: pointer;
-  transition: 0.2s;
 }
 
-.menu-item:hover {
-  transform: translateX(5px);
-  box-shadow: 0 0 15px cyan;
+/* ================= SPLIT MENU ================= */
+
+#splitUI {
+  position: fixed;
+  inset: 0;
+  display: none;
+  z-index: 50;
 }
 
-/* PAGES */
-.center {
+.split {
+  width: 50%;
+  height: 100%;
   position: relative;
+  cursor: pointer;
+  transition: 0.4s ease;
+  overflow: hidden;
 }
 
-.page {
+.split video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.split:hover {
+  filter: brightness(1.2);
+}
+
+.label {
+  position: absolute;
+  bottom: 40px;
+  left: 30px;
+  font-size: 30px;
+  text-shadow: 0 0 10px cyan;
+}
+
+/* ================= SCENES ================= */
+
+.scene {
+  position: fixed;
+  inset: 0;
+  display: none;
+  z-index: 100;
+}
+
+.scene video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.scene-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+}
+
+/* HUD inside scenes */
+.scene-ui {
   position: absolute;
   inset: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 42px;
-  opacity: 0;
-  transition: 0.25s;
-  pointer-events: none;
+  font-size: 50px;
+  color: cyan;
+  text-shadow: 0 0 15px cyan;
 }
 
-.page.active {
-  opacity: 1;
-  pointer-events: all;
-}
-
-/* SPLIT UI (PROFILE) */
-.split-container{
-  display:flex;
-  width:100%;
-  height:100%;
-}
-
-.split{
-  width:50%;
-  position:relative;
-  overflow:hidden;
-  cursor:pointer;
-  transition:0.3s;
-}
-
-.split img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  filter:brightness(0.7);
-  transition:0.3s;
-}
-
-.split:hover img{
-  transform:scale(1.05);
-  filter:brightness(1);
-}
-
-.split:hover{
-  box-shadow:0 0 20px cyan;
-}
-
-.label{
-  position:absolute;
-  bottom:20px;
-  left:20px;
-  font-size:20px;
-  color:cyan;
-  text-shadow:0 0 10px cyan;
-}
-
-/* RIGHT PANEL */
-.panel {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.card {
-  padding: 15px;
-  border: 1px solid rgba(0,255,255,0.2);
-  background: rgba(0,0,0,0.4);
-}
-
-.bar {
-  height: 10px;
-  background: rgba(255,255,255,0.1);
-  margin-top: 8px;
-}
-
-.fill {
-  height: 100%;
-  width: 0%;
-  background: cyan;
-  transition: width 0.5s ease;
-}
-
-/* VISUALIZER */
-.visualizer {
-  position: fixed;
-  bottom: 100px;
+/* BACK BUTTON */
+.back {
+  position: absolute;
+  top: 20px;
   left: 20px;
-  display: flex;
-  gap: 3px;
-  height: 80px;
-  align-items: flex-end;
-}
-
-.vbar {
-  width: 4px;
-  height: 10px;
-  background: cyan;
-  box-shadow: 0 0 8px cyan;
-}
-
-/* MUSIC UI */
-.music {
-  position: fixed;
-  bottom: 15px;
-  left: 15px;
   padding: 10px;
   border: 1px solid cyan;
-  background: rgba(0,0,0,0.6);
+  cursor: pointer;
+  z-index: 200;
 }
+
+/* ================= UTIL ================= */
+
+.hide {
+  display: none !important;
+}
+
 </style>
 </head>
 
 <body>
 
-<!-- VIDEO -->
-<video autoplay muted loop playsinline id="bgvid">
-  <source src="bg.mp4">
-</video>
-<div class="video-overlay"></div>
+<!-- ================= MAIN HUD ================= -->
+<div id="hud">
 
-<!-- BOOT -->
-<div id="boot">INITIALIZING SYSTEM CORE...</div>
-
-<div class="container">
-
-  <!-- MENU -->
-  <div class="menu">
-    <div class="menu-item" onclick="showPage('dashboard')">DASHBOARD</div>
-    <div class="menu-item" onclick="showPage('profile')">PROFILE</div>
-    <div class="menu-item" onclick="showPage('system')">SYSTEM</div>
+  <div>
+    <div class="menu-item" onclick="openSelect()">MODE SELECT</div>
   </div>
 
-  <!-- CENTER -->
-  <div class="center">
-
-    <div class="page active" id="dashboard">
-      DASHBOARD ONLINE
-    </div>
-
-    <div class="page" id="profile">
-      <div class="split-container">
-
-        <div class="split" onclick="openUI('A')">
-          <img src="https://images.unsplash.com/photo-1520975922284-9f0f2b0f8f7c">
-          <div class="label">SYSTEM A</div>
-        </div>
-
-        <div class="split" onclick="openUI('B')">
-          <img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5">
-          <div class="label">SYSTEM B</div>
-        </div>
-
-      </div>
-    </div>
-
-    <div class="page" id="system">
-      SYSTEM STATUS
-    </div>
-
+  <div style="display:flex;align-items:center;justify-content:center;">
+    SYSTEM ONLINE
   </div>
 
-  <!-- RIGHT -->
-  <div class="panel">
-    <div class="card">CPU<div class="bar"><div class="fill" id="cpu"></div></div></div>
-    <div class="card">MEMORY<div class="bar"><div class="fill" id="ram"></div></div></div>
-    <div class="card">NETWORK<div class="bar"><div class="fill" id="net"></div></div></div>
+  <div>
+    STATUS PANEL
   </div>
 
 </div>
 
-<!-- VISUALIZER -->
-<div class="visualizer" id="vis"></div>
+<!-- ================= SPLIT MENU ================= -->
+<div id="splitUI">
 
-<!-- AUDIO -->
-<audio id="bgm" loop>
-  <source src="bgm.mp3" type="audio/mpeg">
-</audio>
+  <div class="split" onclick="enterScene('A')">
+    <video autoplay muted loop>
+      <source src="modeA.mp4">
+    </video>
+    <div class="label">MODE A</div>
+  </div>
 
-<div class="music">
-  <button onclick="toggleMusic()">▶ / ⏸</button><br>
-  <input type="range" id="vol" min="0" max="1" step="0.01" value="0.5">
+  <div class="split" onclick="enterScene('B')">
+    <video autoplay muted loop>
+      <source src="modeB.mp4">
+    </video>
+    <div class="label">MODE B</div>
+  </div>
+
+</div>
+
+<!-- ================= MODE A SCENE ================= -->
+<div id="sceneA" class="scene">
+  <video autoplay muted loop>
+    <source src="modeA.mp4">
+  </video>
+
+  <div class="scene-overlay"></div>
+
+  <div class="back" onclick="backToMenu()">BACK</div>
+
+  <div class="scene-ui">
+    MODE A ACTIVE
+  </div>
+</div>
+
+<!-- ================= MODE B SCENE ================= -->
+<div id="sceneB" class="scene">
+  <video autoplay muted loop>
+    <source src="modeB.mp4">
+  </video>
+
+  <div class="scene-overlay"></div>
+
+  <div class="back" onclick="backToMenu()">BACK</div>
+
+  <div class="scene-ui">
+    MODE B ACTIVE
+  </div>
 </div>
 
 <script>
 
-/* PAGE SWITCH */
-function showPage(id){
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
+const hud = document.getElementById("hud");
+const splitUI = document.getElementById("splitUI");
+const sceneA = document.getElementById("sceneA");
+const sceneB = document.getElementById("sceneB");
+
+/* OPEN MODE SELECT */
+function openSelect(){
+  hud.classList.add("hide");
+  splitUI.style.display = "flex";
 }
 
-/* SPLIT UI */
-function openUI(type){
-  clickFX();
-  alert("Opening SYSTEM " + type);
+/* ENTER MODE (SEPARATE SCENES) */
+function enterScene(mode){
+
+  splitUI.style.display = "none";
+
+  if(mode === "A"){
+    sceneA.style.display = "block";
+  }
+
+  if(mode === "B"){
+    sceneB.style.display = "block";
+  }
 }
 
-/* CLICK SOUND */
-let ctx;
-function clickFX(){
-  if(!ctx) ctx = new AudioContext();
-  if(ctx.state === "suspended") ctx.resume();
+/* BACK TO MENU */
+function backToMenu(){
 
-  const o = ctx.createOscillator();
-  const g = ctx.createGain();
+  sceneA.style.display = "none";
+  sceneB.style.display = "none";
 
-  o.type = "square";
-  o.frequency.value = 650;
-
-  g.gain.setValueAtTime(0.05, ctx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.08);
-
-  o.connect(g);
-  g.connect(ctx.destination);
-
-  o.start();
-  o.stop(ctx.currentTime + 0.08);
+  hud.classList.remove("hide");
 }
-
-/* AUDIO */
-const audio = document.getElementById("bgm");
-const vol = document.getElementById("vol");
-
-audio.volume = 0.5;
-vol.oninput = () => audio.volume = vol.value;
-
-document.addEventListener("click", () => {
-  audio.play().catch(()=>{});
-}, { once:true });
-
-function toggleMusic(){
-  if(audio.paused) audio.play();
-  else audio.pause();
-}
-
-/* STATS */
-let cpu=0, ram=0, net=0;
-let cpuT=50, ramT=50, netT=50;
-
-setInterval(()=>{
-  cpuT=Math.random()*100;
-  ramT=Math.random()*100;
-  netT=Math.random()*100;
-},1000);
-
-function animate(){
-  cpu += (cpuT-cpu)*0.05;
-  ram += (ramT-ram)*0.05;
-  net += (netT-net)*0.05;
-
-  document.getElementById("cpu").style.width = cpu + "%";
-  document.getElementById("ram").style.width = ram + "%";
-  document.getElementById("net").style.width = net + "%";
-
-  requestAnimationFrame(animate);
-}
-animate();
-
-/* VISUALIZER */
-const vis=document.getElementById("vis");
-const bars=[];
-
-for(let i=0;i<40;i++){
-  let b=document.createElement("div");
-  b.className="vbar";
-  vis.appendChild(b);
-  bars.push(b);
-}
-
-let ac, analyser, source, data;
-
-function initAudio(){
-  if(ac) return;
-
-  ac = new AudioContext();
-  analyser = ac.createAnalyser();
-  source = ac.createMediaElementSource(audio);
-
-  source.connect(analyser);
-  analyser.connect(ac.destination);
-
-  analyser.fftSize = 64;
-  data = new Uint8Array(analyser.frequencyBinCount);
-}
-
-function render(){
-  requestAnimationFrame(render);
-  if(!analyser) return;
-
-  analyser.getByteFrequencyData(data);
-
-  bars.forEach((b,i)=>{
-    b.style.height = (data[i]/255)*80 + "px";
-  });
-}
-render();
-
-document.addEventListener("click", ()=>{
-  initAudio();
-},{once:true});
 
 </script>
 
