@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>NEXUS HUD VISUALIZER</title>
+<title>NEXUS HUD SYSTEM</title>
 
 <style>
 * {
@@ -28,48 +28,123 @@ body::after {
     linear-gradient(rgba(0,255,255,0.05) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0,255,255,0.05) 1px, transparent 1px);
   background-size: 40px 40px;
-  animation: move 6s linear infinite;
-  z-index: -2;
+  animation: grid 6s linear infinite;
+  z-index: -3;
 }
 
-@keyframes move {
+@keyframes grid {
   from { transform: translateY(0); }
   to { transform: translateY(40px); }
 }
 
-/* CENTER */
-.container {
-  height: 100vh;
+/* BOOT */
+#boot {
+  position: fixed;
+  inset: 0;
+  background: black;
   display: flex;
   justify-content: center;
   align-items: center;
-  flex-direction: column;
+  z-index: 9999;
+  animation: boot 3s forwards;
 }
 
-/* VISUALIZER */
-#visualizer {
+@keyframes boot {
+  0% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
+}
+
+/* LAYOUT */
+.container {
+  display: grid;
+  grid-template-columns: 260px 1fr 320px;
+  height: 100vh;
+  padding: 20px;
+  gap: 20px;
+}
+
+/* MENU */
+.menu {
   display: flex;
-  gap: 4px;
-  height: 120px;
-  align-items: flex-end;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.menu-item {
+  padding: 12px;
+  border: 1px solid rgba(0,255,255,0.3);
+  background: rgba(0,0,0,0.4);
+  cursor: pointer;
+}
+
+.menu-item:hover {
+  box-shadow: 0 0 15px cyan;
+  transform: translateX(5px);
+}
+
+/* CENTER PAGES */
+.center {
+  position: relative;
+}
+
+.page {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 42px;
+  opacity: 0;
+  transition: 0.25s;
+  pointer-events: none;
+}
+
+.page.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* RIGHT PANEL */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.card {
+  padding: 15px;
+  border: 1px solid rgba(0,255,255,0.2);
+  background: rgba(0,0,0,0.4);
 }
 
 .bar {
-  width: 6px;
   height: 10px;
-  background: cyan;
-  box-shadow: 0 0 10px cyan;
-  transition: 0.05s;
+  background: rgba(255,255,255,0.1);
 }
 
-/* BUTTON */
-button {
-  margin-top: 20px;
-  padding: 10px 16px;
-  background: black;
-  border: 1px solid cyan;
-  color: cyan;
-  cursor: pointer;
+.fill {
+  height: 100%;
+  width: 0%;
+  background: cyan;
+}
+
+/* 🎧 VISUALIZER */
+.visualizer {
+  position: fixed;
+  bottom: 90px;
+  left: 20px;
+  display: flex;
+  gap: 3px;
+  height: 80px;
+  align-items: flex-end;
+}
+
+.vbar {
+  width: 4px;
+  height: 10px;
+  background: cyan;
+  box-shadow: 0 0 8px cyan;
 }
 
 /* MUSIC UI */
@@ -77,97 +152,161 @@ button {
   position: fixed;
   bottom: 15px;
   left: 15px;
-  border: 1px solid cyan;
   padding: 10px;
+  border: 1px solid cyan;
   background: rgba(0,0,0,0.6);
+}
+
+button {
+  background: black;
+  border: 1px solid cyan;
+  color: cyan;
+  cursor: pointer;
+  margin-top: 5px;
 }
 </style>
 </head>
 
 <body>
 
+<div id="boot">INITIALIZING SYSTEM...</div>
+
 <div class="container">
 
-  <!-- VISUALIZER -->
-  <div id="visualizer"></div>
+  <!-- MENU -->
+  <div class="menu">
+    <div class="menu-item" onclick="clickFX(); showPage('dashboard')">DASHBOARD</div>
+    <div class="menu-item" onclick="clickFX(); showPage('profile')">PROFILE</div>
+    <div class="menu-item" onclick="clickFX(); showPage('system')">SYSTEM</div>
+  </div>
 
-  <button onclick="toggleMusic()">▶ / ⏸ MUSIC</button>
+  <!-- CENTER -->
+  <div class="center">
+
+    <div class="page active" id="dashboard">DASHBOARD ONLINE</div>
+    <div class="page" id="profile">USER PROFILE</div>
+    <div class="page" id="system">SYSTEM STATUS</div>
+
+  </div>
+
+  <!-- RIGHT -->
+  <div class="panel">
+    <div class="card">CPU<div class="bar"><div class="fill" id="cpu"></div></div></div>
+    <div class="card">RAM<div class="bar"><div class="fill" id="ram"></div></div></div>
+    <div class="card">NET<div class="bar"><div class="fill" id="net"></div></div></div>
+  </div>
 
 </div>
 
-<!-- AUDIO -->
+<!-- VISUALIZER -->
+<div class="visualizer" id="vis"></div>
+
+<!-- MUSIC -->
 <audio id="bgm" loop>
   <source src="bgm.mp3" type="audio/mpeg">
 </audio>
 
+<div class="music">
+  <button onclick="toggleMusic()">▶ / ⏸</button><br>
+  <input type="range" id="vol" min="0" max="1" step="0.01">
+</div>
+
 <script>
 
-const audio = document.getElementById("bgm");
-let ctx, analyser, source;
-let bars = [];
-
-/* CREATE VISUALIZER BARS */
-const visualizer = document.getElementById("visualizer");
-
-for (let i = 0; i < 50; i++) {
-  let bar = document.createElement("div");
-  bar.className = "bar";
-  visualizer.appendChild(bar);
-  bars.push(bar);
+/* PAGE SWITCH */
+function showPage(id){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
 }
 
-/* INIT AUDIO */
-function initAudio() {
-  if (!ctx) {
-    ctx = new (window.AudioContext || window.webkitAudioContext)();
-    analyser = ctx.createAnalyser();
+/* CLICK SOUND */
+let ctx;
+function clickFX(){
+  if(!ctx) ctx = new AudioContext();
+  if(ctx.state==="suspended") ctx.resume();
 
-    source = ctx.createMediaElementSource(audio);
-    source.connect(analyser);
-    analyser.connect(ctx.destination);
+  let o = ctx.createOscillator();
+  let g = ctx.createGain();
 
-    analyser.fftSize = 64;
+  o.type="square";
+  o.frequency.value=800;
+
+  g.gain.setValueAtTime(0.05,ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.08);
+
+  o.connect(g);
+  g.connect(ctx.destination);
+
+  o.start();
+  o.stop(ctx.currentTime+0.08);
+}
+
+/* STATS */
+function r(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+setInterval(()=>{
+  cpu.style.width=r(10,95)+"%";
+  ram.style.width=r(10,90)+"%";
+  net.style.width=r(5,100)+"%";
+},1000);
+
+/* MUSIC + VISUALIZER */
+const audio=document.getElementById("bgm");
+const vol=document.getElementById("vol");
+
+let ac,an,src;
+const vis=document.getElementById("vis");
+let bars=[];
+
+/* create bars */
+for(let i=0;i<40;i++){
+  let b=document.createElement("div");
+  b.className="vbar";
+  vis.appendChild(b);
+  bars.push(b);
+}
+
+function initAudio(){
+  if(!ac){
+    ac=new AudioContext();
+    an=ac.createAnalyser();
+    src=ac.createMediaElementSource(audio);
+    src.connect(an);
+    an.connect(ac.destination);
+    an.fftSize=64;
   }
 }
 
-/* UPDATE VISUALIZER */
-function render() {
+function render(){
   requestAnimationFrame(render);
+  if(!an)return;
 
-  if (!analyser) return;
+  let data=new Uint8Array(an.frequencyBinCount);
+  an.getByteFrequencyData(data);
 
-  const data = new Uint8Array(analyser.frequencyBinCount);
-  analyser.getByteFrequencyData(data);
-
-  bars.forEach((bar, i) => {
-    let val = data[i] / 255;
-    bar.style.height = (val * 120) + "px";
+  bars.forEach((b,i)=>{
+    let v=data[i]/255;
+    b.style.height=(v*80)+"px";
   });
 }
-
-/* MUSIC TOGGLE */
-function toggleMusic() {
-  initAudio();
-
-  if (ctx.state === "suspended") {
-    ctx.resume();
-  }
-
-  if (audio.paused) {
-    audio.play();
-  } else {
-    audio.pause();
-  }
-}
-
-/* auto start visualizer loop */
 render();
 
-/* unlock autoplay on first click */
-document.addEventListener("click", () => {
+/* controls */
+function toggleMusic(){
+  initAudio();
+  if(ac.state==="suspended") ac.resume();
+
+  if(audio.paused) audio.play();
+  else audio.pause();
+}
+
+vol.oninput=()=>audio.volume=vol.value;
+audio.volume=0.5;
+
+/* unlock autoplay */
+document.addEventListener("click",()=>{
   initAudio();
   audio.play().catch(()=>{});
-}, { once: true });
+},{once:true});
 
 </script>
 
