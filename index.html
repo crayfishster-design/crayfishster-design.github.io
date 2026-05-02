@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>NEXUS HUD</title>
+<title>NEXUS HUD SYSTEM</title>
 
 <style>
 * {
@@ -13,20 +13,20 @@
 }
 
 body {
-  font-family: Arial, sans-serif;
-  color: #cfffff;
-  overflow: hidden;
+  font-family: Arial;
   background: black;
+  color: cyan;
+  overflow: hidden;
 }
 
-/* GRID */
+/* GRID BACKGROUND */
 body::after {
   content: "";
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(0,255,255,0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,255,255,0.05) 1px, transparent 1px);
+    linear-gradient(rgba(0,255,255,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,255,0.06) 1px, transparent 1px);
   background-size: 40px 40px;
   animation: gridMove 6s linear infinite;
   z-index: -3;
@@ -37,17 +37,7 @@ body::after {
   to { transform: translateY(40px); }
 }
 
-/* OVERLAY */
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.65);
-  z-index: -2;
-}
-
-/* =========================
-   🔥 BOOT SCREEN
-========================= */
+/* BOOT SCREEN */
 #boot {
   position: fixed;
   inset: 0;
@@ -56,43 +46,18 @@ body::after {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  color: cyan;
-  z-index: 9999;
   font-size: 20px;
-  letter-spacing: 2px;
+  z-index: 9999;
+  animation: bootFade 2.8s forwards;
 }
 
-.boot-text {
-  animation: flicker 1.2s infinite;
+@keyframes bootFade {
+  0% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
 }
 
-@keyframes flicker {
-  0%,100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-.boot-bar {
-  margin-top: 20px;
-  width: 300px;
-  height: 4px;
-  background: rgba(255,255,255,0.1);
-  overflow: hidden;
-}
-
-.boot-fill {
-  width: 0%;
-  height: 100%;
-  background: cyan;
-  animation: load 3s forwards;
-}
-
-@keyframes load {
-  to { width: 100%; }
-}
-
-/* =========================
-   MAIN UI
-========================= */
+/* LAYOUT */
 .container {
   display: grid;
   grid-template-columns: 260px 1fr 320px;
@@ -101,6 +66,7 @@ body::after {
   gap: 20px;
 }
 
+/* MENU */
 .menu {
   display: flex;
   flex-direction: column;
@@ -111,45 +77,24 @@ body::after {
   padding: 12px;
   border: 1px solid rgba(0,255,255,0.3);
   background: rgba(0,0,0,0.4);
-  backdrop-filter: blur(10px);
   cursor: pointer;
   transition: 0.2s;
 }
 
 .menu-item:hover {
   transform: translateX(5px);
-  border-color: cyan;
   box-shadow: 0 0 15px cyan;
 }
 
+/* CENTER */
 .center {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.page {
-  display: none;
-  flex-direction: column;
-  text-align: center;
-}
-
-.page.active {
-  display: flex;
-}
-
 .title {
   font-size: 42px;
-  letter-spacing: 3px;
-}
-
-.subtitle {
-  opacity: 0.7;
-  margin-top: 10px;
-}
-
-.glow {
-  color: cyan;
   text-shadow: 0 0 10px cyan;
 }
 
@@ -164,7 +109,6 @@ body::after {
   padding: 15px;
   border: 1px solid rgba(0,255,255,0.2);
   background: rgba(0,0,0,0.4);
-  backdrop-filter: blur(10px);
 }
 
 .bar {
@@ -177,56 +121,44 @@ body::after {
   height: 100%;
   width: 0%;
   background: cyan;
-  transition: 0.4s;
+  transition: 0.3s;
+}
+
+/* 🎵 BGM UI */
+.bgm {
+  position: fixed;
+  bottom: 15px;
+  left: 15px;
+  padding: 10px;
+  border: 1px solid cyan;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(10px);
+}
+
+/* slider */
+input[type="range"] {
+  width: 130px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- 🔥 BOOT SCREEN -->
-<div id="boot">
-  <div class="boot-text">INITIALIZING SYSTEM CORE...</div>
-  <div class="boot-bar">
-    <div class="boot-fill"></div>
-  </div>
-</div>
-
-<div class="overlay"></div>
+<!-- BOOT -->
+<div id="boot">INITIALIZING SYSTEM CORE...</div>
 
 <div class="container">
 
   <!-- MENU -->
   <div class="menu">
-    <div class="menu-item" onclick="clickFX(); showPage('dashboard')">DASHBOARD</div>
-    <div class="menu-item" onclick="clickFX(); showPage('profile')">PROFILE</div>
-    <div class="menu-item" onclick="clickFX(); showPage('projects')">PROJECTS</div>
-    <div class="menu-item" onclick="clickFX(); showPage('settings')">SETTINGS</div>
+    <div class="menu-item" onclick="clickFX()">DASHBOARD</div>
+    <div class="menu-item" onclick="clickFX()">PROFILE</div>
+    <div class="menu-item" onclick="clickFX()">SYSTEM</div>
   </div>
 
   <!-- CENTER -->
   <div class="center">
-
-    <div class="page active" id="dashboard">
-      <div class="title glow">SYSTEM ONLINE</div>
-      <div class="subtitle">Monitoring active processes</div>
-    </div>
-
-    <div class="page" id="profile">
-      <div class="title glow">USER PROFILE</div>
-      <div class="subtitle">Identity module loaded</div>
-    </div>
-
-    <div class="page" id="projects">
-      <div class="title glow">PROJECTS</div>
-      <div class="subtitle">No active missions</div>
-    </div>
-
-    <div class="page" id="settings">
-      <div class="title glow">SETTINGS</div>
-      <div class="subtitle">System configuration panel</div>
-    </div>
-
+    <div class="title">SYSTEM ONLINE</div>
   </div>
 
   <!-- RIGHT -->
@@ -251,30 +183,25 @@ body::after {
 
 </div>
 
+<!-- 🎵 MP3 BACKGROUND MUSIC -->
+<audio id="bgm" autoplay loop>
+  <source src="bgm.mp3" type="audio/mp3">
+</audio>
+
+<!-- 🎚 VOLUME CONTROL -->
+<div class="bgm">
+  🎵 BGM Volume<br>
+  <input type="range" min="0" max="1" step="0.01" value="0.5" id="vol"><br>
+  <button onclick="toggleMusic()">Play / Pause</button>
+</div>
+
 <script>
 
-/* =========================
-   BOOT SEQUENCE CONTROL
-========================= */
-window.addEventListener("load", () => {
-  setTimeout(() => {
-    document.getElementById("boot").style.display = "none";
-  }, 3200); // matches animation
-});
-
-/* =========================
-   CLICK SOUND (your working version)
-========================= */
+/* CLICK SOUND */
 let audioCtx;
 
-function initAudio() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-}
-
 function clickFX() {
-  initAudio();
+  if (!audioCtx) audioCtx = new AudioContext();
 
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
@@ -283,37 +210,42 @@ function clickFX() {
   osc.frequency.value = 650;
 
   gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.07);
+  gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.08);
 
   osc.connect(gain);
   gain.connect(audioCtx.destination);
 
   osc.start();
-  osc.stop(audioCtx.currentTime + 0.07);
+  osc.stop(audioCtx.currentTime + 0.08);
 }
 
-/* =========================
-   PAGE SWITCH
-========================= */
-function showPage(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+/* BGM CONTROL */
+const bgm = document.getElementById("bgm");
+const vol = document.getElementById("vol");
+
+bgm.volume = 0.5;
+
+vol.addEventListener("input", () => {
+  bgm.volume = vol.value;
+});
+
+function toggleMusic() {
+  if (bgm.paused) bgm.play();
+  else bgm.pause();
 }
 
-/* =========================
-   FAKE STATS
-========================= */
-function rand(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+/* FAKE SYSTEM STATS */
+function rand(min,max){
+  return Math.floor(Math.random()*(max-min+1))+min;
 }
 
-function updateStats() {
-  document.getElementById("cpu").style.width = rand(10, 95) + "%";
-  document.getElementById("ram").style.width = rand(20, 90) + "%";
-  document.getElementById("net").style.width = rand(5, 100) + "%";
+function updateStats(){
+  document.getElementById("cpu").style.width = rand(10,95)+"%";
+  document.getElementById("ram").style.width = rand(20,90)+"%";
+  document.getElementById("net").style.width = rand(5,100)+"%";
 }
 
-setInterval(updateStats, 1000);
+setInterval(updateStats,1000);
 updateStats();
 
 </script>
