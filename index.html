@@ -19,7 +19,7 @@ body {
   overflow: hidden;
 }
 
-/* GRID */
+/* GRID BACKGROUND */
 body::after {
   content: "";
   position: fixed;
@@ -46,7 +46,7 @@ body::after {
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  animation: boot 3s forwards;
+  animation: boot 2.8s forwards;
 }
 
 @keyframes boot {
@@ -76,33 +76,24 @@ body::after {
   border: 1px solid rgba(0,255,255,0.3);
   background: rgba(0,0,0,0.4);
   cursor: pointer;
+  transition: 0.2s;
 }
 
 .menu-item:hover {
-  box-shadow: 0 0 15px cyan;
   transform: translateX(5px);
+  box-shadow: 0 0 15px cyan;
 }
 
-/* CENTER PAGES */
+/* CENTER */
 .center {
-  position: relative;
-}
-
-.page {
-  position: absolute;
-  inset: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 42px;
-  opacity: 0;
-  transition: 0.25s;
-  pointer-events: none;
 }
 
-.page.active {
-  opacity: 1;
-  pointer-events: all;
+.title {
+  font-size: 42px;
+  text-shadow: 0 0 10px cyan;
 }
 
 /* RIGHT PANEL */
@@ -121,30 +112,15 @@ body::after {
 .bar {
   height: 10px;
   background: rgba(255,255,255,0.1);
+  margin-top: 8px;
+  overflow: hidden;
 }
 
 .fill {
   height: 100%;
   width: 0%;
   background: cyan;
-}
-
-/* 🎧 VISUALIZER */
-.visualizer {
-  position: fixed;
-  bottom: 90px;
-  left: 20px;
-  display: flex;
-  gap: 3px;
-  height: 80px;
-  align-items: flex-end;
-}
-
-.vbar {
-  width: 4px;
-  height: 10px;
-  background: cyan;
-  box-shadow: 0 0 8px cyan;
+  transition: width 0.1s linear;
 }
 
 /* MUSIC UI */
@@ -169,144 +145,106 @@ button {
 
 <body>
 
-<div id="boot">INITIALIZING SYSTEM...</div>
+<!-- BOOT SCREEN -->
+<div id="boot">INITIALIZING SYSTEM CORE...</div>
 
 <div class="container">
 
   <!-- MENU -->
   <div class="menu">
-    <div class="menu-item" onclick="clickFX(); showPage('dashboard')">DASHBOARD</div>
-    <div class="menu-item" onclick="clickFX(); showPage('profile')">PROFILE</div>
-    <div class="menu-item" onclick="clickFX(); showPage('system')">SYSTEM</div>
+    <div class="menu-item">DASHBOARD</div>
+    <div class="menu-item">PROFILE</div>
+    <div class="menu-item">SYSTEM</div>
   </div>
 
   <!-- CENTER -->
   <div class="center">
-
-    <div class="page active" id="dashboard">DASHBOARD ONLINE</div>
-    <div class="page" id="profile">USER PROFILE</div>
-    <div class="page" id="system">SYSTEM STATUS</div>
-
+    <div class="title">SYSTEM ONLINE</div>
   </div>
 
-  <!-- RIGHT -->
+  <!-- RIGHT PANEL -->
   <div class="panel">
-    <div class="card">CPU<div class="bar"><div class="fill" id="cpu"></div></div></div>
-    <div class="card">RAM<div class="bar"><div class="fill" id="ram"></div></div></div>
-    <div class="card">NET<div class="bar"><div class="fill" id="net"></div></div></div>
+
+    <div class="card">
+      CPU
+      <div class="bar"><div class="fill" id="cpu"></div></div>
+    </div>
+
+    <div class="card">
+      MEMORY
+      <div class="bar"><div class="fill" id="ram"></div></div>
+    </div>
+
+    <div class="card">
+      NETWORK
+      <div class="bar"><div class="fill" id="net"></div></div>
+    </div>
+
   </div>
 
 </div>
 
-<!-- VISUALIZER -->
-<div class="visualizer" id="vis"></div>
-
 <!-- MUSIC -->
-<audio id="bgm" loop>
+<audio id="bgm" autoplay loop>
   <source src="bgm.mp3" type="audio/mpeg">
 </audio>
 
 <div class="music">
   <button onclick="toggleMusic()">▶ / ⏸</button><br>
-  <input type="range" id="vol" min="0" max="1" step="0.01">
+  <input type="range" id="vol" min="0" max="1" step="0.01" value="0.5">
 </div>
 
 <script>
 
-/* PAGE SWITCH */
-function showPage(id){
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-}
+/* MUSIC */
+const bgm = document.getElementById("bgm");
+const vol = document.getElementById("vol");
 
-/* CLICK SOUND */
-let ctx;
-function clickFX(){
-  if(!ctx) ctx = new AudioContext();
-  if(ctx.state==="suspended") ctx.resume();
+bgm.volume = 0.5;
 
-  let o = ctx.createOscillator();
-  let g = ctx.createGain();
+vol.oninput = () => {
+  bgm.volume = vol.value;
+};
 
-  o.type="square";
-  o.frequency.value=800;
-
-  g.gain.setValueAtTime(0.05,ctx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.08);
-
-  o.connect(g);
-  g.connect(ctx.destination);
-
-  o.start();
-  o.stop(ctx.currentTime+0.08);
-}
-
-/* STATS */
-function r(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
-setInterval(()=>{
-  cpu.style.width=r(10,95)+"%";
-  ram.style.width=r(10,90)+"%";
-  net.style.width=r(5,100)+"%";
-},1000);
-
-/* MUSIC + VISUALIZER */
-const audio=document.getElementById("bgm");
-const vol=document.getElementById("vol");
-
-let ac,an,src;
-const vis=document.getElementById("vis");
-let bars=[];
-
-/* create bars */
-for(let i=0;i<40;i++){
-  let b=document.createElement("div");
-  b.className="vbar";
-  vis.appendChild(b);
-  bars.push(b);
-}
-
-function initAudio(){
-  if(!ac){
-    ac=new AudioContext();
-    an=ac.createAnalyser();
-    src=ac.createMediaElementSource(audio);
-    src.connect(an);
-    an.connect(ac.destination);
-    an.fftSize=64;
-  }
-}
-
-function render(){
-  requestAnimationFrame(render);
-  if(!an)return;
-
-  let data=new Uint8Array(an.frequencyBinCount);
-  an.getByteFrequencyData(data);
-
-  bars.forEach((b,i)=>{
-    let v=data[i]/255;
-    b.style.height=(v*80)+"px";
-  });
-}
-render();
-
-/* controls */
 function toggleMusic(){
-  initAudio();
-  if(ac.state==="suspended") ac.resume();
-
-  if(audio.paused) audio.play();
-  else audio.pause();
+  if (bgm.paused) bgm.play();
+  else bgm.pause();
 }
 
-vol.oninput=()=>audio.volume=vol.value;
-audio.volume=0.5;
+/* SMOOTH STATS */
+function rand(min, max){
+  return Math.random() * (max - min) + min;
+}
 
-/* unlock autoplay */
-document.addEventListener("click",()=>{
-  initAudio();
-  audio.play().catch(()=>{});
-},{once:true});
+let cpu = 0, ram = 0, net = 0;
+
+let cpuT = rand(10,95);
+let ramT = rand(20,90);
+let netT = rand(5,100);
+
+const speed = 0.05;
+
+function updateTargets(){
+  cpuT = rand(10,95);
+  ramT = rand(20,90);
+  netT = rand(5,100);
+}
+
+function animate(){
+  cpu += (cpuT - cpu) * speed;
+  ram += (ramT - ram) * speed;
+  net += (netT - net) * speed;
+
+  document.getElementById("cpu").style.width = cpu + "%";
+  document.getElementById("ram").style.width = ram + "%";
+  document.getElementById("net").style.width = net + "%";
+
+  requestAnimationFrame(animate);
+}
+
+setInterval(updateTargets, 1000);
+updateTargets();
+animate();
 
 </script>
 
