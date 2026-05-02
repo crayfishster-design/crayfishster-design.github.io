@@ -19,7 +19,7 @@ body {
   overflow: hidden;
 }
 
-/* GRID BACKGROUND */
+/* GRID */
 body::after {
   content: "";
   position: fixed;
@@ -37,7 +37,7 @@ body::after {
   to { transform: translateY(40px); }
 }
 
-/* BOOT */
+/* BOOT SCREEN */
 #boot {
   position: fixed;
   inset: 0;
@@ -46,7 +46,7 @@ body::after {
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  animation: boot 2.8s forwards;
+  animation: boot 2.5s forwards;
 }
 
 @keyframes boot {
@@ -120,7 +120,6 @@ body::after {
   height: 100%;
   width: 0%;
   background: cyan;
-  transition: width 0.1s linear;
 }
 
 /* MUSIC UI */
@@ -133,6 +132,25 @@ body::after {
   background: rgba(0,0,0,0.6);
 }
 
+/* VISUALIZER */
+.visualizer {
+  position: fixed;
+  bottom: 100px;
+  left: 20px;
+  display: flex;
+  gap: 3px;
+  height: 80px;
+  align-items: flex-end;
+}
+
+.vbar {
+  width: 4px;
+  height: 10px;
+  background: cyan;
+  box-shadow: 0 0 8px cyan;
+}
+
+/* BUTTON */
 button {
   background: black;
   border: 1px solid cyan;
@@ -145,7 +163,7 @@ button {
 
 <body>
 
-<!-- BOOT SCREEN -->
+<!-- BOOT -->
 <div id="boot">INITIALIZING SYSTEM CORE...</div>
 
 <div class="container">
@@ -162,7 +180,7 @@ button {
     <div class="title">SYSTEM ONLINE</div>
   </div>
 
-  <!-- RIGHT PANEL -->
+  <!-- RIGHT -->
   <div class="panel">
 
     <div class="card">
@@ -184,11 +202,15 @@ button {
 
 </div>
 
-<!-- MUSIC -->
-<audio id="bgm" autoplay loop>
+<!-- VISUALIZER -->
+<div class="visualizer" id="vis"></div>
+
+<!-- AUDIO -->
+<audio id="bgm" loop>
   <source src="bgm.mp3" type="audio/mpeg">
 </audio>
 
+<!-- MUSIC UI -->
 <div class="music">
   <button onclick="toggleMusic()">▶ / ⏸</button><br>
   <input type="range" id="vol" min="0" max="1" step="0.01" value="0.5">
@@ -197,43 +219,37 @@ button {
 <script>
 
 /* MUSIC */
-const bgm = document.getElementById("bgm");
+const audio = document.getElementById("bgm");
 const vol = document.getElementById("vol");
 
-bgm.volume = 0.5;
+audio.volume = 0.5;
 
-vol.oninput = () => {
-  bgm.volume = vol.value;
-};
+vol.oninput = () => audio.volume = vol.value;
 
 function toggleMusic(){
-  if (bgm.paused) bgm.play();
-  else bgm.pause();
+  if (audio.paused) audio.play();
+  else audio.pause();
 }
 
 /* SMOOTH STATS */
-function rand(min, max){
+function rand(min,max){
   return Math.random() * (max - min) + min;
 }
 
-let cpu = 0, ram = 0, net = 0;
-
-let cpuT = rand(10,95);
-let ramT = rand(20,90);
-let netT = rand(5,100);
-
-const speed = 0.05;
+let cpu=0, ram=0, net=0;
+let cpuT=rand(10,95), ramT=rand(20,90), netT=rand(5,100);
+const speed=0.05;
 
 function updateTargets(){
-  cpuT = rand(10,95);
-  ramT = rand(20,90);
-  netT = rand(5,100);
+  cpuT=rand(10,95);
+  ramT=rand(20,90);
+  netT=rand(5,100);
 }
 
 function animate(){
-  cpu += (cpuT - cpu) * speed;
-  ram += (ramT - ram) * speed;
-  net += (netT - net) * speed;
+  cpu += (cpuT-cpu)*speed;
+  ram += (ramT-ram)*speed;
+  net += (netT-net)*speed;
 
   document.getElementById("cpu").style.width = cpu + "%";
   document.getElementById("ram").style.width = ram + "%";
@@ -242,9 +258,57 @@ function animate(){
   requestAnimationFrame(animate);
 }
 
-setInterval(updateTargets, 1000);
+setInterval(updateTargets,1000);
 updateTargets();
 animate();
+
+/* VISUALIZER */
+let ctx, analyser, source;
+const vis = document.getElementById("vis");
+let bars=[];
+
+/* create bars */
+for(let i=0;i<40;i++){
+  let b=document.createElement("div");
+  b.className="vbar";
+  vis.appendChild(b);
+  bars.push(b);
+}
+
+function initAudio(){
+  if(!ctx){
+    ctx = new AudioContext();
+    analyser = ctx.createAnalyser();
+
+    source = ctx.createMediaElementSource(audio);
+    source.connect(analyser);
+    analyser.connect(ctx.destination);
+
+    analyser.fftSize = 64;
+  }
+}
+
+function render(){
+  requestAnimationFrame(render);
+
+  if(!analyser) return;
+
+  let data = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(data);
+
+  bars.forEach((bar,i)=>{
+    let v = data[i]/255;
+    bar.style.height = (v*80) + "px";
+  });
+}
+
+render();
+
+/* UNLOCK AUDIO (IMPORTANT FOR BROWSER) */
+document.addEventListener("click", () => {
+  initAudio();
+  audio.play().catch(()=>{});
+}, { once:true });
 
 </script>
 
