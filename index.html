@@ -43,7 +43,6 @@ body::after {
   inset: 0;
   background: black;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
   font-size: 20px;
@@ -129,10 +128,19 @@ body::after {
   position: fixed;
   bottom: 15px;
   left: 15px;
-  padding: 10px;
+  padding: 12px;
   border: 1px solid cyan;
   background: rgba(0,0,0,0.6);
   backdrop-filter: blur(10px);
+}
+
+button {
+  margin-top: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  background: black;
+  color: cyan;
+  border: 1px solid cyan;
 }
 
 /* slider */
@@ -163,7 +171,6 @@ input[type="range"] {
 
   <!-- RIGHT -->
   <div class="panel">
-
     <div class="card">
       CPU
       <div class="bar"><div class="fill" id="cpu"></div></div>
@@ -178,26 +185,29 @@ input[type="range"] {
       NETWORK
       <div class="bar"><div class="fill" id="net"></div></div>
     </div>
-
   </div>
 
 </div>
 
-<!-- 🎵 MP3 BACKGROUND MUSIC -->
-<audio id="bgm" autoplay loop>
-  <source src="bgm.mp3" type="audio/mp3">
+<!-- 🎵 AUDIO (MUST BE IN REPO ROOT: bgm.mp3) -->
+<audio id="bgm" loop preload="auto">
+  <source src="bgm.mp3" type="audio/mpeg">
 </audio>
 
-<!-- 🎚 VOLUME CONTROL -->
+<!-- 🎛 BGM CONTROL -->
 <div class="bgm">
-  🎵 BGM Volume<br>
-  <input type="range" min="0" max="1" step="0.01" value="0.5" id="vol"><br>
-  <button onclick="toggleMusic()">Play / Pause</button>
+  🎵 BGM SYSTEM<br>
+
+  <button onclick="startMusic()">START MUSIC</button>
+  <button onclick="toggleMusic()">PLAY / PAUSE</button><br><br>
+
+  VOLUME<br>
+  <input type="range" min="0" max="1" step="0.01" value="0.5" id="vol">
 </div>
 
 <script>
 
-/* CLICK SOUND */
+/* CLICK FX */
 let audioCtx;
 
 function clickFX() {
@@ -219,22 +229,7 @@ function clickFX() {
   osc.stop(audioCtx.currentTime + 0.08);
 }
 
-/* BGM CONTROL */
-const bgm = document.getElementById("bgm");
-const vol = document.getElementById("vol");
-
-bgm.volume = 0.5;
-
-vol.addEventListener("input", () => {
-  bgm.volume = vol.value;
-});
-
-function toggleMusic() {
-  if (bgm.paused) bgm.play();
-  else bgm.pause();
-}
-
-/* FAKE SYSTEM STATS */
+/* SYSTEM STATS */
 function rand(min,max){
   return Math.floor(Math.random()*(max-min+1))+min;
 }
@@ -247,6 +242,28 @@ function updateStats(){
 
 setInterval(updateStats,1000);
 updateStats();
+
+/* 🎵 BGM SYSTEM */
+const bgm = document.getElementById("bgm");
+const vol = document.getElementById("vol");
+
+bgm.volume = 0.5;
+
+vol.addEventListener("input", () => {
+  bgm.volume = vol.value;
+});
+
+function startMusic() {
+  bgm.play().catch(err => {
+    console.log("Blocked:", err);
+    alert("Click again — browser blocked autoplay.");
+  });
+}
+
+function toggleMusic() {
+  if (bgm.paused) bgm.play();
+  else bgm.pause();
+}
 
 </script>
 
