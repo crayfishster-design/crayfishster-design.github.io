@@ -23,33 +23,8 @@ body {
 }
 
 /* =======================
-   VIDEO BACKGROUND
+   BACKGROUND
 ======================= */
-.video-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: -3;
-  animation: zoom 20s ease-in-out infinite alternate;
-}
-
-@keyframes zoom {
-  from { transform: scale(1); }
-  to { transform: scale(1.1); }
-}
-
-/* fallback dark overlay */
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.65);
-  z-index: -2;
-}
-
-/* animated grid */
 body::after {
   content: "";
   position: fixed;
@@ -59,12 +34,20 @@ body::after {
     linear-gradient(90deg, rgba(0,255,255,0.05) 1px, transparent 1px);
   background-size: 40px 40px;
   animation: gridMove 6s linear infinite;
-  z-index: -1;
+  z-index: -2;
 }
 
 @keyframes gridMove {
   from { transform: translateY(0); }
   to { transform: translateY(40px); }
+}
+
+/* dark overlay */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: -1;
 }
 
 /* =======================
@@ -103,7 +86,7 @@ body::after {
 }
 
 /* =======================
-   CENTER PAGES
+   CENTER
 ======================= */
 .center {
   display: flex;
@@ -153,18 +136,22 @@ body::after {
 }
 
 .bar {
-  height: 8px;
+  height: 10px;
   background: rgba(255,255,255,0.1);
   margin-top: 8px;
+  overflow: hidden;
+  border-radius: 5px;
 }
 
 .fill {
   height: 100%;
+  width: 0%;
   background: cyan;
+  transition: width 0.4s ease;
 }
 
 /* =======================
-   BOOT EFFECT (optional feel)
+   BOOT SCREEN
 ======================= */
 #boot {
   position: fixed;
@@ -189,19 +176,14 @@ body::after {
 
 <body>
 
-<!-- BOOT SCREEN -->
+<!-- BOOT -->
 <div id="boot">INITIALIZING SYSTEM...</div>
-
-<!-- VIDEO BACKGROUND (replace bg.mp4 with your own if needed) -->
-<video class="video-bg" autoplay muted loop playsinline>
-  <source src="bg.mp4" type="video/mp4">
-</video>
 
 <div class="overlay"></div>
 
 <div class="container">
 
-  <!-- LEFT MENU -->
+  <!-- LEFT -->
   <div class="menu">
     <div class="menu-item" onclick="showPage('dashboard')">DASHBOARD</div>
     <div class="menu-item" onclick="showPage('profile')">PROFILE</div>
@@ -213,8 +195,8 @@ body::after {
   <div class="center">
 
     <div class="page active" id="dashboard">
-      <div class="title glow">SYSTEM DASHBOARD</div>
-      <div class="subtitle">All systems operational</div>
+      <div class="title glow">SYSTEM ONLINE</div>
+      <div class="subtitle">Monitoring active processes</div>
     </div>
 
     <div class="page" id="profile">
@@ -234,22 +216,22 @@ body::after {
 
   </div>
 
-  <!-- RIGHT PANEL -->
+  <!-- RIGHT -->
   <div class="panel">
 
     <div class="card">
       CPU
-      <div class="bar"><div class="fill" style="width:70%"></div></div>
+      <div class="bar"><div class="fill" id="cpu"></div></div>
     </div>
 
     <div class="card">
       MEMORY
-      <div class="bar"><div class="fill" style="width:50%"></div></div>
+      <div class="bar"><div class="fill" id="ram"></div></div>
     </div>
 
     <div class="card">
       NETWORK
-      <div class="bar"><div class="fill" style="width:80%"></div></div>
+      <div class="bar"><div class="fill" id="net"></div></div>
     </div>
 
   </div>
@@ -257,12 +239,33 @@ body::after {
 </div>
 
 <script>
+
+/* =======================
+   PAGE SWITCHER
+======================= */
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => {
     p.classList.remove('active');
   });
   document.getElementById(id).classList.add('active');
 }
+
+/* =======================
+   FAKE LIVE SYSTEM STATS
+======================= */
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function updateStats() {
+  document.getElementById("cpu").style.width = rand(10, 95) + "%";
+  document.getElementById("ram").style.width = rand(20, 90) + "%";
+  document.getElementById("net").style.width = rand(5, 100) + "%";
+}
+
+setInterval(updateStats, 1000);
+updateStats();
+
 </script>
 
 </body>
