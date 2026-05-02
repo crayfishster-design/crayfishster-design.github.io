@@ -6,9 +6,11 @@
 <title>NEXUS HUD SYSTEM</title>
 
 <style>
-/* (UNCHANGED VISUALS — SAME AS YOUR WORKING VERSION) */
-
-* { margin:0; padding:0; box-sizing:border-box; }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
 body {
   font-family: Arial;
@@ -17,6 +19,7 @@ body {
   background: black;
 }
 
+/* 🎥 VIDEO BACKGROUND */
 #bgvid {
   position: fixed;
   inset: 0;
@@ -33,6 +36,7 @@ body {
   z-index: -4;
 }
 
+/* GRID */
 body::after {
   content: "";
   position: fixed;
@@ -50,6 +54,7 @@ body::after {
   to { transform: translateY(40px); }
 }
 
+/* BOOT */
 #boot {
   position: fixed;
   inset: 0;
@@ -67,6 +72,7 @@ body::after {
   100% { opacity: 0; visibility: hidden; }
 }
 
+/* LAYOUT */
 .container {
   display: grid;
   grid-template-columns: 260px 1fr 320px;
@@ -75,13 +81,19 @@ body::after {
   gap: 20px;
 }
 
-.menu { display:flex; flex-direction:column; gap:12px; }
+/* MENU */
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 
 .menu-item {
-  padding:12px;
-  border:1px solid rgba(0,255,255,0.3);
-  background:rgba(0,0,0,0.4);
-  cursor:pointer;
+  padding: 12px;
+  border: 1px solid rgba(0,255,255,0.3);
+  background: rgba(0,0,0,0.4);
+  cursor: pointer;
+  transition: 0.2s;
 }
 
 .menu-item:hover {
@@ -89,46 +101,96 @@ body::after {
   box-shadow: 0 0 15px cyan;
 }
 
-.center { position:relative; }
+/* PAGES */
+.center {
+  position: relative;
+}
 
 .page {
-  position:absolute;
-  inset:0;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:42px;
-  opacity:0;
-  transition:0.25s;
-  pointer-events:none;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 42px;
+  opacity: 0;
+  transition: 0.25s;
+  pointer-events: none;
 }
 
 .page.active {
-  opacity:1;
-  pointer-events:all;
+  opacity: 1;
+  pointer-events: all;
 }
 
-.panel { display:flex; flex-direction:column; gap:15px; }
-
-.card {
-  padding:15px;
-  border:1px solid rgba(0,255,255,0.2);
-  background:rgba(0,0,0,0.4);
-}
-
-.bar {
-  height:10px;
-  background:rgba(255,255,255,0.1);
-  margin-top:8px;
-}
-
-.fill {
+/* SPLIT UI (PROFILE) */
+.split-container{
+  display:flex;
+  width:100%;
   height:100%;
-  width:0%;
-  background:cyan;
+}
+
+.split{
+  width:50%;
+  position:relative;
+  overflow:hidden;
+  cursor:pointer;
   transition:0.3s;
 }
 
+.split img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  filter:brightness(0.7);
+  transition:0.3s;
+}
+
+.split:hover img{
+  transform:scale(1.05);
+  filter:brightness(1);
+}
+
+.split:hover{
+  box-shadow:0 0 20px cyan;
+}
+
+.label{
+  position:absolute;
+  bottom:20px;
+  left:20px;
+  font-size:20px;
+  color:cyan;
+  text-shadow:0 0 10px cyan;
+}
+
+/* RIGHT PANEL */
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.card {
+  padding: 15px;
+  border: 1px solid rgba(0,255,255,0.2);
+  background: rgba(0,0,0,0.4);
+}
+
+.bar {
+  height: 10px;
+  background: rgba(255,255,255,0.1);
+  margin-top: 8px;
+}
+
+.fill {
+  height: 100%;
+  width: 0%;
+  background: cyan;
+  transition: width 0.5s ease;
+}
+
+/* VISUALIZER */
 .visualizer {
   position: fixed;
   bottom: 100px;
@@ -146,6 +208,7 @@ body::after {
   box-shadow: 0 0 8px cyan;
 }
 
+/* MUSIC UI */
 .music {
   position: fixed;
   bottom: 15px;
@@ -159,27 +222,54 @@ body::after {
 
 <body>
 
+<!-- VIDEO -->
 <video autoplay muted loop playsinline id="bgvid">
   <source src="bg.mp4">
 </video>
 <div class="video-overlay"></div>
 
+<!-- BOOT -->
 <div id="boot">INITIALIZING SYSTEM CORE...</div>
 
 <div class="container">
 
+  <!-- MENU -->
   <div class="menu">
     <div class="menu-item" onclick="showPage('dashboard')">DASHBOARD</div>
     <div class="menu-item" onclick="showPage('profile')">PROFILE</div>
     <div class="menu-item" onclick="showPage('system')">SYSTEM</div>
   </div>
 
+  <!-- CENTER -->
   <div class="center">
-    <div class="page active" id="dashboard">DASHBOARD ONLINE</div>
-    <div class="page" id="profile">PROFILE MODULE</div>
-    <div class="page" id="system">SYSTEM STATUS</div>
+
+    <div class="page active" id="dashboard">
+      DASHBOARD ONLINE
+    </div>
+
+    <div class="page" id="profile">
+      <div class="split-container">
+
+        <div class="split" onclick="openUI('A')">
+          <img src="https://images.unsplash.com/photo-1520975922284-9f0f2b0f8f7c">
+          <div class="label">SYSTEM A</div>
+        </div>
+
+        <div class="split" onclick="openUI('B')">
+          <img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5">
+          <div class="label">SYSTEM B</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="page" id="system">
+      SYSTEM STATUS
+    </div>
+
   </div>
 
+  <!-- RIGHT -->
   <div class="panel">
     <div class="card">CPU<div class="bar"><div class="fill" id="cpu"></div></div></div>
     <div class="card">MEMORY<div class="bar"><div class="fill" id="ram"></div></div></div>
@@ -188,8 +278,10 @@ body::after {
 
 </div>
 
+<!-- VISUALIZER -->
 <div class="visualizer" id="vis"></div>
 
+<!-- AUDIO -->
 <audio id="bgm" loop>
   <source src="bgm.mp3" type="audio/mpeg">
 </audio>
@@ -207,6 +299,34 @@ function showPage(id){
   document.getElementById(id).classList.add("active");
 }
 
+/* SPLIT UI */
+function openUI(type){
+  clickFX();
+  alert("Opening SYSTEM " + type);
+}
+
+/* CLICK SOUND */
+let ctx;
+function clickFX(){
+  if(!ctx) ctx = new AudioContext();
+  if(ctx.state === "suspended") ctx.resume();
+
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+
+  o.type = "square";
+  o.frequency.value = 650;
+
+  g.gain.setValueAtTime(0.05, ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.08);
+
+  o.connect(g);
+  g.connect(ctx.destination);
+
+  o.start();
+  o.stop(ctx.currentTime + 0.08);
+}
+
 /* AUDIO */
 const audio = document.getElementById("bgm");
 const vol = document.getElementById("vol");
@@ -214,58 +334,16 @@ const vol = document.getElementById("vol");
 audio.volume = 0.5;
 vol.oninput = () => audio.volume = vol.value;
 
+document.addEventListener("click", () => {
+  audio.play().catch(()=>{});
+}, { once:true });
+
 function toggleMusic(){
   if(audio.paused) audio.play();
   else audio.pause();
 }
 
-/* SAFE AUDIO INIT (ONLY ONCE) */
-let audioCtx, analyser, source, dataArray;
-const vis = document.getElementById("vis");
-const bars = [];
-
-for(let i=0;i<40;i++){
-  let b=document.createElement("div");
-  b.className="vbar";
-  vis.appendChild(b);
-  bars.push(b);
-}
-
-function initAudio(){
-  if(audioCtx) return; // 🔥 prevents breaking everything twice
-
-  audioCtx = new AudioContext();
-  analyser = audioCtx.createAnalyser();
-
-  source = audioCtx.createMediaElementSource(audio);
-  source.connect(analyser);
-  analyser.connect(audioCtx.destination);
-
-  analyser.fftSize = 64;
-  dataArray = new Uint8Array(analyser.frequencyBinCount);
-}
-
-/* VISUALIZER */
-function render(){
-  requestAnimationFrame(render);
-
-  if(!analyser) return;
-
-  analyser.getByteFrequencyData(dataArray);
-
-  bars.forEach((b,i)=>{
-    b.style.height = (dataArray[i] / 255) * 80 + "px";
-  });
-}
-render();
-
-/* UNLOCK AUDIO */
-document.addEventListener("click",()=>{
-  initAudio();
-  audio.play().catch(()=>{});
-},{once:true});
-
-/* SMOOTH STATS FIXED */
+/* STATS */
 let cpu=0, ram=0, net=0;
 let cpuT=50, ramT=50, netT=50;
 
@@ -287,6 +365,49 @@ function animate(){
   requestAnimationFrame(animate);
 }
 animate();
+
+/* VISUALIZER */
+const vis=document.getElementById("vis");
+const bars=[];
+
+for(let i=0;i<40;i++){
+  let b=document.createElement("div");
+  b.className="vbar";
+  vis.appendChild(b);
+  bars.push(b);
+}
+
+let ac, analyser, source, data;
+
+function initAudio(){
+  if(ac) return;
+
+  ac = new AudioContext();
+  analyser = ac.createAnalyser();
+  source = ac.createMediaElementSource(audio);
+
+  source.connect(analyser);
+  analyser.connect(ac.destination);
+
+  analyser.fftSize = 64;
+  data = new Uint8Array(analyser.frequencyBinCount);
+}
+
+function render(){
+  requestAnimationFrame(render);
+  if(!analyser) return;
+
+  analyser.getByteFrequencyData(data);
+
+  bars.forEach((b,i)=>{
+    b.style.height = (data[i]/255)*80 + "px";
+  });
+}
+render();
+
+document.addEventListener("click", ()=>{
+  initAudio();
+},{once:true});
 
 </script>
 
