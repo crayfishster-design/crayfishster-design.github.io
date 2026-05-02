@@ -1,22 +1,61 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>My First Website</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Site</title>
 
   <style>
-    body {
-      background: #111;
+    /* Fullscreen video background */
+    .video-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;
+    }
+
+    /* Dark overlay so text is readable */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 0;
+    }
+
+    /* Center content */
+    .content {
+      position: relative;
+      z-index: 1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
       color: white;
-      font-family: Arial;
+      font-family: Arial, sans-serif;
       text-align: center;
-      padding-top: 100px;
+    }
+
+    h1 {
+      font-size: 3rem;
+      margin: 0;
+    }
+
+    p {
+      opacity: 0.8;
     }
 
     button {
+      margin-top: 20px;
       padding: 12px 20px;
-      font-size: 18px;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       cursor: pointer;
     }
   </style>
@@ -24,19 +63,21 @@
 
 <body>
 
-  <h1>YO I MADE A WEBSITE 🔥</h1>
+  <!-- VIDEO BACKGROUND -->
+  <video class="video-bg" autoplay muted loop playsinline>
+    <source src="https://cdn.coverr.co/videos/coverr-aerial-view-of-city-traffic-4482/1080p.mp4" type="video/mp4">
+  </video>
 
-  <p>This website is hosted on GitHub Pages.</p>
+  <!-- DARK OVERLAY -->
+  <div class="overlay"></div>
 
-  <button onclick="hello()">
-    Click me
-  </button>
+  <!-- MAIN CONTENT -->
+  <div class="content">
+    <h1>Welcome to My Site 🔥</h1>
+    <p>Clean + modern GitHub Pages website</p>
 
-  <script>
-    function hello() {
-      alert("W WEBSITE 😎");
-    }
-  </script>
+    <button onclick="alert('Nice 😎')">Click Me</button>
+  </div>
 
 </body>
 </html>
