@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXUS STABLE HUD</title>
+<title>NEXUS RESTORED HUD</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 
 body{
   font-family:Arial;
-  background:black;
   color:cyan;
   overflow:hidden;
+  background:black;
 }
 
 /* VIDEO BACKGROUND */
@@ -22,14 +22,14 @@ body{
   width:100%;
   height:100%;
   object-fit:cover;
-  z-index:-5;
+  z-index:-6;
 }
 
 .overlay{
   position:fixed;
   inset:0;
   background:rgba(0,0,0,0.6);
-  z-index:-4;
+  z-index:-5;
 }
 
 /* GRID */
@@ -42,12 +42,32 @@ body::after{
     linear-gradient(90deg, rgba(0,255,255,0.05) 1px, transparent 1px);
   background-size:40px 40px;
   animation:grid 6s linear infinite;
-  z-index:-3;
+  z-index:-4;
 }
 
 @keyframes grid{
   from{transform:translateY(0);}
   to{transform:translateY(40px);}
+}
+
+/* BOOT INTRO */
+#boot{
+  position:fixed;
+  inset:0;
+  background:black;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  z-index:9999;
+  color:cyan;
+  animation:boot 2.8s forwards;
+}
+
+@keyframes boot{
+  0%{opacity:1}
+  80%{opacity:1}
+  100%{opacity:0;visibility:hidden}
 }
 
 /* LAYOUT */
@@ -63,7 +83,7 @@ body::after{
 .menu{
   display:flex;
   flex-direction:column;
-  gap:10px;
+  gap:12px;
 }
 
 .menu-item{
@@ -71,17 +91,73 @@ body::after{
   border:1px solid rgba(0,255,255,0.3);
   background:rgba(0,0,0,0.4);
   cursor:pointer;
+  transition:0.2s;
 }
 
 .menu-item:hover{
+  transform:translateX(5px);
   box-shadow:0 0 15px cyan;
 }
 
-/* CENTER */
+/* CENTER PAGES */
 .center{
+  position:relative;
+}
+
+.page{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  transform:translateX(40px);
+  pointer-events:none;
+  transition:0.35s ease;
+}
+
+.page.active{
+  opacity:1;
+  transform:translateX(0);
+  pointer-events:all;
+}
+
+/* DASHBOARD */
+#dashboard{
   display:flex;
   justify-content:center;
   align-items:center;
+  font-size:40px;
+}
+
+/* PROFILE SPLIT UI */
+.split{
+  display:flex;
+  width:100%;
+  height:100%;
+}
+
+.split div{
+  width:50%;
+  position:relative;
+  cursor:pointer;
+  overflow:hidden;
+  transition:0.3s;
+}
+
+.split div:hover{
+  transform:scale(1.02);
+  filter:brightness(1.2);
+}
+
+.split img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.split span{
+  position:absolute;
+  bottom:20px;
+  left:20px;
+  font-size:20px;
 }
 
 /* RIGHT PANEL */
@@ -108,7 +184,7 @@ body::after{
   height:100%;
   width:0%;
   background:cyan;
-  transition:width .6s ease;
+  transition:width 0.6s ease;
 }
 
 /* BGM UI */
@@ -120,10 +196,6 @@ body::after{
   border:1px solid cyan;
   background:rgba(0,0,0,0.6);
   z-index:999;
-}
-
-.bgm-ui input{
-  width:130px;
 }
 
 /* VISUALIZER */
@@ -142,7 +214,13 @@ body::after{
 
 <body>
 
-<!-- VIDEO -->
+<!-- 🎬 BOOT INTRO -->
+<div id="boot">
+  <h2>INITIALIZING SYSTEM...</h2>
+  <p>loading modules...</p>
+</div>
+
+<!-- 🎥 BACKGROUND -->
 <video autoplay muted loop playsinline id="bgvid">
   <source src="bg.mp4" type="video/mp4">
 </video>
@@ -152,17 +230,41 @@ body::after{
 
   <!-- MENU -->
   <div class="menu">
-    <div class="menu-item">DASHBOARD</div>
-    <div class="menu-item">PROFILE</div>
-    <div class="menu-item">SYSTEM</div>
+    <div class="menu-item" onclick="switchPage('dashboard')">DASHBOARD</div>
+    <div class="menu-item" onclick="switchPage('profile')">PROFILE</div>
+    <div class="menu-item" onclick="switchPage('system')">SYSTEM</div>
   </div>
 
-  <!-- CENTER -->
+  <!-- CENTER PAGES -->
   <div class="center">
-    <h1>SYSTEM ONLINE</h1>
+
+    <div class="page active" id="dashboard">
+      SYSTEM ONLINE
+    </div>
+
+    <div class="page" id="profile">
+      <div class="split">
+
+        <div onclick="clickFX(); alert('UI A')" >
+          <img src="https://images.unsplash.com/photo-1520975922284-9f0f2b0f8f7c">
+          <span>UI SYSTEM A</span>
+        </div>
+
+        <div onclick="clickFX(); alert('UI B')" >
+          <img src="https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5">
+          <span>UI SYSTEM B</span>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="page" id="system">
+      SYSTEM STATUS ONLINE
+    </div>
+
   </div>
 
-  <!-- RIGHT -->
+  <!-- RIGHT PANEL -->
   <div class="panel">
     <div class="card">CPU<div class="bar"><div class="fill" id="cpu"></div></div></div>
     <div class="card">RAM<div class="bar"><div class="fill" id="ram"></div></div></div>
@@ -171,10 +273,10 @@ body::after{
 
 </div>
 
-<!-- BGM -->
+<!-- 🎵 BGM -->
 <div class="bgm-ui">
-  🎵 BGM<br>
-  <input id="vol" type="range" min="0" max="1" step="0.01">
+  🎵 AUDIO<br>
+  <input type="range" id="vol" min="0" max="1" step="0.01">
   <br>
   <button onclick="toggleBGM()">Play / Pause</button>
 
@@ -183,39 +285,29 @@ body::after{
   </audio>
 </div>
 
-<!-- VISUALIZER -->
+<!-- 📊 VISUALIZER -->
 <canvas id="visualizer"></canvas>
 
 <script>
 
-/* AUDIO FIX CORE */
-const audio = document.getElementById("bgm");
-const vol = document.getElementById("vol");
-audio.volume = 0.5;
-
-vol.oninput = () => audio.volume = vol.value;
-
-function toggleBGM(){
-  if(audio.paused) audio.play();
-  else audio.pause();
+/* PAGE SYSTEM */
+function switchPage(id){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
 }
 
-/* IMPORTANT: unlock audio only after interaction */
-document.addEventListener("click", () => {
-  audio.play().catch(()=>{});
-}, {once:true});
+/* BOOT REMOVE */
+setTimeout(()=>document.getElementById("boot").remove(),2800);
 
-/* CLICK SOUND (FIXED) */
+/* CLICK SOUND */
 let ctx;
 function clickFX(){
-  if(!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
-  if(ctx.state === "suspended") ctx.resume();
-
+  if(!ctx) ctx = new AudioContext();
   const o = ctx.createOscillator();
   const g = ctx.createGain();
 
   o.type="square";
-  o.frequency.value=650;
+  o.frequency.value=600;
 
   g.gain.setValueAtTime(0.05,ctx.currentTime);
   g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.08);
@@ -227,43 +319,53 @@ function clickFX(){
   o.stop(ctx.currentTime+0.08);
 }
 
-/* SMOOTH SYSTEM BARS */
+/* BGM */
+const bgm = document.getElementById("bgm");
+const vol = document.getElementById("vol");
+bgm.volume = 0.5;
+
+vol.oninput = ()=>bgm.volume = vol.value;
+
+document.addEventListener("click",()=>bgm.play(),{once:true});
+
+function toggleBGM(){
+  if(bgm.paused) bgm.play();
+  else bgm.pause();
+}
+
+/* SMOOTH BARS */
 function lerp(a,b,t){return a+(b-a)*t;}
 let cpu=0,ram=0,net=0;
 
 setInterval(()=>{
-  cpu = lerp(cpu,Math.random()*100,0.15);
-  ram = lerp(ram,Math.random()*100,0.15);
-  net = lerp(net,Math.random()*100,0.15);
+  cpu=lerp(cpu,Math.random()*100,0.2);
+  ram=lerp(ram,Math.random()*100,0.2);
+  net=lerp(net,Math.random()*100,0.2);
 
-  cpu = Math.max(0,Math.min(100,cpu));
-  ram = Math.max(0,Math.min(100,ram));
-  net = Math.max(0,Math.min(100,net));
-
-  document.getElementById("cpu").style.width = cpu+"%";
-  document.getElementById("ram").style.width = ram+"%";
-  document.getElementById("net").style.width = net+"%";
+  document.getElementById("cpu").style.width=cpu+"%";
+  document.getElementById("ram").style.width=ram+"%";
+  document.getElementById("net").style.width=net+"%";
 },400);
 
-/* VISUALIZER (STABLE VERSION) */
-const canvas = document.getElementById("visualizer");
-const c = canvas.getContext("2d");
+/* VISUALIZER */
+const canvas=document.getElementById("visualizer");
+const c=canvas.getContext("2d");
 
-canvas.width = 260;
-canvas.height = 100;
+canvas.width=260;
+canvas.height=100;
 
-const AudioCtx = window.AudioContext || window.webkitAudioContext;
-const audioCtx = new AudioCtx();
+const AudioCtx=window.AudioContext||window.webkitAudioContext;
+const audioCtx=new AudioCtx();
 
-const src = audioCtx.createMediaElementSource(audio);
-const analyser = audioCtx.createAnalyser();
+const src=audioCtx.createMediaElementSource(bgm);
+const analyser=audioCtx.createAnalyser();
 
 src.connect(analyser);
 analyser.connect(audioCtx.destination);
 
-analyser.fftSize = 64;
+analyser.fftSize=64;
 
-const data = new Uint8Array(analyser.frequencyBinCount);
+const data=new Uint8Array(analyser.frequencyBinCount);
 
 function draw(){
   requestAnimationFrame(draw);
@@ -272,13 +374,12 @@ function draw(){
 
   c.clearRect(0,0,canvas.width,canvas.height);
 
-  let barW = canvas.width / data.length;
+  let w=canvas.width/data.length;
 
   for(let i=0;i<data.length;i++){
-    let h = data[i]/2;
-
+    let h=data[i]/2;
     c.fillStyle="cyan";
-    c.fillRect(i*barW, canvas.height-h, barW-2, h);
+    c.fillRect(i*w,canvas.height-h,w-2,h);
   }
 }
 
