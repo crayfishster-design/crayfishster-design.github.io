@@ -1,446 +1,485 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>NEXUS HUD SYSTEM</title>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WAR SYSTEM — SORTIE COMMAND</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Titillium+Web:wght@200;300;400;600&display=swap" rel="stylesheet">
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --navy:#050c14;--navy2:#081525;--panel:#0a1a2a;--panel2:#0d2035;
+  --border:#1a3a5a;--border2:#204870;
+  --cyan:#4fc8d8;--cyan2:#2a8fa0;--cyan3:#1a5a6a;
+  --orange:#e87a20;--orange2:#b05818;
+  --text:#8ab8cc;--text2:#4a7a8a;--text3:#2a4a5a;
+  --white:#c8dce8;--red:#c83020;
 }
+html,body{width:100%;height:100%;background:var(--navy);color:var(--text);font-family:'Share Tech Mono',monospace;overflow:hidden;cursor:default;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.07) 3px,rgba(0,0,0,0.07) 4px);pointer-events:none;z-index:9999;}
 
-body {
-  font-family: Arial;
-  color: cyan;
-  overflow: hidden;
-  background: black;
-}
+/* INTRO */
+#intro{position:fixed;inset:0;background:var(--navy);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s ease;}
+#intro.out{opacity:0;pointer-events:none;}
+.itopbar{position:absolute;top:0;left:0;right:0;height:32px;background:rgba(10,26,42,.95);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--orange);letter-spacing:.2em;}
+.ibotbar{position:absolute;bottom:0;left:0;right:0;height:26px;background:rgba(10,26,42,.95);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:8px;color:var(--text2);letter-spacing:.15em;}
+.ghost{position:absolute;font-family:'Titillium Web',sans-serif;font-weight:200;font-size:clamp(36px,8vw,88px);color:rgba(74,200,216,.055);letter-spacing:.12em;text-align:center;line-height:1.1;pointer-events:none;user-select:none;text-transform:uppercase;}
+.ipanel{position:relative;width:clamp(420px,62vw,720px);background:rgba(10,26,42,.94);border:1px solid var(--border2);z-index:2;}
+.ipanel-hd{background:rgba(10,26,42,.98);border-bottom:1px solid var(--border);padding:9px 16px;display:flex;align-items:center;justify-content:space-between;}
+.ipanel-hd .t{font-size:10px;color:var(--cyan);letter-spacing:.25em;}
+.ipanel-hd .s{font-size:8px;color:var(--text2);letter-spacing:.15em;}
+.ipanel-bd{padding:18px 20px 14px;min-height:110px;}
+.bl{font-size:10px;line-height:2;color:var(--text2);letter-spacing:.08em;opacity:0;transition:opacity .1s;}
+.bl.on{opacity:1;}
+.bl .ok{color:var(--cyan);}
+.bl .wn{color:var(--orange);}
+.ipanel-ft{border-top:1px solid var(--border);padding:9px 16px;display:flex;align-items:center;gap:10px;}
+.prog-t{flex:1;height:2px;background:var(--border);overflow:hidden;}
+.prog-f{height:100%;background:var(--cyan2);width:0%;transition:width .1s linear;}
+.prog-p{font-size:9px;color:var(--cyan2);min-width:28px;}
+.start-p{position:absolute;bottom:44px;left:0;right:0;text-align:center;font-size:11px;color:var(--cyan2);letter-spacing:.3em;opacity:0;animation:bl 1s steps(1) infinite;}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:0}}
+.br{position:absolute;width:9px;height:9px;}
+.br.tl{top:-1px;left:-1px;border-top:1px solid var(--cyan2);border-left:1px solid var(--cyan2);}
+.br.tr{top:-1px;right:-1px;border-top:1px solid var(--cyan2);border-right:1px solid var(--cyan2);}
+.br.bl2{bottom:-1px;left:-1px;border-bottom:1px solid var(--cyan2);border-left:1px solid var(--cyan2);}
+.br.br2{bottom:-1px;right:-1px;border-bottom:1px solid var(--cyan2);border-right:1px solid var(--cyan2);}
 
-/* 🎥 VIDEO BACKGROUND */
-#bgvid {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: -5;
-}
+/* MAIN UI */
+#ui{position:fixed;inset:0;display:grid;grid-template-rows:32px 1fr 24px;opacity:0;transition:opacity .8s ease;pointer-events:none;}
+#ui.vis{opacity:1;pointer-events:all;}
+.topbar{background:rgba(10,26,42,.97);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;}
+.topbar-l{display:flex;align-items:center;gap:20px;}
+.tb-title{font-size:11px;color:var(--cyan);letter-spacing:.25em;}
+.tb-nav{display:flex;gap:1px;}
+.ni{font-size:9px;letter-spacing:.15em;color:var(--text2);background:transparent;border:none;padding:0 12px;height:32px;cursor:pointer;display:flex;align-items:center;position:relative;transition:color .15s;}
+.ni:hover{color:var(--text);}
+.ni.act{color:var(--cyan);}
+.ni.act::after{content:'';position:absolute;bottom:0;left:12px;right:12px;height:1px;background:var(--cyan2);}
+.topbar-r{display:flex;align-items:center;gap:18px;font-size:9px;color:var(--text2);letter-spacing:.1em;}
+.topbar-r .lv{color:var(--cyan);}
+.dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--cyan2);box-shadow:0 0 5px var(--cyan3);margin-right:5px;animation:pd 2s ease-in-out infinite;}
+@keyframes pd{0%,100%{opacity:1}50%{opacity:.4}}
+.body{display:grid;grid-template-columns:220px 1fr;overflow:hidden;}
 
-.video-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
-  z-index: -4;
-}
+/* SIDEBAR */
+.sb{background:rgba(8,21,37,.97);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
+.sb-hd{padding:11px 14px 8px;border-bottom:1px solid var(--border);font-size:9px;color:var(--text2);letter-spacing:.2em;}
+.wn-list{padding:6px 0;}
+.wni{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;transition:background .1s;position:relative;}
+.wni:hover{background:rgba(74,200,216,.035);}
+.wni.act{background:rgba(74,200,216,.055);}
+.wni.act::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--cyan2);}
+.wni.dis{opacity:.32;cursor:default;}
+.wni .pip{width:7px;height:7px;background:var(--cyan2);flex-shrink:0;}
+.wni .pip.g{background:var(--text3);}
+.wni .lbl{font-size:11px;color:var(--white);letter-spacing:.06em;font-family:'Titillium Web',sans-serif;font-weight:300;}
+.wni.dis .lbl{color:var(--text3);}
+.sdiv{height:1px;background:var(--border);margin:6px 0;}
+.al{padding:6px 0;}
+.al-lbl{padding:5px 14px 3px;font-size:8px;color:var(--text2);letter-spacing:.2em;display:flex;align-items:center;gap:5px;}
+.al-lbl::before{content:'';display:inline-block;width:5px;height:5px;background:var(--text3);}
+.at{display:block;width:calc(100% - 28px);margin:3px 14px;height:50px;background:var(--navy2);border:1px solid var(--border);cursor:pointer;overflow:hidden;position:relative;transition:border-color .15s;}
+.at:hover{border-color:var(--cyan3);}
+.at.sel{border-color:var(--cyan2);}
+.at.sel::after{content:'';position:absolute;inset:0;border:1px solid rgba(74,200,216,.25);}
+.at-rank{position:absolute;top:3px;right:4px;font-size:8px;color:var(--orange);background:rgba(5,12,20,.8);padding:1px 4px;}
+.at-name{position:absolute;bottom:3px;left:5px;font-size:8px;color:var(--text);letter-spacing:.06em;}
+.pb{margin-top:auto;border-top:1px solid var(--border);padding:11px 14px;}
+.pb-name{font-size:11px;color:var(--white);letter-spacing:.08em;font-family:'Titillium Web',sans-serif;font-weight:300;margin-bottom:7px;}
+.ps{display:flex;justify-content:space-between;font-size:9px;color:var(--text2);letter-spacing:.07em;padding:3px 0;border-bottom:1px solid rgba(26,58,90,.4);}
+.ps:last-child{border:none;}
+.ps .v{color:var(--text);}
+.ps .vc{color:var(--cyan);}
+.ps .vo{color:var(--orange);}
 
-/* GRID */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(0,255,255,0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,255,255,0.05) 1px, transparent 1px);
-  background-size: 40px 40px;
-  animation: grid 6s linear infinite;
-  z-index: -3;
-}
+/* MAP */
+.ma{position:relative;overflow:hidden;background:var(--navy);}
+#wmap{position:absolute;inset:0;width:100%;height:100%;opacity:.9;}
+.mgrid{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(74,200,216,.13) 1px,transparent 1px);background-size:28px 28px;pointer-events:none;}
+.mvig{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 25%,rgba(5,12,20,.65) 100%);pointer-events:none;}
+.zname{position:absolute;top:15px;left:50%;transform:translateX(-50%);font-size:13px;color:var(--white);letter-spacing:.2em;font-family:'Titillium Web',sans-serif;font-weight:300;pointer-events:none;transition:opacity .3s;}
+.manlink{position:absolute;top:11px;right:16px;font-size:9px;color:var(--text2);letter-spacing:.15em;display:flex;align-items:center;gap:4px;cursor:pointer;}
+.manlink:hover{color:var(--text);}
+.manlink .arr{color:var(--cyan2);font-size:8px;}
+.ti{position:absolute;top:11px;right:90px;background:rgba(8,21,37,.92);border:1px solid var(--border);padding:5px 9px;display:flex;align-items:center;gap:7px;font-size:9px;color:var(--text2);letter-spacing:.08em;}
+.tish{width:21px;height:21px;background:var(--panel);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--cyan2);}
+.ibar{position:absolute;bottom:0;left:0;right:0;height:24px;background:rgba(8,21,37,.97);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:9px;color:var(--text2);letter-spacing:.1em;}
+.ibar .il{color:var(--cyan2);}
 
-@keyframes grid {
-  from { transform: translateY(0); }
-  to { transform: translateY(40px); }
-}
+/* MISSION PANEL */
+#mpanel{position:absolute;inset:0;background:rgba(5,12,20,.97);display:none;flex-direction:column;z-index:50;}
+#mpanel.op{display:flex;}
+.mph{border-bottom:1px solid var(--border);padding:13px 20px;display:flex;align-items:flex-start;justify-content:space-between;}
+.mp-t{font-family:'Titillium Web',sans-serif;font-weight:300;font-size:21px;color:var(--white);letter-spacing:.15em;text-transform:uppercase;}
+.mp-i{font-size:9px;color:var(--text2);letter-spacing:.18em;margin-top:3px;}
+.mp-r{font-size:26px;font-weight:200;font-family:'Titillium Web',sans-serif;color:var(--orange);letter-spacing:.1em;}
+.mpb{flex:1;overflow-y:auto;padding:18px 20px;display:flex;gap:18px;}
+.mpc{flex:1;}
+.mpsl{font-size:8px;color:var(--text2);letter-spacing:.25em;margin-bottom:7px;padding-bottom:4px;border-bottom:1px solid var(--border);}
+.mpdesc{font-size:11px;color:var(--text);line-height:1.8;letter-spacing:.04em;margin-bottom:14px;}
+.mpobj{display:flex;gap:7px;font-size:10px;color:var(--text);padding:4px 0;border-bottom:1px solid rgba(26,58,90,.4);letter-spacing:.04em;line-height:1.4;}
+.mpobj::before{content:'·';color:var(--cyan2);flex-shrink:0;}
+.rg{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px;}
+.rc{background:var(--panel);border:1px solid var(--border);padding:9px 11px;}
+.rl{font-size:8px;color:var(--text2);letter-spacing:.15em;}
+.rv{font-size:17px;color:var(--cyan);font-family:'Titillium Web',sans-serif;font-weight:300;margin-top:2px;letter-spacing:.08em;}
+.mpf{border-top:1px solid var(--border);padding:13px 20px;display:flex;gap:10px;align-items:center;}
+.dep{background:rgba(74,200,216,.1);border:1px solid var(--cyan3);color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:.25em;padding:9px 26px;cursor:pointer;transition:background .15s,border-color .15s;}
+.dep:hover{background:rgba(74,200,216,.18);border-color:var(--cyan2);}
+.bk{background:transparent;border:1px solid var(--border);color:var(--text2);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:.2em;padding:9px 18px;cursor:pointer;transition:color .15s;}
+.bk:hover{color:var(--text);}
+.mpn{flex:1;font-size:9px;color:var(--text2);letter-spacing:.07em;line-height:1.6;border-left:1px solid var(--border);padding-left:11px;}
 
-/* BOOT */
-#boot {
-  position: fixed;
-  inset: 0;
-  background: black;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-  animation: boot 2.5s forwards;
-}
+/* COMMANDS VIEW */
+#vcmd{position:absolute;inset:0;background:var(--navy);display:none;overflow-y:auto;padding:18px 22px;}
+#vcmd.op{display:block;}
+.cs{margin-bottom:22px;}
+.csl{font-size:8px;color:var(--text2);letter-spacing:.25em;margin-bottom:9px;padding-bottom:4px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;}
+.csl .p{width:5px;height:5px;background:var(--cyan2);}
+.cr{display:flex;align-items:baseline;gap:14px;padding:6px 0;border-bottom:1px solid rgba(26,58,90,.28);font-size:10px;}
+.cn{color:var(--cyan);min-width:130px;letter-spacing:.09em;}
+.cd{color:var(--text2);flex:1;font-size:9px;line-height:1.5;}
 
-@keyframes boot {
-  0% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { opacity: 0; visibility: hidden; }
-}
+/* INVITE VIEW */
+#vinv{position:absolute;inset:0;background:var(--navy);display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;}
+#vinv.op{display:flex;}
+.ig{font-family:'Titillium Web',sans-serif;font-weight:200;font-size:clamp(28px,6vw,68px);color:rgba(74,200,216,.05);letter-spacing:.2em;position:absolute;pointer-events:none;user-select:none;text-transform:uppercase;}
+.ibox{position:relative;background:var(--panel);border:1px solid var(--border2);padding:30px 38px;text-align:center;width:clamp(280px,44vw,480px);}
+.it{font-family:'Titillium Web',sans-serif;font-weight:300;font-size:19px;color:var(--white);letter-spacing:.2em;margin-bottom:7px;}
+.is{font-size:10px;color:var(--text2);letter-spacing:.07em;line-height:1.8;margin-bottom:22px;}
+.ib{background:rgba(88,101,242,.14);border:1px solid rgba(88,101,242,.38);color:#8892f5;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:.25em;padding:11px 30px;cursor:pointer;transition:background .15s;}
+.ib:hover{background:rgba(88,101,242,.24);}
 
-/* LAYOUT */
-.container {
-  display: grid;
-  grid-template-columns: 260px 1fr 320px;
-  height: 100vh;
-  padding: 20px;
-  gap: 20px;
-}
+/* BOTTOM */
+.btmbar{grid-column:1/-1;background:rgba(8,21,37,.97);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:8px;color:var(--text2);letter-spacing:.1em;}
+.tkw{flex:1;overflow:hidden;margin:0 16px;}
+.tki{white-space:nowrap;font-size:8px;color:var(--text3);letter-spacing:.1em;animation:tk 40s linear infinite;}
+@keyframes tk{from{transform:translateX(80vw)}to{transform:translateX(-100%)}}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);}
+#flash{position:fixed;inset:0;pointer-events:none;z-index:5000;background:rgba(74,200,216,.07);opacity:0;transition:opacity .08s;}
+#flash.on{opacity:1;}
 
-/* MENU */
-.menu {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.menu-item {
-  padding: 12px;
-  border: 1px solid rgba(0,255,255,0.3);
-  background: rgba(0,0,0,0.4);
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.menu-item:hover {
-  transform: translateX(5px);
-  box-shadow: 0 0 15px cyan;
-}
-
-/* PAGES */
-.center {
-  position: relative;
-}
-
-.page {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 42px;
-  opacity: 0;
-  transition: 0.25s;
-  pointer-events: none;
-}
-
-.page.active {
-  opacity: 1;
-  pointer-events: all;
-}
-
-/* RIGHT PANEL */
-.panel {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.card {
-  padding: 15px;
-  border: 1px solid rgba(0,255,255,0.2);
-  background: rgba(0,0,0,0.4);
-}
-
-.bar {
-  height: 10px;
-  background: rgba(255,255,255,0.1);
-  margin-top: 8px;
-}
-
-.fill {
-  height: 100%;
-  width: 0%;
-  background: cyan;
-}
-
-/* VISUALIZER */
-.visualizer {
-  position: fixed;
-  bottom: 100px;
-  left: 20px;
-  display: flex;
-  gap: 3px;
-  height: 80px;
-  align-items: flex-end;
-}
-
-.vbar {
-  width: 4px;
-  height: 10px;
-  background: cyan;
-  box-shadow: 0 0 8px cyan;
-}
-
-/* MUSIC */
-.music {
-  position: fixed;
-  bottom: 15px;
-  left: 15px;
-  padding: 10px;
-  border: 1px solid cyan;
-  background: rgba(0,0,0,0.6);
-}
-
-/* EMAIL FORM */
-form {
-  position: fixed;
-  right: 20px;
-  bottom: 120px;
-  width: 250px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-input, textarea {
-  background: black;
-  border: 1px solid cyan;
-  color: cyan;
-  padding: 5px;
-}
-
-button {
-  background: black;
-  border: 1px solid cyan;
-  color: cyan;
-  cursor: pointer;
-}
-
-/* ================= PROFILE SPLIT UI ================= */
-
-#splitUI {
-  position: fixed;
-  inset: 0;
-  display: none;
-  z-index: 50;
-}
-
-.split {
-  width: 50%;
-  height: 100%;
-  float: left;
-  position: relative;
-  cursor: pointer;
-  overflow: hidden;
-}
-
-.split video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.split span {
-  position: absolute;
-  bottom: 30px;
-  left: 30px;
-  font-size: 28px;
-  text-shadow: 0 0 10px cyan;
-}
-
-/* FULLSCREEN MODE */
-.fullscreen {
-  position: fixed;
-  inset: 0;
-  display: none;
-  z-index: 100;
-}
-
-.fullscreen video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.back {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  padding: 10px;
-  border: 1px solid cyan;
-  background: rgba(0,0,0,0.5);
-  cursor: pointer;
-}
-
+/* faction markers */
+.fm{position:absolute;width:18px;height:22px;cursor:pointer;transform:translate(-50%,-100%);}
+.fm svg{width:100%;height:100%;}
 </style>
 </head>
-
 <body>
 
-<!-- 🎥 VIDEO -->
-<video autoplay muted loop playsinline id="bgvid">
-  <source src="bg.mp4" type="video/mp4">
-</video>
-<div class="video-overlay"></div>
+<div id="intro">
+  <div class="itopbar"><span id="iclk">12:00:00 06/08/2026</span></div>
+  <div class="ghost-text" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Titillium Web',sans-serif;font-weight:200;font-size:clamp(36px,8vw,88px);color:rgba(74,200,216,.055);letter-spacing:.12em;text-align:center;line-height:1.1;pointer-events:none;user-select:none;text-transform:uppercase;">WAR SYSTEM<br>ENGAGED</div>
+  <div class="ipanel">
+    <div class="br tl"></div><div class="br tr"></div><div class="br bl2"></div><div class="br br2"></div>
+    <div class="ipanel-hd">
+      <span class="t">SORTIE COMMAND — INITIAL SETTINGS</span>
+      <span class="s">SYSTEM BOOT</span>
+    </div>
+    <div class="ipanel-bd" id="bbd">
+      <div class="bl" id="b0">CONNECTING TO DISCORD GATEWAY ................... <span class="ok">OK</span></div>
+      <div class="bl" id="b1">AUTHENTICATING BOT TOKEN ........................ <span class="ok">OK</span></div>
+      <div class="bl" id="b2">LOADING MISSION DATABASE [288 ENTRIES] ......... <span class="ok">OK</span></div>
+      <div class="bl" id="b3">SYNCHRONIZING OPERATIVE LEDGER ................. <span class="ok">OK</span></div>
+      <div class="bl" id="b4">SCANNING ACTIVE SORTIES ........................ <span class="wn">3 IN PROGRESS</span></div>
+      <div class="bl" id="b5">FACTION CONFLICT DATA .......................... <span class="ok">LOADED</span></div>
+      <div class="bl" id="b6">ENCRYPTING COMMAND CHANNEL ..................... <span class="ok">SECURE</span></div>
+      <div class="bl" id="b7">WAR SYSTEM INTERFACE ........................... <span class="ok">READY</span></div>
+    </div>
+    <div class="ipanel-ft">
+      <div class="prog-t"><div class="prog-f" id="pf"></div></div>
+      <div class="prog-p" id="pp">0%</div>
+    </div>
+  </div>
+  <div class="start-p" id="sp">[ PRESS ANY KEY TO CONTINUE ]</div>
+  <div class="ibotbar"><span>SORTIE COMMAND INTERFACE</span><span>v2.4.1 / r1.03</span></div>
+</div>
 
-<!-- BOOT -->
-<div id="boot">INITIALIZING SYSTEM CORE...</div>
-
-<div class="container">
-
-  <!-- MENU -->
-  <div class="menu">
-    <div class="menu-item" onclick="clickFX(); showPage('dashboard')">DASHBOARD</div>
-    <div class="menu-item" onclick="clickFX(); showPage('profile')">PROFILE</div>
-    <div class="menu-item" onclick="clickFX(); showPage('system')">SYSTEM</div>
+<div id="ui">
+  <div class="topbar">
+    <div class="topbar-l">
+      <span class="tb-title">WAR SYSTEM</span>
+      <nav class="tb-nav">
+        <button class="ni act" onclick="tab('world',this)">WORLD MENU</button>
+        <button class="ni" onclick="tab('cmd',this)">COMMANDS</button>
+        <button class="ni" onclick="tab('inv',this)">INVITE BOT</button>
+      </nav>
+    </div>
+    <div class="topbar-r">
+      <span><span class="dot"></span>BOT <span class="lv">ONLINE</span></span>
+      <span>PING <span class="lv" id="pg">44ms</span></span>
+      <span id="mc">--:--:--</span>
+    </div>
   </div>
 
-  <!-- CENTER -->
-  <div class="center">
-
-    <div class="page active" id="dashboard">DASHBOARD ONLINE</div>
-    <div class="page" id="profile">PROFILE MODULE</div>
-    <div class="page" id="system">SYSTEM STATUS</div>
-
-  </div>
-
-  <!-- RIGHT -->
-  <div class="panel">
-
-    <div class="card">
-      CPU
-      <div class="bar"><div class="fill" id="cpu"></div></div>
+  <div class="body">
+    <div class="sb">
+      <div class="sb-hd">WORLD MENU</div>
+      <div class="wn-list">
+        <div class="wni act" onclick="sec('sortie',this)"><div class="pip"></div><span class="lbl">Sortie</span></div>
+        <div class="wni" onclick="sec('ws',this)"><div class="pip"></div><span class="lbl">Workshop</span></div>
+        <div class="wni" onclick="sec('pd',this)"><div class="pip"></div><span class="lbl">Player Data</span></div>
+        <div class="wni dis"><div class="pip g"></div><span class="lbl">Leaderboards</span></div>
+        <div class="wni dis"><div class="pip g"></div><span class="lbl">Free Battle</span></div>
+        <div class="wni" onclick="sec('ex',this)"><div class="pip"></div><span class="lbl">Extra</span></div>
+      </div>
+      <div class="sdiv"></div>
+      <div class="al" id="alist">
+        <div class="al-lbl">Area List</div>
+        <div class="at sel" onclick="area(0,this)">
+          <svg viewBox="0 0 160 50" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="160" height="50" fill="#081525"/><polygon points="0,50 0,30 40,22 80,28 120,18 160,24 160,50" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.4"/><line x1="0" y1="38" x2="160" y2="38" stroke="#1a3a5a" stroke-width="0.3" opacity="0.4"/></svg>
+          <div class="at-rank">S</div><div class="at-name">New Frontier</div>
+        </div>
+        <div class="at" onclick="area(1,this)">
+          <svg viewBox="0 0 160 50" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="160" height="50" fill="#0c1008"/><polygon points="0,50 0,32 35,28 75,22 115,26 160,20 160,50" fill="#0a1208" stroke="#1a2a10" stroke-width="0.4"/><circle cx="120" cy="14" r="7" fill="#1a2000" opacity="0.5"/></svg>
+          <div class="at-rank">A</div><div class="at-name">Desolate Plains</div>
+        </div>
+        <div class="at" onclick="area(2,this)">
+          <svg viewBox="0 0 160 50" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="160" height="50" fill="#0a0a14"/><rect x="10" y="18" width="7" height="32" fill="#0d0d1a"/><rect x="24" y="9" width="9" height="41" fill="#0f0f1c"/><rect x="42" y="14" width="6" height="36" fill="#0d0d1a"/><rect x="58" y="22" width="11" height="28" fill="#10101e"/><rect x="78" y="10" width="8" height="40" fill="#0d0d1a"/><rect x="98" y="7" width="10" height="43" fill="#101020"/><rect x="118" y="16" width="7" height="34" fill="#0d0d1a"/><rect x="136" y="20" width="9" height="30" fill="#0f0f1c"/></svg>
+          <div class="at-rank">A</div><div class="at-name">Ruined City</div>
+        </div>
+        <div class="at" onclick="area(3,this)">
+          <svg viewBox="0 0 160 50" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="160" height="50" fill="#0a0c10"/><rect x="5" y="26" width="22" height="24" fill="#0d1015"/><rect x="34" y="13" width="17" height="37" fill="#0f1218"/><rect x="58" y="20" width="28" height="30" fill="#0d1015"/><rect x="94" y="9" width="18" height="41" fill="#101318"/><rect x="120" y="18" width="33" height="32" fill="#0d1015"/></svg>
+          <div class="at-rank">B</div><div class="at-name">Industrial Zone</div>
+        </div>
+        <div class="at" onclick="area(4,this)">
+          <svg viewBox="0 0 160 50" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="160" height="50" fill="#140e06"/><polygon points="0,50 0,34 30,30 60,36 90,26 130,32 160,28 160,50" fill="#100c08"/><circle cx="30" cy="18" r="12" fill="#180e04" opacity="0.4"/></svg>
+          <div class="at-rank">B</div><div class="at-name">Desert Wasteland</div>
+        </div>
+        <div class="at" onclick="area(5,this)">
+          <svg viewBox="0 0 160 50" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="160" height="50" fill="#080e18"/><rect x="0" y="28" width="160" height="22" fill="#081428" opacity="0.7"/><rect x="10" y="18" width="5" height="32" fill="#0a1020"/><rect x="50" y="14" width="7" height="36" fill="#0a1020"/><rect x="90" y="20" width="6" height="30" fill="#0a1020"/><rect x="130" y="16" width="8" height="34" fill="#0a1020"/></svg>
+          <div class="at-rank">B</div><div class="at-name">Flooded District</div>
+        </div>
+        <div class="at" onclick="area(6,this)">
+          <svg viewBox="0 0 160 50" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="160" height="50" fill="#05080f"/><circle cx="80" cy="25" r="11" fill="none" stroke="#1a2a40" stroke-width="0.5"/><rect x="62" y="23" width="36" height="4" fill="#0a1020"/><rect x="78" y="9" width="4" height="32" fill="#0a1020"/><circle cx="40" cy="14" r="1.5" fill="#1a2a40" opacity="0.5"/><circle cx="120" cy="34" r="1.5" fill="#1a2a40" opacity="0.5"/></svg>
+          <div class="at-rank">S</div><div class="at-name">Orbit Station</div>
+        </div>
+      </div>
+      <div class="pb">
+        <div class="pb-name">■ Operative Profile</div>
+        <div class="ps"><span>BALANCE</span><span class="v vo">24,850 CR</span></div>
+        <div class="ps"><span>RANK</span><span class="v vc">A-CLASS</span></div>
+        <div class="ps"><span>MISSIONS</span><span class="v">47</span></div>
+        <div class="ps"><span>FACTION</span><span class="v">ORCA</span></div>
+      </div>
     </div>
 
-    <div class="card">
-      MEMORY
-      <div class="bar"><div class="fill" id="ram"></div></div>
+    <div class="ma" id="ma">
+      <svg id="wmap" viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <rect width="1000" height="560" fill="#060e1a"/>
+        <defs><pattern id="gp" x="0" y="0" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="14" cy="14" r="0.7" fill="rgba(74,200,216,0.14)"/></pattern></defs>
+        <rect width="1000" height="560" fill="url(#gp)"/>
+        <path d="M85 60L120 55L160 60L190 80L220 75L240 90L250 120L260 150L255 180L240 200L220 220L200 240L180 260L165 280L155 310L145 330L155 340L160 355L150 370L135 375L120 360L110 340L100 310L95 280L80 260L70 240L60 210L55 180L60 150L65 120L70 95Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.5"/>
+        <path d="M165 30L200 25L220 35L215 55L195 62L170 55Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.5"/>
+        <path d="M175 380L200 370L220 375L235 390L240 420L235 450L220 475L200 490L180 485L162 465L155 440L155 410L160 390Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.5"/>
+        <path d="M440 55L460 52L480 58L495 65L500 80L495 100L480 115L465 120L450 115L440 100L435 80L435 65Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.5"/>
+        <path d="M440 130L475 125L510 130L530 145L540 165L545 195L540 225L530 260L515 290L500 315L485 335L470 345L455 340L440 325L428 305L420 280L415 255L415 225L420 195L425 165L430 145Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.5"/>
+        <path d="M505 55L560 45L620 42L680 48L730 55L770 65L800 75L820 90L825 110L815 130L800 145L780 155L755 160L730 155L710 145L695 130L680 120L660 115L640 118L620 125L600 130L580 125L560 115L545 105L530 95L515 85L510 70Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.5"/>
+        <path d="M630 160L660 155L680 165L685 185L675 210L655 230L640 225L628 205L622 182Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.5"/>
+        <path d="M720 165L745 160L760 170L755 185L735 190L718 182Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.5"/>
+        <path d="M755 330L800 318L840 320L870 330L880 350L875 375L858 395L830 405L800 402L772 390L755 372L748 350Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.5"/>
+        <ellipse cx="810" cy="115" rx="8" ry="18" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.5"/>
+        <line x1="0" y1="280" x2="1000" y2="280" stroke="rgba(74,200,216,0.05)" stroke-width="0.5"/>
+        <line x1="0" y1="140" x2="1000" y2="140" stroke="rgba(74,200,216,0.035)" stroke-width="0.3"/>
+        <line x1="0" y1="420" x2="1000" y2="420" stroke="rgba(74,200,216,0.035)" stroke-width="0.3"/>
+      </svg>
+      <div class="mgrid"></div>
+      <div class="mvig"></div>
+      <div id="ml"></div>
+      <div class="zname" id="zn">New Frontier</div>
+      <div class="manlink"><span class="arr">▶</span> Manual</div>
+      <div class="ti">
+        <div class="tish">◈</div>
+        <div><div style="font-size:8px;color:var(--text2);letter-spacing:.1em;">■ Team Information</div><div style="font-size:10px;color:var(--white);letter-spacing:.07em;margin-top:1px;">gg/armoredcore</div></div>
+      </div>
+      <div class="ibar"><span class="il" id="it">Select the area you will go to.</span><span id="fc">--:--:-- UTC</span></div>
+
+      <!-- Mission panel -->
+      <div id="mpanel">
+        <div class="mph">
+          <div><div class="mp-t" id="mpt">MISSION</div><div class="mp-i" id="mpi">M-000</div></div>
+          <div class="mp-r" id="mpr">A</div>
+        </div>
+        <div class="mpb">
+          <div class="mpc">
+            <div class="mpsl">MISSION BRIEF</div>
+            <div class="mpdesc" id="mpd"></div>
+            <div class="mpsl">OBJECTIVES</div>
+            <div id="mpo"></div>
+          </div>
+          <div class="mpc" style="max-width:210px;">
+            <div class="mpsl">REWARDS</div>
+            <div class="rg">
+              <div class="rc"><div class="rl">CREDITS</div><div class="rv" id="rc">0</div></div>
+              <div class="rc"><div class="rl">EXP</div><div class="rv" id="rx">0</div></div>
+              <div class="rc"><div class="rl">DURATION</div><div class="rv" id="rt" style="font-size:12px;">--</div></div>
+              <div class="rc"><div class="rl">DIFFICULTY</div><div class="rv" id="rd" style="font-size:12px;">●●●○○</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="mpf">
+          <button class="dep" onclick="deploy()">▶ DEPLOY TO SORTIE</button>
+          <button class="bk" onclick="closeMP()">◀ BACK</button>
+          <div class="mpn" id="mpnote"></div>
+        </div>
+      </div>
+
+      <!-- Commands -->
+      <div id="vcmd">
+        <div class="cs"><div class="csl"><div class="p"></div>MISSION COMMANDS</div>
+          <div class="cr"><span class="cn">/sortie</span><span class="cd">Deploy on a mission directly from Discord</span></div>
+          <div class="cr"><span class="cn">/missions</span><span class="cd">List all available missions with rewards</span></div>
+          <div class="cr"><span class="cn">/status</span><span class="cd">Check your active sortie progress</span></div>
+          <div class="cr"><span class="cn">/abort</span><span class="cd">Abort your active sortie (10% credit penalty)</span></div>
+          <div class="cr"><span class="cn">/area [name]</span><span class="cd">View missions available in a specific area</span></div>
+        </div>
+        <div class="cs"><div class="csl"><div class="p"></div>ECONOMY COMMANDS</div>
+          <div class="cr"><span class="cn">/balance</span><span class="cd">View your current credit balance</span></div>
+          <div class="cr"><span class="cn">/work</span><span class="cd">Earn base credits (1h cooldown)</span></div>
+          <div class="cr"><span class="cn">/leaderboard</span><span class="cd">Top operatives ranked by credits and missions</span></div>
+          <div class="cr"><span class="cn">/transfer @u [amt]</span><span class="cd">Transfer credits to another operative</span></div>
+          <div class="cr"><span class="cn">/daily</span><span class="cd">Claim your daily login bonus</span></div>
+        </div>
+        <div class="cs"><div class="csl"><div class="p"></div>PROFILE COMMANDS</div>
+          <div class="cr"><span class="cn">/rank</span><span class="cd">View rank and progress to next tier</span></div>
+          <div class="cr"><span class="cn">/profile [@user]</span><span class="cd">View full operative profile card</span></div>
+          <div class="cr"><span class="cn">/faction</span><span class="cd">Faction standings and active conflict state</span></div>
+          <div class="cr"><span class="cn">/history</span><span class="cd">Your recent mission history</span></div>
+          <div class="cr"><span class="cn">/help</span><span class="cd">All commands and full usage guide</span></div>
+        </div>
+      </div>
+
+      <!-- Invite -->
+      <div id="vinv">
+        <div class="ig" style="top:20%;left:50%;transform:translateX(-50%)">WAR SYSTEM</div>
+        <div class="ibox">
+          <div class="br tl"></div><div class="br tr"></div><div class="br bl2"></div><div class="br br2"></div>
+          <div class="it">ADD TO SERVER</div>
+          <div class="is">Deploy the sortie bot to your Discord server.<br>Missions, economy, and faction conflict<br>integrated into your channels.</div>
+          <button class="ib" onclick="alert('Replace with your Discord OAuth2 invite URL.')">▶ INVITE WAR-SYSTEM BOT</button>
+          <div style="font-size:8px;color:var(--text3);letter-spacing:.15em;margin-top:10px;">REQUIRES MANAGE SERVER PERMISSION</div>
+        </div>
+      </div>
     </div>
-
-    <div class="card">
-      NETWORK
-      <div class="bar"><div class="fill" id="net"></div></div>
-    </div>
-
   </div>
 
-</div>
-
-<!-- SPLIT PROFILE UI -->
-<div id="splitUI">
-
-  <div class="split" onclick="openMode('A')">
-    <video autoplay muted loop>
-      <source src="modeA.mp4">
-    </video>
-    <span>PROFILE A</span>
+  <div class="btmbar">
+    <span style="white-space:nowrap">WAR SYSTEM — SORTIE COMMAND</span>
+    <div class="tkw"><div class="tki">◈ ORCA NETWORK OPERATIONAL ◈ FACTION CONFLICT: ORCA 58% / GA 42% ◈ TOP OPERATIVE: GHOST-7 [S-CLASS] ◈ NEW MISSION UNLOCKED: SILENT MERIDIAN ◈ NEXT EVENT IN 14:32:07 ◈ ECONOMY LEDGER SYNCHRONIZED ◈</div></div>
+    <span style="white-space:nowrap">v2.4.1 / r1.03</span>
   </div>
-
-  <div class="split" onclick="openMode('B')">
-    <video autoplay muted loop>
-      <source src="modeB.mp4">
-    </video>
-    <span>PROFILE B</span>
-  </div>
-
 </div>
 
-<!-- FULLSCREEN MODES -->
-<div id="modeA" class="fullscreen">
-  <video autoplay muted loop>
-    <source src="modeA.mp4">
-  </video>
-  <div class="back" onclick="back()">BACK</div>
-</div>
-
-<div id="modeB" class="fullscreen">
-  <video autoplay muted loop>
-    <source src="modeB.mp4">
-  </video>
-  <div class="back" onclick="back()">BACK</div>
-</div>
-
-<!-- VISUALIZER -->
-<div class="visualizer" id="vis"></div>
-
-<!-- MUSIC -->
-<audio id="bgm" loop>
-  <source src="bgm.mp3" type="audio/mpeg">
-</audio>
-
-<div class="music">
-  <button onclick="toggleMusic()">▶ / ⏸</button><br>
-  <input type="range" id="vol" min="0" max="1" step="0.01" value="0.5">
-</div>
-
-<!-- EMAIL -->
-<form action="https://formsubmit.co/YOUR_EMAIL@gmail.com" method="POST">
-  <input type="hidden" name="_captcha" value="false">
-  <input name="name" placeholder="Name">
-  <input name="email" placeholder="Email">
-  <textarea name="message" placeholder="Message"></textarea>
-  <button type="submit">Send</button>
-</form>
+<div id="flash"></div>
 
 <script>
+const MISSIONS=[
+  {id:'M-004',area:0,name:'IRON MERIDIAN',rank:'S',diff:5,desc:"Infiltrate GA's automated weapons plant in Sector 12. Disable the primary fabrication array. Expect heavy armored resistance.",objectives:['Eliminate perimeter defense units ×8','Disable fabrication control core','Extract via evacuation point','BONUS: Recover encrypted data shard'],creds:8400,xp:1200,time:'45 MIN',note:'High risk. S-class operative recommended. Reinforcement waves after primary objective.'},
+  {id:'M-007',area:0,name:'NEW FRONTIER',rank:'S',diff:5,desc:'Penetrate the GA orbital relay station. Upload the stolen cipher key. Zero collateral tolerance. Comms blackout in effect.',objectives:['Board relay station undetected','Upload cipher payload to node','Neutralize all station crew','Escape before lockdown triggers'],creds:9600,xp:1500,time:'60 MIN',note:'Stealth approach strongly advised. Alert state triggers immediate GA response.'},
+  {id:'M-008',area:1,name:'SUPPLY DISRUPTION',rank:'A',diff:3,desc:'Destroy the GA eastern supply bridge and disrupt Sector 7 logistics. Standard breach-and-demolish contract.',objectives:['Place charges on all three bridge pylons','Eliminate escort convoy','Detonate on signal'],creds:3200,xp:600,time:'25 MIN',note:'Escort convoy is lightly armored. Straightforward demolition contract.'},
+  {id:'M-014',area:2,name:'GHOST PROTOCOL',rank:'A',diff:4,desc:'Locate and terminate a rogue AC unit operating without faction authorization in the outer districts. Civilian presence confirmed.',objectives:['Locate target AC signal in outer districts','Neutralize hostile unit','Recover intact AC core unit'],creds:5100,xp:900,time:'35 MIN',note:'Target AC equipped with electronic countermeasures. Sensor lock may be disrupted.'},
+  {id:'M-021',area:3,name:'INFRASTRUCTURE BREACH',rank:'B',diff:2,desc:'Intercept a GA supply convoy. Destroy the armored trucks and scatter cargo before reinforcements arrive.',objectives:['Destroy all 5 supply trucks','Eliminate convoy escorts','Escape before GA response unit arrives'],creds:1800,xp:350,time:'20 MIN',note:'Fast mission. Window before response unit arrival is approximately 8 minutes.'},
+  {id:'M-029',area:4,name:'WATCHTOWER',rank:'B',diff:2,desc:'Dismantle sensor infrastructure across the eastern grid. Blind the enemy for 48 hours to support the ORCA advance.',objectives:['Destroy 12 sensor towers','Disable central relay hub'],creds:1500,xp:280,time:'15 MIN',note:'Towers undefended. Relay hub has automated turret defense.'},
+  {id:'M-033',area:5,name:'FLOOD CONTROL',rank:'B',diff:2,desc:'Navigate the flooded district and destroy remaining GA patrol units. Submersible movement required in sectors 3 and 7.',objectives:['Eliminate 8 GA patrol units','Destroy submerged weapons cache'],creds:2100,xp:420,time:'25 MIN',note:'Limited visibility in flooded zones. Radar performance degraded.'},
+  {id:'M-041',area:6,name:'SILENT MERIDIAN',rank:'S',diff:5,desc:'[CLASSIFIED — A-CLASS CLEARANCE REQUIRED TO VIEW FULL BRIEF]',objectives:['[CLASSIFIED]','[CLASSIFIED]'],creds:'???',xp:'???',time:'???',note:'Clearance level insufficient. Complete more A-rank missions to unlock.'},
+];
+const AREAS=['New Frontier','Desolate Plains','Ruined City','Industrial Zone','Desert Wasteland','Flooded District','Orbit Station'];
+const MKS=[[13,22,0],[18,28,0],[22,35,1],[28,32,0],[8,38,1],[15,42,0],[35,48,0],[40,52,0],[32,55,1],[38,60,0],[44,42,1],[50,44,0],[48,30,0],[53,25,1],[56,32,0],[60,28,0],[58,40,1],[62,36,0],[65,48,0],[70,38,1],[72,30,0],[68,22,0],[75,25,0],[78,32,1],[80,42,0],[82,35,0],[85,28,1],[88,38,0],[90,45,0],[92,30,0],[36,68,0],[42,72,1],[40,78,0],[44,82,0],[38,76,1]];
 
-/* PAGE SWITCH */
-function showPage(id){
+function buildMarkers(){
+  const l=document.getElementById('ml'); l.innerHTML='';
+  MKS.forEach(([x,y,t])=>{
+    const d=document.createElement('div'); d.className='fm';
+    d.style.left=x+'%'; d.style.top=y+'%';
+    const c=t===0?'#c83020':t===1?'#d0d0d0':'#e87a20';
+    const s=t===0?'#901810':t===1?'#808080':'#b05010';
+    const inner=t===1?'<path d="M6 9L13 9M9.5 5L9.5 13" stroke="#606060" stroke-width="1.2"/>':'<path d="M5 6L13 14M13 6L5 14" stroke="'+s+'" stroke-width="1"/>';
+    d.innerHTML=`<svg viewBox="0 0 18 22" xmlns="http://www.w3.org/2000/svg"><path d="M9 2L17 2L17 14L9 21L1 14L1 2Z" fill="${c}" stroke="${s}" stroke-width="0.8"/>${inner}</svg>`;
+    l.appendChild(d);
+  });
+}
 
-  if(id === "profile"){
-    document.querySelector(".container").style.display = "none";
-    document.getElementById("splitUI").style.display = "block";
-    return;
+// BOOT
+const bls=document.querySelectorAll('.bl');
+const pf=document.getElementById('pf'),pp=document.getElementById('pp'),sp=document.getElementById('sp');
+let rdy=false;
+async function slp(ms){return new Promise(r=>setTimeout(r,ms));}
+async function boot(){
+  await slp(350);
+  for(let i=0;i<bls.length;i++){
+    bls[i].classList.add('on');
+    const p=Math.round((i+1)/bls.length*100);
+    pf.style.width=p+'%'; pp.textContent=p+'%';
+    await slp(155+Math.random()*115);
   }
+  await slp(180); sp.style.opacity='1'; rdy=true;
+}
+function launch(){if(!rdy)return; document.getElementById('intro').classList.add('out'); document.getElementById('ui').classList.add('vis'); setTimeout(()=>document.getElementById('intro').style.display='none',700);}
+document.addEventListener('keydown',launch);
+document.getElementById('intro').addEventListener('click',launch);
 
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
+// CLOCK
+function tick(){
+  const n=new Date(),pad=x=>String(x).padStart(2,'0');
+  const t=`${pad(n.getUTCHours())}:${pad(n.getUTCMinutes())}:${pad(n.getUTCSeconds())}`;
+  const ds=`${pad(n.getUTCMonth()+1)}/${pad(n.getUTCDate())}/${n.getUTCFullYear()}`;
+  document.getElementById('iclk').textContent=`${t} ${ds}`;
+  document.getElementById('mc').textContent=t;
+  document.getElementById('fc').textContent=t+' UTC';
+}
+setInterval(tick,1000); tick();
+setInterval(()=>{document.getElementById('pg').textContent=(36+Math.floor(Math.random()*18))+'ms';},4200);
+
+// TABS
+function tab(id,btn){
+  document.querySelectorAll('.ni').forEach(b=>b.classList.remove('act')); btn.classList.add('act');
+  document.getElementById('vcmd').classList.toggle('op',id==='cmd');
+  document.getElementById('vinv').classList.toggle('op',id==='inv');
+  document.getElementById('alist').style.display=id==='world'?'':'none';
+}
+function sec(id,el){
+  document.querySelectorAll('.wni').forEach(x=>x.classList.remove('act')); el.classList.add('act');
+  document.getElementById('alist').style.display=id==='sortie'?'':'none';
+  document.getElementById('it').textContent=id==='sortie'?'Select the area you will go to.':id.toUpperCase()+' — Coming soon.';
 }
 
-/* PROFILE MODES */
-function openMode(m){
-  document.getElementById("splitUI").style.display = "none";
-  document.getElementById("modeA").style.display = (m==="A") ? "block" : "none";
-  document.getElementById("modeB").style.display = (m==="B") ? "block" : "none";
+// AREA SELECT
+function area(i,el){
+  document.querySelectorAll('.at').forEach(x=>x.classList.remove('sel')); el.classList.add('sel');
+  document.getElementById('zn').textContent=AREAS[i];
 }
 
-function back(){
-  document.getElementById("modeA").style.display = "none";
-  document.getElementById("modeB").style.display = "none";
-  document.querySelector(".container").style.display = "grid";
+// MISSION PANEL
+let cm=null;
+function openM(id){
+  cm=MISSIONS.find(x=>x.id===id); if(!cm) return;
+  document.getElementById('mpt').textContent=cm.name;
+  document.getElementById('mpi').textContent=`${cm.id}  ·  DIFFICULTY ${cm.diff}/5  ·  EST. ${cm.time}`;
+  document.getElementById('mpr').textContent=cm.rank;
+  document.getElementById('mpd').textContent=cm.desc;
+  document.getElementById('mpo').innerHTML=cm.objectives.map(o=>`<div class="mpobj">${o}</div>`).join('');
+  document.getElementById('rc').textContent=cm.creds;
+  document.getElementById('rx').textContent=cm.xp;
+  document.getElementById('rt').textContent=cm.time;
+  document.getElementById('rd').textContent='●'.repeat(cm.diff)+'○'.repeat(5-cm.diff);
+  document.getElementById('mpnote').textContent=cm.note;
+  document.getElementById('mpanel').classList.add('op');
+}
+function closeMP(){document.getElementById('mpanel').classList.remove('op');}
+function deploy(){
+  if(!cm) return; closeMP();
+  const f=document.getElementById('flash'); f.classList.add('on'); setTimeout(()=>f.classList.remove('on'),180);
+  setTimeout(()=>alert(`SORTIE DISPATCHED — ${cm.name}\n\nWire your bot API here:\nfetch('/api/sortie',{method:'POST',body:JSON.stringify({missionId:'${cm.id}'})})`)  ,230);
 }
 
-/* CLICK SOUND */
-let ctx;
-function clickFX(){
-  if(!ctx) ctx = new AudioContext();
-  const o = ctx.createOscillator();
-  const g = ctx.createGain();
+// Double-click area thumbnails to open first mission for that area
+document.querySelectorAll('.at').forEach((el,i)=>{
+  el.addEventListener('dblclick',()=>{
+    const m=MISSIONS.find(x=>x.area===i); if(m) openM(m.id);
+  });
+});
 
-  o.type="square";
-  o.frequency.value=700;
-
-  g.gain.setValueAtTime(0.05,ctx.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.08);
-
-  o.connect(g);
-  g.connect(ctx.destination);
-
-  o.start();
-  o.stop(ctx.currentTime+0.08);
-}
-
-/* MUSIC */
-const audio=document.getElementById("bgm");
-const vol=document.getElementById("vol");
-audio.volume=0.5;
-
-vol.oninput=()=>audio.volume=vol.value;
-
-function toggleMusic(){
-  audio.paused ? audio.play() : audio.pause();
-}
-
-/* STATS */
-let cpu=0,ram=0,net=0;
-setInterval(()=>{
-  cpu+=(Math.random()*100-cpu)*0.1;
-  ram+=(Math.random()*100-ram)*0.1;
-  net+=(Math.random()*100-net)*0.1;
-
-  cpu.style?0:0;
-  document.getElementById("cpu").style.width=cpu+"%";
-  document.getElementById("ram").style.width=ram+"%";
-  document.getElementById("net").style.width=net+"%";
-},500);
-
+buildMarkers(); boot();
 </script>
-
 </body>
 </html>
