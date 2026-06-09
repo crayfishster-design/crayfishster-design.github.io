@@ -4,482 +4,1446 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WAR SYSTEM — SORTIE COMMAND</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Titillium+Web:wght@200;300;400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --navy:#050c14;--navy2:#081525;--panel:#0a1a2a;--panel2:#0d2035;
-  --border:#1a3a5a;--border2:#204870;
-  --cyan:#4fc8d8;--cyan2:#2a8fa0;--cyan3:#1a5a6a;
-  --orange:#e87a20;--orange2:#b05818;
-  --text:#8ab8cc;--text2:#4a7a8a;--text3:#2a4a5a;
-  --white:#c8dce8;--red:#c83020;
+  --bg:#000;
+  --map-bg:#060d18;
+  --panel-bg:rgba(6,14,26,0.92);
+  --border:#1e4060;
+  --border2:#2a5a80;
+  --cyan:#4dd8e8;
+  --cyan2:#2aabbc;
+  --cyan-dim:#1a6070;
+  --orange:#e8721a;
+  --orange2:#c05810;
+  --text:#7ab8cc;
+  --text2:#4a7a90;
+  --text3:#2a4a5a;
+  --white:#d8ecf4;
+  --red:#c02820;
+  --green:#28a858;
+  --warm-bg:#c8c4a0; /* acvd loading bg */
 }
-html,body{width:100%;height:100%;background:var(--navy);color:var(--text);font-family:'Share Tech Mono',monospace;overflow:hidden;cursor:default;}
-body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.07) 3px,rgba(0,0,0,0.07) 4px);pointer-events:none;z-index:9999;}
+html,body{width:100%;height:100%;background:#000;color:var(--white);font-family:'Share Tech Mono',monospace;overflow:hidden;}
 
-/* INTRO */
-#intro{position:fixed;inset:0;background:var(--navy);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s ease;}
-#intro.out{opacity:0;pointer-events:none;}
-.itopbar{position:absolute;top:0;left:0;right:0;height:32px;background:rgba(10,26,42,.95);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--orange);letter-spacing:.2em;}
-.ibotbar{position:absolute;bottom:0;left:0;right:0;height:26px;background:rgba(10,26,42,.95);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:8px;color:var(--text2);letter-spacing:.15em;}
-.ghost{position:absolute;font-family:'Titillium Web',sans-serif;font-weight:200;font-size:clamp(36px,8vw,88px);color:rgba(74,200,216,.055);letter-spacing:.12em;text-align:center;line-height:1.1;pointer-events:none;user-select:none;text-transform:uppercase;}
-.ipanel{position:relative;width:clamp(420px,62vw,720px);background:rgba(10,26,42,.94);border:1px solid var(--border2);z-index:2;}
-.ipanel-hd{background:rgba(10,26,42,.98);border-bottom:1px solid var(--border);padding:9px 16px;display:flex;align-items:center;justify-content:space-between;}
-.ipanel-hd .t{font-size:10px;color:var(--cyan);letter-spacing:.25em;}
-.ipanel-hd .s{font-size:8px;color:var(--text2);letter-spacing:.15em;}
-.ipanel-bd{padding:18px 20px 14px;min-height:110px;}
-.bl{font-size:10px;line-height:2;color:var(--text2);letter-spacing:.08em;opacity:0;transition:opacity .1s;}
-.bl.on{opacity:1;}
-.bl .ok{color:var(--cyan);}
-.bl .wn{color:var(--orange);}
-.ipanel-ft{border-top:1px solid var(--border);padding:9px 16px;display:flex;align-items:center;gap:10px;}
-.prog-t{flex:1;height:2px;background:var(--border);overflow:hidden;}
-.prog-f{height:100%;background:var(--cyan2);width:0%;transition:width .1s linear;}
-.prog-p{font-size:9px;color:var(--cyan2);min-width:28px;}
-.start-p{position:absolute;bottom:44px;left:0;right:0;text-align:center;font-size:11px;color:var(--cyan2);letter-spacing:.3em;opacity:0;animation:bl 1s steps(1) infinite;}
-@keyframes bl{0%,100%{opacity:1}50%{opacity:0}}
-.br{position:absolute;width:9px;height:9px;}
-.br.tl{top:-1px;left:-1px;border-top:1px solid var(--cyan2);border-left:1px solid var(--cyan2);}
-.br.tr{top:-1px;right:-1px;border-top:1px solid var(--cyan2);border-right:1px solid var(--cyan2);}
-.br.bl2{bottom:-1px;left:-1px;border-bottom:1px solid var(--cyan2);border-left:1px solid var(--cyan2);}
-.br.br2{bottom:-1px;right:-1px;border-bottom:1px solid var(--cyan2);border-right:1px solid var(--cyan2);}
+/* scanlines */
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.12) 2px,rgba(0,0,0,0.12) 4px);pointer-events:none;z-index:9997;}
 
-/* MAIN UI */
-#ui{position:fixed;inset:0;display:grid;grid-template-rows:32px 1fr 24px;opacity:0;transition:opacity .8s ease;pointer-events:none;}
-#ui.vis{opacity:1;pointer-events:all;}
-.topbar{background:rgba(10,26,42,.97);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;}
-.topbar-l{display:flex;align-items:center;gap:20px;}
-.tb-title{font-size:11px;color:var(--cyan);letter-spacing:.25em;}
-.tb-nav{display:flex;gap:1px;}
-.ni{font-size:9px;letter-spacing:.15em;color:var(--text2);background:transparent;border:none;padding:0 12px;height:32px;cursor:pointer;display:flex;align-items:center;position:relative;transition:color .15s;}
-.ni:hover{color:var(--text);}
-.ni.act{color:var(--cyan);}
-.ni.act::after{content:'';position:absolute;bottom:0;left:12px;right:12px;height:1px;background:var(--cyan2);}
-.topbar-r{display:flex;align-items:center;gap:18px;font-size:9px;color:var(--text2);letter-spacing:.1em;}
-.topbar-r .lv{color:var(--cyan);}
-.dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--cyan2);box-shadow:0 0 5px var(--cyan3);margin-right:5px;animation:pd 2s ease-in-out infinite;}
+.screen{position:fixed;inset:0;display:none;}
+.screen.active{display:block;}
+
+/* ════════════════════════════════
+   BOOT — PHASE 1: warm globe fade
+   ════════════════════════════════ */
+#boot{background:#000;overflow:hidden;}
+
+.boot-warm-bg{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 70% at 50% 55%, #b8b49000 0%, #a8a47840 30%, #888060 60%, #606050 80%, #303028 100%);
+  opacity:0;transition:opacity 1.2s ease;
+}
+.boot-warm-bg.show{opacity:1;}
+
+/* dot grid */
+.boot-dotgrid{
+  position:absolute;inset:0;
+  background-image:radial-gradient(circle,rgba(80,80,60,0.5) 1px,transparent 1px);
+  background-size:32px 32px;
+  opacity:0;transition:opacity 1s ease;
+}
+.boot-dotgrid.show{opacity:1;}
+
+/* vertical crosshair line on warm bg */
+.boot-crosshair{
+  position:absolute;left:50%;top:0;bottom:0;
+  width:1px;background:rgba(100,100,80,0.3);
+  opacity:0;transition:opacity 1s ease;
+}
+.boot-crosshair.show{opacity:1;}
+
+/* Phase 1 title bar — "ARMORED CORE VERDICT DAY INITIAL SETTINGS >>>" */
+.boot-title-bar{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  display:flex;align-items:center;gap:0;
+  opacity:0;transition:opacity 0.4s ease;
+  white-space:nowrap;
+}
+.boot-title-bar.show{opacity:1;}
+.btb-sq{width:52px;height:44px;border:1px solid rgba(200,200,180,0.5);background:rgba(100,100,80,0.1);}
+.btb-sq2{width:52px;height:44px;border:1px solid rgba(200,200,180,0.5);background:rgba(100,100,80,0.1);}
+.btb-text{padding:0 18px;text-align:center;}
+.btb-top{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:400;color:#e06830;letter-spacing:.15em;}
+.btb-main{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:var(--cyan);letter-spacing:.08em;text-shadow:0 0 20px rgba(77,216,232,0.8);}
+.btb-sub{font-size:10px;color:rgba(220,220,200,0.7);letter-spacing:.18em;margin-top:2px;}
+
+/* ════════════════════════════════
+   BOOT — PHASE 2: 3D globe loading
+   ════════════════════════════════ */
+.boot-globe-screen{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 90% 80% at 50% 50%, #b0ac8840 0%, #a0a07060 30%, #707058 60%, #404038 100%);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity 0.6s ease;pointer-events:none;
+}
+.boot-globe-screen.show{opacity:1;}
+
+.globe-wrap{position:relative;width:420px;height:420px;}
+.globe-svg{width:100%;height:100%;}
+
+/* concentric rings */
+.globe-ring{position:absolute;border-radius:50%;border:1px solid rgba(100,180,200,0.2);}
+
+.globe-loading-box{
+  position:absolute;bottom:80px;left:50%;transform:translateX(-50%);
+  width:520px;
+  background:rgba(20,30,40,0.85);
+  border:1px solid rgba(77,216,232,0.3);
+  padding:10px 16px;
+  text-align:center;
+}
+.glb-title{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;color:var(--white);letter-spacing:.3em;margin-bottom:8px;}
+.glb-bar-wrap{margin-bottom:5px;}
+.glb-bar-track{height:6px;background:rgba(77,216,232,0.1);border:1px solid rgba(77,216,232,0.2);margin-bottom:4px;overflow:hidden;}
+.glb-bar-fill{height:100%;background:var(--cyan2);box-shadow:0 0 8px var(--cyan2);width:0%;transition:width 0.08s linear;}
+.glb-pct{font-size:10px;color:var(--cyan);text-align:right;letter-spacing:.1em;}
+
+/* ════════════════════════════════
+   BOOT — PHASE 3: MAIN SYSTEM ENGAGED
+   ════════════════════════════════ */
+.boot-engaged-screen{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 100% 80% at 50% 40%, #303828 0%, #202820 40%, #101810 70%, #080c08 100%);
+  overflow:hidden;
+  opacity:0;transition:opacity 0.5s ease;pointer-events:none;
+}
+.boot-engaged-screen.show{opacity:1;}
+
+/* blurry map silhouette behind */
+.eng-map-bg{
+  position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 560'%3E%3Crect width='1000' height='560' fill='%23101810'/%3E%3Cpath d='M85 80L180 70L240 100L255 170L240 220L180 270L90 290L60 240L55 170L70 110Z' fill='%23182018' opacity='.6'/%3E%3Cpath d='M435 60L500 55L545 90L540 180L480 230L430 220L415 155L420 90Z' fill='%23182018' opacity='.5'/%3E%3Cpath d='M505 55L820 50L825 160L720 180L540 130L510 80Z' fill='%23182018' opacity='.5'/%3E%3Cpath d='M440 140L540 130L545 280L460 360L415 280L415 195Z' fill='%23182018' opacity='.5'/%3E%3C/svg%3E") center/cover;
+  filter:blur(8px);
+  opacity:0.7;
+}
+
+/* dot grid */
+.eng-dotgrid{
+  position:absolute;inset:0;
+  background-image:radial-gradient(circle,rgba(60,100,60,0.3) 1px,transparent 1px);
+  background-size:32px 32px;
+}
+
+/* floating orbs */
+.orb{
+  position:absolute;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, rgba(200,220,180,0.4), rgba(100,140,100,0.1) 60%, transparent 80%);
+  border:1px solid rgba(150,180,150,0.2);
+}
+
+/* the main band */
+.eng-band{
+  position:absolute;top:50%;left:0;right:0;transform:translateY(-50%);
+  background:rgba(0,0,0,0.75);
+  padding:28px 0 24px;
+  text-align:center;
+  border-top:1px solid rgba(77,216,232,0.15);
+  border-bottom:1px solid rgba(77,216,232,0.15);
+}
+.eng-top{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:400;color:rgba(77,216,232,0.7);letter-spacing:.35em;text-transform:uppercase;}
+.eng-main{font-family:'Rajdhani',sans-serif;font-size:52px;font-weight:700;color:var(--cyan);letter-spacing:.15em;text-transform:uppercase;text-shadow:0 0 40px rgba(77,216,232,0.6),0 0 80px rgba(77,216,232,0.3);}
+.eng-sub{font-size:8px;color:rgba(77,216,232,0.25);letter-spacing:.2em;margin-top:6px;overflow:hidden;white-space:nowrap;}
+
+/* ════════════════════════════════
+   BOOT — PHASE 4: guide tips
+   ════════════════════════════════ */
+.boot-guide-screen{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 100% 80% at 50% 40%, #202820 0%, #141c14 50%, #080c08 100%);
+  opacity:0;transition:opacity 0.4s ease;pointer-events:none;
+  overflow:hidden;
+}
+.boot-guide-screen.show{opacity:1;pointer-events:all;}
+
+/* same map/dotgrid bg as engaged */
+.guide-map-bg{position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 560'%3E%3Crect width='1000' height='560' fill='%23101810'/%3E%3Cpath d='M85 80L180 70L240 100L255 170L240 220L180 270L90 290L60 240L55 170L70 110Z' fill='%23182018' opacity='.6'/%3E%3Cpath d='M435 60L500 55L545 90L540 180L480 230L430 220L415 155L420 90Z' fill='%23182018' opacity='.5'/%3E%3Cpath d='M505 55L820 50L825 160L720 180L540 130L510 80Z' fill='%23182018' opacity='.5'/%3E%3Cpath d='M440 140L540 130L545 280L460 360L415 280L415 195Z' fill='%23182018' opacity='.5'/%3E%3C/svg%3E") center/cover;filter:blur(6px);opacity:0.5;}
+.guide-dotgrid{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(60,100,60,0.25) 1px,transparent 1px);background-size:32px 32px;}
+
+/* "MAIN SYSTEM ENGAGED" ghost text behind */
+.guide-ghost{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;user-select:none;}
+.guide-ghost-top{font-family:'Rajdhani',sans-serif;font-size:clamp(28px,5vw,48px);font-weight:700;color:rgba(77,216,232,0.06);letter-spacing:.3em;text-transform:uppercase;}
+.guide-ghost-main{font-family:'Rajdhani',sans-serif;font-size:clamp(48px,9vw,90px);font-weight:700;color:rgba(77,216,232,0.05);letter-spacing:.15em;text-transform:uppercase;}
+
+/* orange timestamp bar */
+.guide-timebar{
+  position:absolute;top:0;left:0;right:0;
+  display:flex;align-items:center;justify-content:center;
+  padding:6px 0;
+}
+.guide-timebar-inner{
+  border:1px solid rgba(200,120,40,0.5);
+  padding:3px 20px;
+  font-size:11px;color:var(--orange);letter-spacing:.2em;
+  background:rgba(0,0,0,0.5);
+  min-width:280px;text-align:center;
+}
+.guide-timebar-brackets{
+  position:absolute;top:4px;left:calc(50% - 160px);right:calc(50% - 160px);
+  height:20px;pointer-events:none;
+}
+
+/* player bar */
+.guide-playerbar{
+  position:absolute;top:34px;left:0;right:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.guide-playerbar-inner{
+  background:rgba(20,50,80,0.7);
+  border:1px solid rgba(40,90,130,0.6);
+  padding:5px 0;
+  width:calc(100% - 40px);max-width:1160px;
+  text-align:center;
+  font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:400;
+  color:var(--cyan);letter-spacing:.1em;
+}
+
+/* guide panel */
+.guide-panel{
+  position:absolute;
+  top:70px;left:20px;right:20px;
+  bottom:80px;
+  display:flex;flex-direction:column;
+}
+.guide-panel-title{
+  font-size:11px;color:var(--white);letter-spacing:.2em;
+  font-family:'Rajdhani',sans-serif;font-weight:400;
+  text-align:center;padding:5px 0;
+}
+.guide-panel-box{
+  flex:1;
+  background:rgba(10,24,40,0.75);
+  border:1px solid rgba(77,216,232,0.2);
+  padding:18px 20px;
+  position:relative;
+}
+.guide-panel-box::before{content:'';position:absolute;top:0;left:0;width:8px;height:8px;border-top:1px solid var(--cyan-dim);border-left:1px solid var(--cyan-dim);}
+.guide-panel-box::after{content:'';position:absolute;bottom:0;right:0;width:8px;height:8px;border-bottom:1px solid var(--cyan-dim);border-right:1px solid var(--cyan-dim);}
+.guide-h{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--white);letter-spacing:.1em;margin-bottom:12px;}
+.guide-line{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--white);letter-spacing:.05em;line-height:1.9;padding-left:4px;}
+.guide-line::before{content:'· ';color:var(--white);}
+
+.guide-counter{
+  text-align:center;
+  padding:6px 0;
+  font-size:11px;color:var(--white);letter-spacing:.15em;
+}
+
+/* guide bottom bar */
+.guide-bottom{
+  position:absolute;bottom:0;left:0;right:0;
+  background:rgba(10,30,50,0.85);
+  border-top:1px solid rgba(40,80,110,0.5);
+}
+.guide-pips{
+  display:flex;justify-content:flex-end;align-items:center;
+  padding:5px 16px;gap:3px;
+}
+.guide-pip{width:14px;height:8px;background:rgba(77,216,232,0.15);border:1px solid rgba(77,216,232,0.2);}
+.guide-pip.on{background:rgba(77,216,232,0.5);border-color:rgba(77,216,232,0.6);}
+.guide-start{
+  text-align:center;padding:6px 0;
+  font-size:11px;color:var(--white);letter-spacing:.2em;
+  animation:gblink 1s steps(1) infinite;
+}
+@keyframes gblink{0%,100%{opacity:1}50%{opacity:0}}
+.guide-footer-line{
+  font-size:9px;color:rgba(180,180,160,0.5);letter-spacing:.1em;
+  text-align:center;padding:3px 0 5px;
+}
+
+/* ════════════════════════════════
+   MAIN — World Menu style
+   ════════════════════════════════ */
+#main{background:#000;}
+
+/* pure black bg with dark map */
+.main-map-bg{
+  position:absolute;inset:0;
+  background:#000;
+}
+.main-map-svg{position:absolute;inset:0;width:100%;height:100%;opacity:1;}
+
+/* starfield dots */
+.main-stars{
+  position:absolute;inset:0;
+  background-image:radial-gradient(circle,rgba(255,255,255,0.25) 1px,transparent 1px);
+  background-size:60px 60px;
+}
+
+/* ACVD crosshair cursor overlay on map area */
+.main-crosshair{
+  position:absolute;inset:0;pointer-events:none;
+}
+
+/* top-right date + manual */
+.main-topright{
+  position:absolute;top:12px;right:16px;
+  text-align:right;
+  font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:400;
+  color:rgba(220,220,200,0.7);letter-spacing:.08em;
+}
+.main-manual{
+  display:flex;align-items:center;gap:5px;
+  color:rgba(180,180,160,0.5);font-size:11px;letter-spacing:.12em;
+  margin-top:2px;cursor:pointer;
+  font-family:'Share Tech Mono',monospace;
+}
+.main-manual:hover{color:rgba(220,220,200,0.8);}
+.main-manual-arrow{color:rgba(180,180,160,0.5);font-size:9px;}
+
+/* team info box */
+.main-teaminfo{
+  position:absolute;top:8px;right:90px;
+  background:rgba(6,14,26,0.85);
+  border:1px solid rgba(40,80,110,0.6);
+  padding:5px 10px;
+  display:flex;align-items:center;gap:8px;
+  font-family:'Share Tech Mono',monospace;
+}
+.ti-label{font-size:8px;color:rgba(180,180,160,0.5);letter-spacing:.1em;display:block;margin-bottom:2px;}
+.ti-shield{
+  width:28px;height:28px;
+  background:rgba(20,40,60,0.8);
+  border:1px solid rgba(60,100,140,0.5);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;color:rgba(200,200,180,0.6);flex-shrink:0;
+}
+.ti-name{font-size:11px;color:var(--white);letter-spacing:.06em;}
+
+/* World Menu title */
+.main-menu-title{
+  position:absolute;top:14px;left:18px;
+  font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:400;
+  color:var(--white);letter-spacing:.08em;
+}
+
+/* nav list */
+.main-nav{
+  position:absolute;top:52px;left:18px;
+  display:flex;flex-direction:column;gap:2px;
+}
+.main-nav-item{
+  display:flex;align-items:center;gap:8px;
+  padding:4px 6px;
+  cursor:pointer;
+  font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:400;
+  color:var(--white);letter-spacing:.06em;
+  transition:background 0.1s;
+  position:relative;
+}
+.main-nav-item:hover{background:rgba(77,216,232,0.05);}
+.main-nav-item.act::before{content:'›';position:absolute;left:-10px;color:var(--white);font-size:14px;}
+.main-nav-item.disabled{color:rgba(100,110,120,0.6);cursor:default;}
+.main-nav-item.disabled:hover{background:transparent;}
+.nav-sq{width:10px;height:10px;background:var(--orange);flex-shrink:0;}
+.nav-sq.dim{background:rgba(100,110,120,0.5);}
+
+/* bottom instruction bar */
+.main-instruct{
+  position:absolute;bottom:0;left:0;right:0;
+  background:rgba(6,14,26,0.85);
+  border-top:1px solid rgba(40,80,110,0.4);
+  padding:5px 16px;
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  color:var(--orange);letter-spacing:.08em;
+}
+
+/* ════════════════════════════════
+   PLANETS — Select Zone
+   ════════════════════════════════ */
+#planets{background:#000;display:none;}
+#planets.active{display:flex;flex-direction:column;}
+
+.pl-topbar{
+  height:30px;background:rgba(6,14,26,0.97);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;flex-shrink:0;
+}
+.pl-topbar-title{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;color:var(--cyan);letter-spacing:.2em;}
+.pl-topbar-right{display:flex;align-items:center;gap:14px;font-size:9px;color:var(--text2);letter-spacing:.1em;}
+.pl-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--cyan2);margin-right:4px;animation:pd 2s ease-in-out infinite;}
 @keyframes pd{0%,100%{opacity:1}50%{opacity:.4}}
-.body{display:grid;grid-template-columns:220px 1fr;overflow:hidden;}
+.pl-lv{color:var(--cyan);}
 
-/* SIDEBAR */
-.sb{background:rgba(8,21,37,.97);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
-.sb-hd{padding:11px 14px 8px;border-bottom:1px solid var(--border);font-size:9px;color:var(--text2);letter-spacing:.2em;}
-.wn-list{padding:6px 0;}
-.wni{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;transition:background .1s;position:relative;}
-.wni:hover{background:rgba(74,200,216,.035);}
-.wni.act{background:rgba(74,200,216,.055);}
-.wni.act::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--cyan2);}
-.wni.dis{opacity:.32;cursor:default;}
-.wni .pip{width:7px;height:7px;background:var(--cyan2);flex-shrink:0;}
-.wni .pip.g{background:var(--text3);}
-.wni .lbl{font-size:11px;color:var(--white);letter-spacing:.06em;font-family:'Titillium Web',sans-serif;font-weight:300;}
-.wni.dis .lbl{color:var(--text3);}
-.sdiv{height:1px;background:var(--border);margin:6px 0;}
-.al{padding:6px 0;}
-.al-lbl{padding:5px 14px 3px;font-size:8px;color:var(--text2);letter-spacing:.2em;display:flex;align-items:center;gap:5px;}
-.al-lbl::before{content:'';display:inline-block;width:5px;height:5px;background:var(--text3);}
-.at{display:block;width:calc(100% - 28px);margin:3px 14px;height:50px;background:var(--navy2);border:1px solid var(--border);cursor:pointer;overflow:hidden;position:relative;transition:border-color .15s;}
-.at:hover{border-color:var(--cyan3);}
-.at.sel{border-color:var(--cyan2);}
-.at.sel::after{content:'';position:absolute;inset:0;border:1px solid rgba(74,200,216,.25);}
-.at-rank{position:absolute;top:3px;right:4px;font-size:8px;color:var(--orange);background:rgba(5,12,20,.8);padding:1px 4px;}
-.at-name{position:absolute;bottom:3px;left:5px;font-size:8px;color:var(--text);letter-spacing:.06em;}
-.pb{margin-top:auto;border-top:1px solid var(--border);padding:11px 14px;}
-.pb-name{font-size:11px;color:var(--white);letter-spacing:.08em;font-family:'Titillium Web',sans-serif;font-weight:300;margin-bottom:7px;}
-.ps{display:flex;justify-content:space-between;font-size:9px;color:var(--text2);letter-spacing:.07em;padding:3px 0;border-bottom:1px solid rgba(26,58,90,.4);}
-.ps:last-child{border:none;}
-.ps .v{color:var(--text);}
-.ps .vc{color:var(--cyan);}
-.ps .vo{color:var(--orange);}
+.pl-body{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.pl-header{padding:12px 20px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(40,80,110,0.3);}
+.pl-header h2{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;color:var(--white);letter-spacing:.2em;text-transform:uppercase;}
+.pl-header-sub{font-size:8px;color:var(--text2);letter-spacing:.15em;}
 
-/* MAP */
-.ma{position:relative;overflow:hidden;background:var(--navy);}
-#wmap{position:absolute;inset:0;width:100%;height:100%;opacity:.9;}
-.mgrid{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(74,200,216,.13) 1px,transparent 1px);background-size:28px 28px;pointer-events:none;}
-.mvig{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 25%,rgba(5,12,20,.65) 100%);pointer-events:none;}
-.zname{position:absolute;top:15px;left:50%;transform:translateX(-50%);font-size:13px;color:var(--white);letter-spacing:.2em;font-family:'Titillium Web',sans-serif;font-weight:300;pointer-events:none;transition:opacity .3s;}
-.manlink{position:absolute;top:11px;right:16px;font-size:9px;color:var(--text2);letter-spacing:.15em;display:flex;align-items:center;gap:4px;cursor:pointer;}
-.manlink:hover{color:var(--text);}
-.manlink .arr{color:var(--cyan2);font-size:8px;}
-.ti{position:absolute;top:11px;right:90px;background:rgba(8,21,37,.92);border:1px solid var(--border);padding:5px 9px;display:flex;align-items:center;gap:7px;font-size:9px;color:var(--text2);letter-spacing:.08em;}
-.tish{width:21px;height:21px;background:var(--panel);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--cyan2);}
-.ibar{position:absolute;bottom:0;left:0;right:0;height:24px;background:rgba(8,21,37,.97);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:9px;color:var(--text2);letter-spacing:.1em;}
-.ibar .il{color:var(--cyan2);}
+.pl-grid-wrap{flex:1;overflow-y:auto;padding:16px 20px;}
+.pl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;}
 
-/* MISSION PANEL */
-#mpanel{position:absolute;inset:0;background:rgba(5,12,20,.97);display:none;flex-direction:column;z-index:50;}
-#mpanel.op{display:flex;}
-.mph{border-bottom:1px solid var(--border);padding:13px 20px;display:flex;align-items:flex-start;justify-content:space-between;}
-.mp-t{font-family:'Titillium Web',sans-serif;font-weight:300;font-size:21px;color:var(--white);letter-spacing:.15em;text-transform:uppercase;}
-.mp-i{font-size:9px;color:var(--text2);letter-spacing:.18em;margin-top:3px;}
-.mp-r{font-size:26px;font-weight:200;font-family:'Titillium Web',sans-serif;color:var(--orange);letter-spacing:.1em;}
-.mpb{flex:1;overflow-y:auto;padding:18px 20px;display:flex;gap:18px;}
-.mpc{flex:1;}
-.mpsl{font-size:8px;color:var(--text2);letter-spacing:.25em;margin-bottom:7px;padding-bottom:4px;border-bottom:1px solid var(--border);}
-.mpdesc{font-size:11px;color:var(--text);line-height:1.8;letter-spacing:.04em;margin-bottom:14px;}
-.mpobj{display:flex;gap:7px;font-size:10px;color:var(--text);padding:4px 0;border-bottom:1px solid rgba(26,58,90,.4);letter-spacing:.04em;line-height:1.4;}
-.mpobj::before{content:'·';color:var(--cyan2);flex-shrink:0;}
-.rg{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px;}
-.rc{background:var(--panel);border:1px solid var(--border);padding:9px 11px;}
-.rl{font-size:8px;color:var(--text2);letter-spacing:.15em;}
-.rv{font-size:17px;color:var(--cyan);font-family:'Titillium Web',sans-serif;font-weight:300;margin-top:2px;letter-spacing:.08em;}
-.mpf{border-top:1px solid var(--border);padding:13px 20px;display:flex;gap:10px;align-items:center;}
-.dep{background:rgba(74,200,216,.1);border:1px solid var(--cyan3);color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:.25em;padding:9px 26px;cursor:pointer;transition:background .15s,border-color .15s;}
-.dep:hover{background:rgba(74,200,216,.18);border-color:var(--cyan2);}
-.bk{background:transparent;border:1px solid var(--border);color:var(--text2);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:.2em;padding:9px 18px;cursor:pointer;transition:color .15s;}
-.bk:hover{color:var(--text);}
-.mpn{flex:1;font-size:9px;color:var(--text2);letter-spacing:.07em;line-height:1.6;border-left:1px solid var(--border);padding-left:11px;}
+.pl-card{
+  position:relative;background:rgba(6,14,26,0.8);
+  border:1px solid var(--border);
+  cursor:pointer;aspect-ratio:1;overflow:hidden;
+  transition:border-color .2s;
+}
+.pl-card:hover{border-color:var(--cyan2);}
+.pl-card img{width:100%;height:100%;object-fit:cover;filter:saturate(.65) brightness(.75);transition:filter .2s;}
+.pl-card:hover img{filter:saturate(.85) brightness(.9);}
+.pl-card-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,.92) 0%,rgba(0,0,0,.4) 50%,transparent 100%);
+  display:flex;flex-direction:column;justify-content:flex-end;padding:10px;
+}
+.pl-card-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;color:var(--white);letter-spacing:.1em;text-transform:uppercase;}
+.pl-card-meta{font-size:8px;color:var(--cyan2);letter-spacing:.12em;margin-top:2px;}
+.pl-card-corner{position:absolute;top:5px;left:5px;width:7px;height:7px;border-top:1px solid var(--cyan2);border-left:1px solid var(--cyan2);}
+.pl-card-corner2{position:absolute;bottom:5px;right:5px;width:7px;height:7px;border-bottom:1px solid var(--cyan2);border-right:1px solid var(--cyan2);}
 
-/* COMMANDS VIEW */
-#vcmd{position:absolute;inset:0;background:var(--navy);display:none;overflow-y:auto;padding:18px 22px;}
-#vcmd.op{display:block;}
-.cs{margin-bottom:22px;}
-.csl{font-size:8px;color:var(--text2);letter-spacing:.25em;margin-bottom:9px;padding-bottom:4px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;}
-.csl .p{width:5px;height:5px;background:var(--cyan2);}
-.cr{display:flex;align-items:baseline;gap:14px;padding:6px 0;border-bottom:1px solid rgba(26,58,90,.28);font-size:10px;}
-.cn{color:var(--cyan);min-width:130px;letter-spacing:.09em;}
-.cd{color:var(--text2);flex:1;font-size:9px;line-height:1.5;}
+.pl-empty{grid-column:1/-1;text-align:center;padding:60px 0;font-size:10px;color:var(--text3);letter-spacing:.15em;line-height:2.2;}
 
-/* INVITE VIEW */
-#vinv{position:absolute;inset:0;background:var(--navy);display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;}
-#vinv.op{display:flex;}
-.ig{font-family:'Titillium Web',sans-serif;font-weight:200;font-size:clamp(28px,6vw,68px);color:rgba(74,200,216,.05);letter-spacing:.2em;position:absolute;pointer-events:none;user-select:none;text-transform:uppercase;}
-.ibox{position:relative;background:var(--panel);border:1px solid var(--border2);padding:30px 38px;text-align:center;width:clamp(280px,44vw,480px);}
-.it{font-family:'Titillium Web',sans-serif;font-weight:300;font-size:19px;color:var(--white);letter-spacing:.2em;margin-bottom:7px;}
-.is{font-size:10px;color:var(--text2);letter-spacing:.07em;line-height:1.8;margin-bottom:22px;}
-.ib{background:rgba(88,101,242,.14);border:1px solid rgba(88,101,242,.38);color:#8892f5;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:.25em;padding:11px 30px;cursor:pointer;transition:background .15s;}
-.ib:hover{background:rgba(88,101,242,.24);}
-
-/* BOTTOM */
-.btmbar{grid-column:1/-1;background:rgba(8,21,37,.97);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:8px;color:var(--text2);letter-spacing:.1em;}
-.tkw{flex:1;overflow:hidden;margin:0 16px;}
-.tki{white-space:nowrap;font-size:8px;color:var(--text3);letter-spacing:.1em;animation:tk 40s linear infinite;}
+.pl-botbar{height:22px;background:rgba(6,14,26,0.97);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:8px;color:var(--text2);letter-spacing:.1em;flex-shrink:0;}
+.tkw{flex:1;overflow:hidden;margin:0 12px;}
+.tki{white-space:nowrap;font-size:8px;color:var(--text3);letter-spacing:.1em;animation:tk 45s linear infinite;}
 @keyframes tk{from{transform:translateX(80vw)}to{transform:translateX(-100%)}}
-::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);}
-#flash{position:fixed;inset:0;pointer-events:none;z-index:5000;background:rgba(74,200,216,.07);opacity:0;transition:opacity .08s;}
-#flash.on{opacity:1;}
 
-/* faction markers */
-.fm{position:absolute;width:18px;height:22px;cursor:pointer;transform:translate(-50%,-100%);}
-.fm svg{width:100%;height:100%;}
+/* modal */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:none;align-items:center;justify-content:center;}
+.modal-ov.open{display:flex;}
+.modal{background:rgba(8,18,32,0.98);border:1px solid var(--border2);width:clamp(300px,40vw,440px);position:relative;}
+.modal-hd{border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;}
+.modal-hd-t{font-size:9px;color:var(--cyan);letter-spacing:.25em;}
+.modal-close{background:none;border:none;color:var(--text2);cursor:pointer;font-size:13px;}
+.modal-close:hover{color:var(--white);}
+.modal-bd{padding:16px;}
+.img-prev{width:100%;aspect-ratio:16/9;background:rgba(6,14,26,0.8);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:10px;cursor:pointer;}
+.img-prev img{width:100%;height:100%;object-fit:cover;}
+.img-prev-lbl{font-size:8px;color:var(--text3);letter-spacing:.15em;}
+.modal-ft{border-top:1px solid var(--border);padding:10px 16px;display:flex;justify-content:flex-end;gap:8px;}
+.mbrk{position:absolute;width:8px;height:8px;}
+.mbrk.tl{top:-1px;left:-1px;border-top:1px solid var(--cyan2);border-left:1px solid var(--cyan2);}
+.mbrk.tr{top:-1px;right:-1px;border-top:1px solid var(--cyan2);border-right:1px solid var(--cyan2);}
+.mbrk.bl{bottom:-1px;left:-1px;border-bottom:1px solid var(--cyan2);border-left:1px solid var(--cyan2);}
+.mbrk.br{bottom:-1px;right:-1px;border-bottom:1px solid var(--cyan2);border-right:1px solid var(--cyan2);}
+
+/* ════════════════════════════════
+   MISSIONS — Select Mission style
+   ════════════════════════════════ */
+#missions{background:#000;display:none;}
+#missions.active{display:flex;flex-direction:column;}
+
+.ms-topbar{height:30px;background:rgba(6,14,26,0.97);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;flex-shrink:0;}
+.ms-title{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;color:var(--white);letter-spacing:.1em;}
+.ms-manual{font-size:9px;color:var(--text2);letter-spacing:.15em;display:flex;align-items:center;gap:4px;cursor:pointer;}
+.ms-manual:hover{color:var(--white);}
+
+.ms-body{flex:1;overflow:hidden;display:grid;grid-template-columns:280px 1fr;}
+
+/* left area list (like ACVD thumbnails) */
+.ms-area{
+  background:rgba(4,10,18,0.97);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow-y:auto;
+}
+.ms-area-hd{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;font-size:9px;color:var(--text2);letter-spacing:.18em;}
+.ms-area-hd::before{content:'';display:inline-block;width:6px;height:6px;background:var(--text3);}
+
+.ms-area-planet{padding:10px 12px;border-bottom:1px solid rgba(26,58,90,0.4);}
+.ms-area-planet-img{width:100%;height:72px;object-fit:cover;border:1px solid var(--border);filter:saturate(.5) brightness(.7);margin-bottom:7px;}
+.ms-area-planet-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;color:var(--white);letter-spacing:.1em;text-transform:uppercase;}
+.ms-area-planet-sub{font-size:8px;color:var(--cyan2);letter-spacing:.12em;margin-top:2px;}
+
+.ms-mission-thumb{
+  display:flex;align-items:center;
+  padding:0 12px 0 0;
+  border-bottom:1px solid rgba(26,58,90,0.25);
+  cursor:pointer;
+  position:relative;
+  transition:background .1s;
+}
+.ms-mission-thumb:hover{background:rgba(77,216,232,0.04);}
+.ms-mission-thumb.sel{background:rgba(77,216,232,0.06);border-left:2px solid var(--cyan2);}
+.ms-mission-img{width:80px;height:52px;object-fit:cover;flex-shrink:0;filter:saturate(.4) brightness(.6);background:rgba(10,20,35,0.8);}
+.ms-mission-img-placeholder{width:80px;height:52px;flex-shrink:0;background:rgba(10,20,35,0.8);border-right:1px solid var(--border);display:flex;align-items:center;justify-content:center;}
+.ms-mip-rank{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:18px;color:var(--orange);letter-spacing:.05em;}
+.ms-mission-info{padding:8px 10px;flex:1;}
+.ms-mission-name{font-family:'Rajdhani',sans-serif;font-weight:600;font-size:12px;color:var(--white);letter-spacing:.06em;}
+.ms-mission-meta{font-size:8px;color:var(--text2);letter-spacing:.1em;margin-top:3px;}
+
+.ms-back-btn{padding:10px 12px;border-top:1px solid var(--border);margin-top:auto;}
+
+/* right map/detail area */
+.ms-right{position:relative;overflow:hidden;background:#000;}
+.ms-map-bg{position:absolute;inset:0;}
+.ms-map-svg{position:absolute;inset:0;width:100%;height:100%;}
+.ms-map-stars{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,0.2) 1px,transparent 1px);background-size:60px 60px;}
+.ms-zone-name{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:400;color:var(--white);letter-spacing:.2em;pointer-events:none;}
+
+.ms-instruct{position:absolute;bottom:0;left:0;right:0;padding:5px 14px;background:rgba(4,10,18,0.85);border-top:1px solid rgba(40,80,110,0.3);font-size:9px;color:var(--orange);letter-spacing:.08em;font-family:'Share Tech Mono',monospace;}
+
+/* mission detail panel */
+#mdetail-panel{position:absolute;inset:0;background:rgba(4,10,18,0.97);display:none;flex-direction:column;z-index:40;}
+#mdetail-panel.open{display:flex;}
+.mdp-hd{border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:flex-start;justify-content:space-between;}
+.mdp-title{font-family:'Rajdhani',sans-serif;font-weight:300;font-size:20px;color:var(--white);letter-spacing:.12em;text-transform:uppercase;}
+.mdp-id{font-size:8px;color:var(--text2);letter-spacing:.2em;margin-top:3px;}
+.mdp-rank{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:30px;color:var(--orange);letter-spacing:.1em;}
+.mdp-body{flex:1;overflow-y:auto;padding:16px 18px;display:flex;gap:16px;}
+.mdp-col{flex:1;}
+.mdp-side{width:190px;flex-shrink:0;}
+.mdp-sl{font-size:8px;color:var(--text2);letter-spacing:.25em;margin-bottom:6px;padding-bottom:3px;border-bottom:1px solid var(--border);}
+.mdp-desc{font-size:10px;color:var(--text);line-height:1.8;letter-spacing:.04em;margin-bottom:14px;border-left:2px solid var(--border);padding-left:10px;}
+.mdp-obj{display:flex;gap:6px;font-size:10px;color:var(--text);padding:4px 0;border-bottom:1px solid rgba(26,58,90,.3);letter-spacing:.04em;}
+.mdp-obj::before{content:'·';color:var(--cyan2);flex-shrink:0;}
+.mdp-chip{background:rgba(6,14,26,0.8);border:1px solid var(--border);padding:9px 11px;margin-bottom:7px;}
+.mdp-chip-l{font-size:7px;color:var(--text2);letter-spacing:.15em;}
+.mdp-chip-v{font-family:'Rajdhani',sans-serif;font-weight:300;font-size:18px;color:var(--cyan);margin-top:2px;letter-spacing:.08em;}
+.mdp-ft{border-top:1px solid var(--border);padding:12px 18px;display:flex;gap:8px;align-items:center;}
+.mdp-note{flex:1;font-size:8px;color:var(--text2);letter-spacing:.06em;line-height:1.7;border-left:1px solid var(--border);padding-left:10px;}
+
+/* ════════════════════════════════
+   PROOF SUBMISSION
+   ════════════════════════════════ */
+#proof{background:rgba(4,10,18,0.98);display:none;flex-direction:column;}
+#proof.active{display:flex;}
+.proof-topbar{height:30px;background:rgba(6,14,26,0.97);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;flex-shrink:0;}
+.proof-topbar-title{font-size:11px;color:var(--cyan);letter-spacing:.2em;}
+.proof-body{flex:1;overflow-y:auto;display:flex;align-items:center;justify-content:center;padding:20px;}
+.proof-box{width:clamp(300px,50vw,560px);background:rgba(6,14,26,0.95);border:1px solid var(--border2);position:relative;}
+.proof-bh{border-bottom:1px solid var(--border);padding:12px 18px;}
+.proof-title{font-family:'Rajdhani',sans-serif;font-weight:300;font-size:17px;color:var(--white);letter-spacing:.12em;text-transform:uppercase;}
+.proof-sub{font-size:8px;color:var(--text2);letter-spacing:.15em;margin-top:3px;}
+.proof-bd{padding:16px 18px;}
+.proof-status{display:flex;align-items:center;gap:7px;padding:6px 9px;background:rgba(4,10,18,0.8);border:1px solid var(--border);font-size:9px;color:var(--text2);letter-spacing:.1em;margin-bottom:12px;}
+.psd{width:5px;height:5px;border-radius:50%;background:var(--orange);box-shadow:0 0 5px var(--orange);}
+.psd.ok{background:var(--green);box-shadow:0 0 5px var(--green);}
+.psd.err{background:var(--red);box-shadow:0 0 5px var(--red);}
+.proof-ft{border-top:1px solid var(--border);padding:11px 18px;display:flex;gap:8px;}
+
+.video-area{width:100%;aspect-ratio:16/9;background:rgba(4,10,18,0.9);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;margin-bottom:4px;overflow:hidden;}
+.video-area video{width:100%;height:100%;object-fit:contain;background:#000;display:block;}
+.va-icon{font-size:22px;color:var(--text3);}
+.va-lbl{font-size:8px;color:var(--text3);letter-spacing:.15em;}
+
+/* ════════════════════════════════
+   ADMIN
+   ════════════════════════════════ */
+#adminlogin{background:rgba(4,10,18,0.98);display:none;flex-direction:column;align-items:center;justify-content:center;}
+#adminlogin.active{display:flex;}
+.albox{width:clamp(280px,34vw,380px);background:rgba(6,14,26,0.95);border:1px solid var(--border2);position:relative;}
+.albox-hd{border-bottom:1px solid var(--border);padding:11px 16px;}
+.albox-title{font-size:9px;color:var(--orange);letter-spacing:.3em;}
+.albox-sub{font-size:7px;color:var(--text2);letter-spacing:.15em;margin-top:2px;}
+.albox-bd{padding:18px;}
+.al-err{font-size:8px;color:var(--red);letter-spacing:.1em;margin-bottom:8px;display:none;}
+.albox-ft{border-top:1px solid var(--border);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;}
+
+#admin{background:rgba(4,10,18,0.98);display:none;flex-direction:column;}
+#admin.active{display:flex;}
+.adm-topbar{height:30px;background:rgba(6,14,26,0.97);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;flex-shrink:0;}
+.adm-topbar-title{font-size:11px;color:var(--orange);letter-spacing:.2em;}
+.adm-body{flex:1;overflow:hidden;display:grid;grid-template-columns:170px 1fr;}
+.adm-sb{background:rgba(4,10,18,0.97);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.adm-sb-hd{padding:9px 13px;border-bottom:1px solid var(--border);font-size:7px;color:var(--orange);letter-spacing:.25em;}
+.adm-ni{padding:9px 13px;font-size:10px;color:var(--text2);letter-spacing:.1em;cursor:pointer;transition:background .1s;border-bottom:1px solid rgba(26,58,90,0.3);display:flex;align-items:center;gap:7px;}
+.adm-ni:hover{background:rgba(77,216,232,0.04);}
+.adm-ni.act{color:var(--cyan);background:rgba(77,216,232,0.06);border-left:2px solid var(--cyan2);}
+.adm-ni-pip{width:4px;height:4px;background:currentColor;flex-shrink:0;}
+.adm-content{flex:1;overflow-y:auto;padding:18px 22px;}
+.adm-view{display:none;}
+.adm-view.act{display:block;}
+.adm-sec{margin-bottom:22px;}
+.adm-sec-title{font-size:8px;color:var(--orange);letter-spacing:.25em;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.adm-botbar{height:22px;background:rgba(6,14,26,0.97);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:8px;color:var(--orange);letter-spacing:.1em;flex-shrink:0;}
+
+/* queue badge */
+#queue-badge{margin-left:auto;font-size:7px;color:var(--orange);display:none;}
+
+/* mission admin cards */
+.amc{background:rgba(6,14,26,0.8);border:1px solid var(--border);padding:10px;margin-bottom:7px;display:flex;align-items:center;gap:10px;}
+.amc-info{flex:1;}
+.amc-name{font-size:11px;color:var(--white);letter-spacing:.06em;}
+.amc-meta{font-size:7px;color:var(--text2);letter-spacing:.1em;margin-top:2px;}
+.amc-acts{display:flex;gap:5px;}
+
+/* proof queue */
+.pqc{background:rgba(6,14,26,0.8);border:1px solid var(--border);padding:11px;margin-bottom:8px;}
+.pqc-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+.pqc-title{font-size:10px;color:var(--white);letter-spacing:.06em;}
+.pqc-time{font-size:7px;color:var(--text3);letter-spacing:.1em;}
+.pqc-meta{font-size:8px;color:var(--text2);letter-spacing:.07em;line-height:1.8;margin-bottom:9px;}
+.pqc-vid{width:100%;aspect-ratio:16/9;background:rgba(4,10,18,0.9);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin-bottom:9px;overflow:hidden;}
+.pqc-vid video{width:100%;height:100%;object-fit:contain;background:#000;}
+.pqc-vid-lbl{font-size:8px;color:var(--text3);letter-spacing:.12em;}
+.pqc-acts{display:flex;gap:7px;}
+.sb{font-size:7px;padding:2px 7px;border:1px solid;letter-spacing:.1em;}
+.sb-pending{color:var(--orange);border-color:rgba(232,114,26,.4);}
+.sb-approved{color:var(--green);border-color:rgba(40,168,88,.4);}
+.sb-rejected{color:var(--red);border-color:rgba(192,40,32,.4);}
+.empty-adm{text-align:center;padding:36px 0;font-size:8px;color:var(--text3);letter-spacing:.15em;line-height:2;}
+
+/* ════════ SHARED INPUTS / BUTTONS ════════ */
+input,textarea,select{
+  background:rgba(6,14,26,0.9);border:1px solid var(--border);
+  color:var(--white);font-family:'Share Tech Mono',monospace;
+  font-size:9px;letter-spacing:.08em;padding:7px 9px;outline:none;width:100%;
+}
+input:focus,textarea:focus,select:focus{border-color:var(--cyan2);}
+textarea{resize:vertical;min-height:65px;}
+label.lbl{font-size:7px;color:var(--text2);letter-spacing:.2em;display:block;margin-bottom:3px;}
+.field{margin-bottom:10px;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.btn{background:rgba(77,216,232,0.08);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:.2em;padding:8px 18px;cursor:pointer;transition:background .15s;}
+.btn:hover{background:rgba(77,216,232,0.18);}
+.btn.danger{background:rgba(192,40,32,.08);border-color:rgba(192,40,32,.3);color:var(--red);}
+.btn.danger:hover{background:rgba(192,40,32,.18);}
+.btn.ok{background:rgba(40,168,88,.08);border-color:rgba(40,168,88,.3);color:var(--green);}
+.btn.ok:hover{background:rgba(40,168,88,.18);}
+.btn.orange{background:rgba(232,114,26,.08);border-color:rgba(232,114,26,.3);color:var(--orange);}
+.btn.orange:hover{background:rgba(232,114,26,.18);}
+
+/* diff pips */
+.dpips{display:flex;gap:2px;}
+.dp{width:7px;height:7px;border:1px solid rgba(77,216,232,0.2);}
+.dp.on{background:var(--cyan2);border-color:var(--cyan2);}
+
+/* rank badges */
+.rank-S{color:#ffd060;border-color:rgba(255,208,96,.4);background:rgba(255,208,96,.05);}
+.rank-A{color:var(--orange);border-color:rgba(232,114,26,.4);background:rgba(232,114,26,.05);}
+.rank-B{color:var(--text);border-color:rgba(122,184,204,.3);background:rgba(122,184,204,.04);}
+.rank-C{color:var(--text2);border-color:rgba(74,122,138,.3);}
+.rbadge{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:11px;letter-spacing:.1em;padding:1px 6px;border:1px solid;}
+
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);}
+
+#flash{position:fixed;inset:0;pointer-events:none;z-index:9999;background:rgba(77,216,232,0.06);opacity:0;transition:opacity .08s;}
+#flash.on{opacity:1;}
 </style>
 </head>
 <body>
 
-<div id="intro">
-  <div class="itopbar"><span id="iclk">12:00:00 06/08/2026</span></div>
-  <div class="ghost-text" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Titillium Web',sans-serif;font-weight:200;font-size:clamp(36px,8vw,88px);color:rgba(74,200,216,.055);letter-spacing:.12em;text-align:center;line-height:1.1;pointer-events:none;user-select:none;text-transform:uppercase;">WAR SYSTEM<br>ENGAGED</div>
-  <div class="ipanel">
-    <div class="br tl"></div><div class="br tr"></div><div class="br bl2"></div><div class="br br2"></div>
-    <div class="ipanel-hd">
-      <span class="t">SORTIE COMMAND — INITIAL SETTINGS</span>
-      <span class="s">SYSTEM BOOT</span>
+<!-- ══════════════ BOOT ══════════════ -->
+<div id="boot" class="screen active">
+  <!-- Phase 1: warm globe title -->
+  <div class="boot-warm-bg" id="bwarm"></div>
+  <div class="boot-dotgrid" id="bdots"></div>
+  <div class="boot-crosshair" id="bcross"></div>
+  <div class="boot-title-bar" id="btitle">
+    <div class="btb-sq"></div>
+    <div class="btb-text">
+      <div class="btb-top">ARMORED CORE</div>
+      <div class="btb-main">VERDICT DAY</div>
+      <div class="btb-sub">INITIAL SETTINGS &gt;&gt;&gt;</div>
     </div>
-    <div class="ipanel-bd" id="bbd">
-      <div class="bl" id="b0">CONNECTING TO DISCORD GATEWAY ................... <span class="ok">OK</span></div>
-      <div class="bl" id="b1">AUTHENTICATING BOT TOKEN ........................ <span class="ok">OK</span></div>
-      <div class="bl" id="b2">LOADING MISSION DATABASE [288 ENTRIES] ......... <span class="ok">OK</span></div>
-      <div class="bl" id="b3">SYNCHRONIZING OPERATIVE LEDGER ................. <span class="ok">OK</span></div>
-      <div class="bl" id="b4">SCANNING ACTIVE SORTIES ........................ <span class="wn">3 IN PROGRESS</span></div>
-      <div class="bl" id="b5">FACTION CONFLICT DATA .......................... <span class="ok">LOADED</span></div>
-      <div class="bl" id="b6">ENCRYPTING COMMAND CHANNEL ..................... <span class="ok">SECURE</span></div>
-      <div class="bl" id="b7">WAR SYSTEM INTERFACE ........................... <span class="ok">READY</span></div>
+    <div class="btb-sq2"></div>
+  </div>
+
+  <!-- Phase 2: 3D globe loading -->
+  <div class="boot-globe-screen" id="bglobe">
+    <div class="globe-wrap">
+      <!-- concentric rings -->
+      <div class="globe-ring" style="inset:-40px;border-color:rgba(100,180,200,0.08);"></div>
+      <div class="globe-ring" style="inset:-80px;border-color:rgba(100,180,200,0.06);"></div>
+      <div class="globe-ring" style="inset:-120px;border-color:rgba(100,180,200,0.04);"></div>
+      <svg class="globe-svg" viewBox="0 0 420 420" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="globeGrad" cx="40%" cy="35%" r="65%">
+            <stop offset="0%" stop-color="#d0c898"/>
+            <stop offset="40%" stop-color="#a09870"/>
+            <stop offset="70%" stop-color="#706850"/>
+            <stop offset="100%" stop-color="#302820"/>
+          </radialGradient>
+          <radialGradient id="shineGrad" cx="35%" cy="30%" r="50%">
+            <stop offset="0%" stop-color="rgba(255,255,230,0.15)"/>
+            <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+          </radialGradient>
+          <clipPath id="globeClip"><circle cx="210" cy="210" r="200"/></clipPath>
+        </defs>
+        <circle cx="210" cy="210" r="200" fill="url(#globeGrad)"/>
+        <!-- continent silhouettes -->
+        <g clip-path="url(#globeClip)" fill="rgba(60,56,40,0.6)" stroke="rgba(80,76,56,0.3)" stroke-width="0.5">
+          <path d="M60 130 L140 120 L175 145 L185 185 L175 220 L140 245 L75 255 L45 215 L42 175 L52 148Z"/>
+          <path d="M130 290 L155 278 L172 284 L180 305 L175 335 L160 358 L140 362 L120 348 L112 322 L118 300Z"/>
+          <path d="M220 105 L245 100 L265 110 L268 140 L258 165 L238 175 L218 168 L208 148 L210 122Z"/>
+          <path d="M222 185 L265 178 L272 230 L260 272 L240 295 L218 290 L205 260 L202 225Z"/>
+          <path d="M278 100 L360 90 L388 105 L392 135 L375 158 L345 166 L308 162 L285 150 L272 128Z"/>
+          <path d="M305 172 L330 168 L342 180 L338 200 L318 208 L302 200Z"/>
+          <path d="M348 250 L380 240 L400 248 L405 268 L396 285 L372 292 L350 284 L340 268Z"/>
+          <ellipse cx="385" cy="155" rx="12" ry="22"/>
+        </g>
+        <!-- grid lines -->
+        <g clip-path="url(#globeClip)" stroke="rgba(100,180,200,0.12)" stroke-width="0.5" fill="none">
+          <line x1="10" y1="210" x2="410" y2="210"/>
+          <line x1="210" y1="10" x2="210" y2="410"/>
+          <ellipse cx="210" cy="210" rx="200" ry="65"/>
+          <ellipse cx="210" cy="210" rx="200" ry="130"/>
+          <ellipse cx="210" cy="210" rx="130" ry="200"/>
+          <ellipse cx="210" cy="210" rx="65" ry="200"/>
+        </g>
+        <circle cx="210" cy="210" r="200" fill="url(#shineGrad)"/>
+        <circle cx="210" cy="210" r="200" fill="none" stroke="rgba(100,180,200,0.25)" stroke-width="1"/>
+      </svg>
     </div>
-    <div class="ipanel-ft">
-      <div class="prog-t"><div class="prog-f" id="pf"></div></div>
-      <div class="prog-p" id="pp">0%</div>
+    <div class="globe-loading-box">
+      <div class="glb-title">LOADING</div>
+      <div class="glb-bar-wrap">
+        <div class="glb-bar-track"><div class="glb-bar-fill" id="glb1"></div></div>
+        <div class="glb-pct" id="glb1p">0.0 %</div>
+      </div>
+      <div class="glb-bar-wrap">
+        <div class="glb-bar-track"><div class="glb-bar-fill" id="glb2" style="width:0%"></div></div>
+        <div class="glb-pct" id="glb2p">0.0 %</div>
+      </div>
     </div>
   </div>
-  <div class="start-p" id="sp">[ PRESS ANY KEY TO CONTINUE ]</div>
-  <div class="ibotbar"><span>SORTIE COMMAND INTERFACE</span><span>v2.4.1 / r1.03</span></div>
+
+  <!-- Phase 3: MAIN SYSTEM ENGAGED -->
+  <div class="boot-engaged-screen" id="bengaged">
+    <div class="eng-map-bg"></div>
+    <div class="eng-dotgrid"></div>
+    <!-- floating orbs -->
+    <div class="orb" style="width:120px;height:120px;top:15%;left:8%;"></div>
+    <div class="orb" style="width:80px;height:80px;top:30%;left:55%;"></div>
+    <div class="orb" style="width:160px;height:160px;top:55%;left:20%;"></div>
+    <div class="orb" style="width:100px;height:100px;top:20%;right:5%;"></div>
+    <div class="orb" style="width:60px;height:60px;top:60%;right:15%;"></div>
+    <div class="orb" style="width:90px;height:90px;top:65%;right:40%;"></div>
+    <div class="orb" style="width:55px;height:55px;top:12%;left:40%;"></div>
+    <div class="eng-band">
+      <div class="eng-top">MAIN SYSTEM</div>
+      <div class="eng-main">ENGAGED</div>
+      <div class="eng-sub" id="eng-sub-text">INITIALIZING SORTIE COMMAND INTERFACE — LOADING OPERATIVE DATABASE — SYNCHRONIZING FACTION DATA — PREPARING MISSION ROSTER — VERIFYING CREDENTIALS —</div>
+    </div>
+  </div>
+
+  <!-- Phase 4: Guide tips -->
+  <div class="boot-guide-screen" id="bguide" onclick="launchMain()">
+    <div class="guide-map-bg"></div>
+    <div class="guide-dotgrid"></div>
+    <div class="guide-ghost">
+      <div class="guide-ghost-top">MAIN SYSTEM</div>
+      <div class="guide-ghost-main">ENGAGED</div>
+    </div>
+    <!-- orange timestamp bar -->
+    <div class="guide-timebar">
+      <div class="guide-timebar-inner" id="guide-clk">23:24:01 06/08/2026</div>
+    </div>
+    <!-- player bar -->
+    <div class="guide-playerbar">
+      <div class="guide-playerbar-inner">Unknown</div>
+    </div>
+    <!-- main guide panel -->
+    <div class="guide-panel">
+      <div class="guide-panel-title">WAR SYSTEM™: Sortie Command™ Basic Guide</div>
+      <div class="guide-panel-box">
+        <div class="guide-h">System Guide 1</div>
+        <div class="guide-line">Select a deployment zone from the planet roster to view available missions.</div>
+        <div class="guide-line">Each zone has missions assigned by the admin with unique rewards and objectives.</div>
+        <div class="guide-line">Deploy to a mission, complete it, then submit video proof to claim your credits.</div>
+        <div class="guide-line">Credits are awarded by admin upon proof verification.</div>
+      </div>
+      <div class="guide-counter">1 / 1</div>
+    </div>
+    <!-- bottom pips + start -->
+    <div class="guide-bottom">
+      <div class="guide-pips">
+        <div class="guide-pip on"></div>
+        <div class="guide-pip on"></div>
+        <div class="guide-pip on"></div>
+        <div class="guide-pip on"></div>
+        <div class="guide-pip on"></div>
+        <div class="guide-pip"></div>
+        <div class="guide-pip"></div>
+      </div>
+      <div class="guide-start">✕ Start Game</div>
+      <div class="guide-footer-line">© Sortie Command Interface &nbsp;·&nbsp; v2.4.1 / r1.03</div>
+    </div>
+  </div>
 </div>
 
-<div id="ui">
-  <div class="topbar">
-    <div class="topbar-l">
-      <span class="tb-title">WAR SYSTEM</span>
-      <nav class="tb-nav">
-        <button class="ni act" onclick="tab('world',this)">WORLD MENU</button>
-        <button class="ni" onclick="tab('cmd',this)">COMMANDS</button>
-        <button class="ni" onclick="tab('inv',this)">INVITE BOT</button>
-      </nav>
+<!-- ══════════════ WORLD MENU (main) ══════════════ -->
+<div id="main" class="screen">
+  <div class="main-map-bg">
+    <svg class="main-map-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <rect width="1000" height="600" fill="#000"/>
+      <!-- continents dark -->
+      <path d="M85 100L180 88L240 118L255 195L240 248L180 300L90 320L58 268L52 195L68 128Z" fill="#111a10"/>
+      <path d="M132 335L165 320L185 328L195 355L188 390L168 418L142 425L118 408L110 378L118 348Z" fill="#111a10"/>
+      <path d="M440 75L505 68L550 100L545 205L485 258L433 245L414 175L418 102Z" fill="#111a10"/>
+      <path d="M425 220L545 208L552 328L535 395L490 428L448 418L425 380L412 310L412 248Z" fill="#111a10"/>
+      <path d="M558 65L635 55L700 60L758 70L805 85L830 110L835 148L820 172L790 185L755 190L720 182L695 168L672 155L648 148L622 152L598 158L575 152L558 135L548 115Z" fill="#111a10"/>
+      <path d="M630 195L668 188L690 200L695 228L682 256L660 270L638 264L624 244L620 218Z" fill="#111a10"/>
+      <path d="M722 198L752 192L768 204L762 222L740 230L720 222Z" fill="#111a10"/>
+      <path d="M758 365L808 350L848 353L880 365L890 390L882 418L862 438L830 448L800 444L770 430L752 408L745 385Z" fill="#111a10"/>
+      <ellipse cx="818" cy="148" rx="10" ry="22" fill="#111a10"/>
+    </svg>
+    <div class="main-stars"></div>
+  </div>
+  <!-- faction markers layer -->
+  <div id="main-markers"></div>
+
+  <div class="main-menu-title">World Menu</div>
+  <nav class="main-nav">
+    <div class="main-nav-item" onclick="showScreen('planets')">
+      <div class="nav-sq"></div>Workshop
     </div>
-    <div class="topbar-r">
-      <span><span class="dot"></span>BOT <span class="lv">ONLINE</span></span>
-      <span>PING <span class="lv" id="pg">44ms</span></span>
-      <span id="mc">--:--:--</span>
+    <div class="main-nav-item" onclick="showScreen('planets')">
+      <div class="nav-sq"></div>Sortie
     </div>
+    <div class="main-nav-item" onclick="showScreen('planets')">
+      <div class="nav-sq"></div>Player Data
+    </div>
+    <div class="main-nav-item disabled">
+      <div class="nav-sq dim"></div>Leaderboards
+    </div>
+    <div class="main-nav-item disabled">
+      <div class="nav-sq dim"></div>Free Battle
+    </div>
+    <div class="main-nav-item" onclick="goAdmin()">
+      <div class="nav-sq"></div>Extra
+    </div>
+  </nav>
+
+  <div class="main-topright">
+    <div id="main-clk">2026/06/08 23:24:52</div>
+    <div class="main-manual"><span class="main-manual-arrow">▶</span> Manual</div>
   </div>
 
-  <div class="body">
-    <div class="sb">
-      <div class="sb-hd">WORLD MENU</div>
-      <div class="wn-list">
-        <div class="wni act" onclick="sec('sortie',this)"><div class="pip"></div><span class="lbl">Sortie</span></div>
-        <div class="wni" onclick="sec('ws',this)"><div class="pip"></div><span class="lbl">Workshop</span></div>
-        <div class="wni" onclick="sec('pd',this)"><div class="pip"></div><span class="lbl">Player Data</span></div>
-        <div class="wni dis"><div class="pip g"></div><span class="lbl">Leaderboards</span></div>
-        <div class="wni dis"><div class="pip g"></div><span class="lbl">Free Battle</span></div>
-        <div class="wni" onclick="sec('ex',this)"><div class="pip"></div><span class="lbl">Extra</span></div>
+  <div class="main-teaminfo">
+    <div class="ti-label">■ Team Information</div>
+    <div class="ti-shield">◈</div>
+    <div class="ti-name">gg/armoredcore</div>
+  </div>
+
+  <div class="main-instruct" id="main-instruct">Select a menu option.</div>
+</div>
+
+<!-- ══════════════ PLANET SELECT ══════════════ -->
+<div id="planets" class="screen">
+  <div class="pl-topbar">
+    <span class="pl-topbar-title">WAR SYSTEM — SELECT ZONE</span>
+    <div class="pl-topbar-right">
+      <span><span class="pl-dot"></span>BOT <span class="pl-lv">ONLINE</span></span>
+      <span id="pl-clk">--:--:--</span>
+      <button class="btn orange" style="padding:3px 10px;font-size:8px;" onclick="goAdmin()">⚙ ADMIN</button>
+    </div>
+  </div>
+  <div class="pl-body">
+    <div class="pl-header">
+      <h2>Select Deployment Zone</h2>
+      <span class="pl-header-sub" id="pl-count">0 ZONES</span>
+    </div>
+    <div class="pl-grid-wrap">
+      <div class="pl-grid" id="pl-grid"></div>
+    </div>
+  </div>
+  <div class="pl-botbar">
+    <button class="btn" style="padding:2px 10px;font-size:8px;" onclick="showScreen('main')">◀ BACK</button>
+    <div class="tkw"><div class="tki">◈ SELECT A ZONE TO VIEW MISSIONS ◈ ADMIN PANEL: EXTRA MENU ◈ SUBMIT VIDEO PROOF AFTER MISSION COMPLETION ◈ CREDITS AWARDED ON ADMIN CONFIRMATION ◈</div></div>
+    <span>v2.4.1</span>
+  </div>
+</div>
+
+<!-- add planet modal -->
+<div class="modal-ov" id="add-planet-modal">
+  <div class="modal">
+    <div class="mbrk tl"></div><div class="mbrk tr"></div><div class="mbrk bl"></div><div class="mbrk br"></div>
+    <div class="modal-hd">
+      <span class="modal-hd-t">ADD DEPLOYMENT ZONE</span>
+      <button class="modal-close" onclick="closeAddPlanet()">✕</button>
+    </div>
+    <div class="modal-bd">
+      <div class="img-prev" id="img-prev" onclick="document.getElementById('pl-img-input').click()">
+        <span class="img-prev-lbl">CLICK TO UPLOAD IMAGE</span>
       </div>
-      <div class="sdiv"></div>
-      <div class="al" id="alist">
-        <div class="al-lbl">Area List</div>
-        <div class="at sel" onclick="area(0,this)">
-          <svg viewBox="0 0 160 50" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="160" height="50" fill="#081525"/><polygon points="0,50 0,30 40,22 80,28 120,18 160,24 160,50" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.4"/><line x1="0" y1="38" x2="160" y2="38" stroke="#1a3a5a" stroke-width="0.3" opacity="0.4"/></svg>
-          <div class="at-rank">S</div><div class="at-name">New Frontier</div>
-        </div>
-        <div class="at" onclick="area(1,this)">
-          <svg viewBox="0 0 160 50" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="160" height="50" fill="#0c1008"/><polygon points="0,50 0,32 35,28 75,22 115,26 160,20 160,50" fill="#0a1208" stroke="#1a2a10" stroke-width="0.4"/><circle cx="120" cy="14" r="7" fill="#1a2000" opacity="0.5"/></svg>
-          <div class="at-rank">A</div><div class="at-name">Desolate Plains</div>
-        </div>
-        <div class="at" onclick="area(2,this)">
-          <svg viewBox="0 0 160 50" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="160" height="50" fill="#0a0a14"/><rect x="10" y="18" width="7" height="32" fill="#0d0d1a"/><rect x="24" y="9" width="9" height="41" fill="#0f0f1c"/><rect x="42" y="14" width="6" height="36" fill="#0d0d1a"/><rect x="58" y="22" width="11" height="28" fill="#10101e"/><rect x="78" y="10" width="8" height="40" fill="#0d0d1a"/><rect x="98" y="7" width="10" height="43" fill="#101020"/><rect x="118" y="16" width="7" height="34" fill="#0d0d1a"/><rect x="136" y="20" width="9" height="30" fill="#0f0f1c"/></svg>
-          <div class="at-rank">A</div><div class="at-name">Ruined City</div>
-        </div>
-        <div class="at" onclick="area(3,this)">
-          <svg viewBox="0 0 160 50" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="160" height="50" fill="#0a0c10"/><rect x="5" y="26" width="22" height="24" fill="#0d1015"/><rect x="34" y="13" width="17" height="37" fill="#0f1218"/><rect x="58" y="20" width="28" height="30" fill="#0d1015"/><rect x="94" y="9" width="18" height="41" fill="#101318"/><rect x="120" y="18" width="33" height="32" fill="#0d1015"/></svg>
-          <div class="at-rank">B</div><div class="at-name">Industrial Zone</div>
-        </div>
-        <div class="at" onclick="area(4,this)">
-          <svg viewBox="0 0 160 50" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="160" height="50" fill="#140e06"/><polygon points="0,50 0,34 30,30 60,36 90,26 130,32 160,28 160,50" fill="#100c08"/><circle cx="30" cy="18" r="12" fill="#180e04" opacity="0.4"/></svg>
-          <div class="at-rank">B</div><div class="at-name">Desert Wasteland</div>
-        </div>
-        <div class="at" onclick="area(5,this)">
-          <svg viewBox="0 0 160 50" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="160" height="50" fill="#080e18"/><rect x="0" y="28" width="160" height="22" fill="#081428" opacity="0.7"/><rect x="10" y="18" width="5" height="32" fill="#0a1020"/><rect x="50" y="14" width="7" height="36" fill="#0a1020"/><rect x="90" y="20" width="6" height="30" fill="#0a1020"/><rect x="130" y="16" width="8" height="34" fill="#0a1020"/></svg>
-          <div class="at-rank">B</div><div class="at-name">Flooded District</div>
-        </div>
-        <div class="at" onclick="area(6,this)">
-          <svg viewBox="0 0 160 50" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="160" height="50" fill="#05080f"/><circle cx="80" cy="25" r="11" fill="none" stroke="#1a2a40" stroke-width="0.5"/><rect x="62" y="23" width="36" height="4" fill="#0a1020"/><rect x="78" y="9" width="4" height="32" fill="#0a1020"/><circle cx="40" cy="14" r="1.5" fill="#1a2a40" opacity="0.5"/><circle cx="120" cy="34" r="1.5" fill="#1a2a40" opacity="0.5"/></svg>
-          <div class="at-rank">S</div><div class="at-name">Orbit Station</div>
-        </div>
-      </div>
-      <div class="pb">
-        <div class="pb-name">■ Operative Profile</div>
-        <div class="ps"><span>BALANCE</span><span class="v vo">24,850 CR</span></div>
-        <div class="ps"><span>RANK</span><span class="v vc">A-CLASS</span></div>
-        <div class="ps"><span>MISSIONS</span><span class="v">47</span></div>
-        <div class="ps"><span>FACTION</span><span class="v">ORCA</span></div>
+      <input type="file" id="pl-img-input" accept="image/*" style="display:none" onchange="previewPlanetImg(this)">
+      <div class="field"><label class="lbl">ZONE NAME</label><input type="text" id="pl-name-inp" placeholder="e.g. PROXIMA KELD"></div>
+      <div class="field"><label class="lbl">DESCRIPTION (optional)</label><input type="text" id="pl-desc-inp" placeholder="e.g. Hostile arid wasteland"></div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" style="padding:5px 12px;font-size:8px;" onclick="closeAddPlanet()">CANCEL</button>
+      <button class="btn orange" style="padding:5px 12px;font-size:8px;" onclick="savePlanet()">ADD ZONE</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MISSIONS ══════════════ -->
+<div id="missions" class="screen">
+  <div class="ms-topbar">
+    <span class="ms-title" id="ms-title">SELECT MISSION</span>
+    <div class="ms-manual"><span style="color:var(--text2);font-size:8px;">▶</span> Manual</div>
+  </div>
+  <div class="ms-body">
+    <!-- left list -->
+    <div class="ms-area">
+      <div class="ms-area-hd">Area List</div>
+      <div id="ms-area-content"></div>
+      <div class="ms-back-btn">
+        <button class="btn" style="width:100%;padding:6px;font-size:8px;" onclick="showScreen('planets')">◀ CHANGE ZONE</button>
       </div>
     </div>
-
-    <div class="ma" id="ma">
-      <svg id="wmap" viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-        <rect width="1000" height="560" fill="#060e1a"/>
-        <defs><pattern id="gp" x="0" y="0" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="14" cy="14" r="0.7" fill="rgba(74,200,216,0.14)"/></pattern></defs>
-        <rect width="1000" height="560" fill="url(#gp)"/>
-        <path d="M85 60L120 55L160 60L190 80L220 75L240 90L250 120L260 150L255 180L240 200L220 220L200 240L180 260L165 280L155 310L145 330L155 340L160 355L150 370L135 375L120 360L110 340L100 310L95 280L80 260L70 240L60 210L55 180L60 150L65 120L70 95Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.5"/>
-        <path d="M165 30L200 25L220 35L215 55L195 62L170 55Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.5"/>
-        <path d="M175 380L200 370L220 375L235 390L240 420L235 450L220 475L200 490L180 485L162 465L155 440L155 410L160 390Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.5"/>
-        <path d="M440 55L460 52L480 58L495 65L500 80L495 100L480 115L465 120L450 115L440 100L435 80L435 65Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.5"/>
-        <path d="M440 130L475 125L510 130L530 145L540 165L545 195L540 225L530 260L515 290L500 315L485 335L470 345L455 340L440 325L428 305L420 280L415 255L415 225L420 195L425 165L430 145Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.5"/>
-        <path d="M505 55L560 45L620 42L680 48L730 55L770 65L800 75L820 90L825 110L815 130L800 145L780 155L755 160L730 155L710 145L695 130L680 120L660 115L640 118L620 125L600 130L580 125L560 115L545 105L530 95L515 85L510 70Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.5"/>
-        <path d="M630 160L660 155L680 165L685 185L675 210L655 230L640 225L628 205L622 182Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.5"/>
-        <path d="M720 165L745 160L760 170L755 185L735 190L718 182Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.5"/>
-        <path d="M755 330L800 318L840 320L870 330L880 350L875 375L858 395L830 405L800 402L772 390L755 372L748 350Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.5"/>
-        <ellipse cx="810" cy="115" rx="8" ry="18" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.5"/>
-        <line x1="0" y1="280" x2="1000" y2="280" stroke="rgba(74,200,216,0.05)" stroke-width="0.5"/>
-        <line x1="0" y1="140" x2="1000" y2="140" stroke="rgba(74,200,216,0.035)" stroke-width="0.3"/>
-        <line x1="0" y1="420" x2="1000" y2="420" stroke="rgba(74,200,216,0.035)" stroke-width="0.3"/>
-      </svg>
-      <div class="mgrid"></div>
-      <div class="mvig"></div>
-      <div id="ml"></div>
-      <div class="zname" id="zn">New Frontier</div>
-      <div class="manlink"><span class="arr">▶</span> Manual</div>
-      <div class="ti">
-        <div class="tish">◈</div>
-        <div><div style="font-size:8px;color:var(--text2);letter-spacing:.1em;">■ Team Information</div><div style="font-size:10px;color:var(--white);letter-spacing:.07em;margin-top:1px;">gg/armoredcore</div></div>
+    <!-- right map -->
+    <div class="ms-right" id="ms-right">
+      <div class="ms-map-bg">
+        <svg class="ms-map-svg" viewBox="0 0 720 500" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <rect width="720" height="500" fill="#050d18"/>
+          <defs><pattern id="mgp" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse"><line x1="15" y1="12" x2="15" y2="18" stroke="rgba(77,216,232,0.15)" stroke-width="0.5"/><line x1="12" y1="15" x2="18" y2="15" stroke="rgba(77,216,232,0.15)" stroke-width="0.5"/></pattern></defs>
+          <rect width="720" height="500" fill="url(#mgp)"/>
+          <path d="M42 80L108 70L148 92L158 138L148 172L108 200L50 212L32 178L28 138L38 100Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.4"/>
+          <path d="M75 230L98 220L112 226L120 248L116 272L104 290L86 295L68 283L62 262L68 240Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.4"/>
+          <path d="M310 58L352 52L380 68L378 130L342 162L310 155L298 115L300 72Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.4"/>
+          <path d="M298 168L378 158L384 238L372 282L348 302L318 296L300 268L292 220Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.4"/>
+          <path d="M392 52L445 44L488 50L520 58L540 72L548 98L542 122L525 135L502 140L480 136L460 126L440 118L418 122L400 118L386 104L382 82Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.4"/>
+          <path d="M440 148L462 144L476 152L474 172L458 182L440 178L430 164Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.4"/>
+          <path d="M530 260L560 250L582 254L590 272L584 290L564 300L542 295L528 280Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.4"/>
+          <ellipse cx="560" cy="108" rx="8" ry="18" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.4"/>
+        </svg>
+        <div class="ms-map-stars"></div>
       </div>
-      <div class="ibar"><span class="il" id="it">Select the area you will go to.</span><span id="fc">--:--:-- UTC</span></div>
-
-      <!-- Mission panel -->
-      <div id="mpanel">
-        <div class="mph">
-          <div><div class="mp-t" id="mpt">MISSION</div><div class="mp-i" id="mpi">M-000</div></div>
-          <div class="mp-r" id="mpr">A</div>
+      <div id="ms-markers"></div>
+      <div class="ms-zone-name" id="ms-zone-name"></div>
+      <div class="ms-instruct" id="ms-instruct">Select the area you will go to.</div>
+      <!-- mission detail panel -->
+      <div id="mdetail-panel">
+        <div class="mdp-hd">
+          <div><div class="mdp-title" id="mdp-title">MISSION</div><div class="mdp-id" id="mdp-id">M-000</div></div>
+          <div class="mdp-rank" id="mdp-rank">A</div>
         </div>
-        <div class="mpb">
-          <div class="mpc">
-            <div class="mpsl">MISSION BRIEF</div>
-            <div class="mpdesc" id="mpd"></div>
-            <div class="mpsl">OBJECTIVES</div>
-            <div id="mpo"></div>
+        <div class="mdp-body">
+          <div class="mdp-col">
+            <div class="mdp-sl">MISSION BRIEF</div>
+            <div class="mdp-desc" id="mdp-desc"></div>
+            <div class="mdp-sl">OBJECTIVES</div>
+            <div id="mdp-obj"></div>
+            <div class="mdp-note" id="mdp-note" style="font-size:8px;color:var(--text2);letter-spacing:.06em;line-height:1.7;border-top:1px solid var(--border);padding-top:10px;margin-top:8px;"></div>
           </div>
-          <div class="mpc" style="max-width:210px;">
-            <div class="mpsl">REWARDS</div>
-            <div class="rg">
-              <div class="rc"><div class="rl">CREDITS</div><div class="rv" id="rc">0</div></div>
-              <div class="rc"><div class="rl">EXP</div><div class="rv" id="rx">0</div></div>
-              <div class="rc"><div class="rl">DURATION</div><div class="rv" id="rt" style="font-size:12px;">--</div></div>
-              <div class="rc"><div class="rl">DIFFICULTY</div><div class="rv" id="rd" style="font-size:12px;">●●●○○</div></div>
+          <div class="mdp-side">
+            <div class="mdp-sl">REWARDS</div>
+            <div class="mdp-chip"><div class="mdp-chip-l">CREDITS</div><div class="mdp-chip-v" id="mdp-creds">0</div></div>
+            <div class="mdp-chip"><div class="mdp-chip-l">EXP</div><div class="mdp-chip-v" id="mdp-xp">0</div></div>
+            <div class="mdp-chip"><div class="mdp-chip-l">DURATION</div><div class="mdp-chip-v" id="mdp-time" style="font-size:13px;">--</div></div>
+            <div class="mdp-chip"><div class="mdp-chip-l">DIFFICULTY</div><div class="mdp-chip-v" id="mdp-diff" style="font-size:13px;">●●●○○</div></div>
+            <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px;">
+              <button class="btn orange" onclick="beginDeploy()">▶ DEPLOY</button>
+              <button class="btn" onclick="closeMissionDetail()">◀ BACK</button>
             </div>
           </div>
         </div>
-        <div class="mpf">
-          <button class="dep" onclick="deploy()">▶ DEPLOY TO SORTIE</button>
-          <button class="bk" onclick="closeMP()">◀ BACK</button>
-          <div class="mpn" id="mpnote"></div>
+      </div>
+    </div>
+  </div>
+  <div style="height:22px;background:rgba(6,14,26,0.97);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 14px;font-size:8px;color:var(--text2);letter-spacing:.1em;flex-shrink:0;">
+    <span id="ms-bottom-instruct">Select the mission you will go on.</span>
+  </div>
+</div>
+
+<!-- ══════════════ PROOF ══════════════ -->
+<div id="proof" class="screen">
+  <div class="proof-topbar">
+    <span class="proof-topbar-title">WAR SYSTEM — PROOF SUBMISSION</span>
+    <div style="display:flex;align-items:center;gap:14px;font-size:9px;color:var(--text2);letter-spacing:.1em;">
+      <span><span class="pl-dot"></span>BOT <span class="pl-lv">ONLINE</span></span>
+      <span id="proof-clk">--:--:--</span>
+    </div>
+  </div>
+  <div class="proof-body">
+    <div class="proof-box">
+      <div class="mbrk tl"></div><div class="mbrk tr"></div><div class="mbrk bl"></div><div class="mbrk br"></div>
+      <div class="proof-bh">
+        <div class="proof-title" id="proof-name">MISSION NAME</div>
+        <div class="proof-sub" id="proof-mid">M-000 · COMPLETION PROOF REQUIRED</div>
+      </div>
+      <div class="proof-bd">
+        <div class="proof-status" id="proof-status">
+          <div class="psd"></div><span>AWAITING PROOF SUBMISSION</span>
+        </div>
+        <div class="field"><label class="lbl">OPERATIVE NAME / DISCORD TAG</label><input type="text" id="proof-op" placeholder="e.g. GHOST-7 / ghost7#0001"></div>
+        <div class="field">
+          <label class="lbl">VIDEO PROOF</label>
+          <div class="video-area" id="video-area">
+            <div class="va-icon">▶</div>
+            <div class="va-lbl">VIDEO PREVIEW</div>
+          </div>
+          <input type="file" id="video-input" accept="video/*" style="display:none" onchange="previewVideo(this)">
+          <button class="btn" style="width:100%;padding:5px;font-size:8px;margin-top:4px;" onclick="document.getElementById('video-input').click()">📁 CHOOSE VIDEO FILE</button>
+        </div>
+        <div class="field"><label class="lbl">NOTES (optional)</label><textarea id="proof-notes" placeholder="Any notes about the mission run..."></textarea></div>
+      </div>
+      <div class="proof-ft">
+        <button class="btn ok" onclick="submitProof()">▶ SUBMIT PROOF</button>
+        <button class="btn" onclick="showScreen('missions')">◀ BACK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ ADMIN LOGIN ══════════════ -->
+<div id="adminlogin" class="screen">
+  <div class="albox">
+    <div class="mbrk tl"></div><div class="mbrk tr"></div><div class="mbrk bl"></div><div class="mbrk br"></div>
+    <div class="albox-hd">
+      <div class="albox-title">⚙ ADMIN ACCESS</div>
+      <div class="albox-sub">RESTRICTED — AUTHORIZED PERSONNEL ONLY</div>
+    </div>
+    <div class="albox-bd">
+      <div class="al-err" id="al-err">INCORRECT PASSWORD. ACCESS DENIED.</div>
+      <div class="field"><label class="lbl">PASSWORD</label><input type="password" id="adm-pw" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkAdmin()"></div>
+    </div>
+    <div class="albox-ft">
+      <button class="btn" style="padding:5px 12px;font-size:8px;" onclick="showScreen('main')">◀ BACK</button>
+      <button class="btn orange" style="padding:5px 12px;font-size:8px;" onclick="checkAdmin()">AUTHENTICATE ▶</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ ADMIN PANEL ══════════════ -->
+<div id="admin" class="screen">
+  <div class="adm-topbar">
+    <span class="adm-topbar-title">⚙ ADMIN PANEL — WAR SYSTEM</span>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button class="btn" style="padding:3px 10px;font-size:8px;" onclick="showScreen('main')">◀ EXIT</button>
+      <span style="font-size:9px;color:var(--text2);letter-spacing:.1em;" id="adm-clk">--:--:--</span>
+    </div>
+  </div>
+  <div class="adm-body">
+    <div class="adm-sb">
+      <div class="adm-sb-hd">ADMIN MENU</div>
+      <div class="adm-ni act" onclick="admTab('missions',this)"><div class="adm-ni-pip"></div>Missions</div>
+      <div class="adm-ni" onclick="admTab('planets',this)"><div class="adm-ni-pip"></div>Zones</div>
+      <div class="adm-ni" onclick="admTab('queue',this)"><div class="adm-ni-pip"></div>Proof Queue<span id="queue-badge"></span></div>
+      <div class="adm-ni" onclick="admTab('settings',this)"><div class="adm-ni-pip"></div>Settings</div>
+    </div>
+    <div class="adm-content">
+
+      <!-- MISSIONS -->
+      <div class="adm-view act" id="atab-missions">
+        <div class="adm-sec">
+          <div class="adm-sec-title">CREATE MISSION</div>
+          <div class="frow">
+            <div class="field"><label class="lbl">MISSION NAME</label><input type="text" id="am-name" placeholder="e.g. IRON MERIDIAN"></div>
+            <div class="field"><label class="lbl">ASSIGN TO ZONE</label><select id="am-planet"><option value="">— Select Zone —</option></select></div>
+          </div>
+          <div class="field"><label class="lbl">DESCRIPTION</label><textarea id="am-desc" placeholder="Mission briefing..."></textarea></div>
+          <div class="field"><label class="lbl">OBJECTIVES (one per line)</label><textarea id="am-obj" placeholder="Eliminate target&#10;Secure the data&#10;Extract to LZ"></textarea></div>
+          <div class="frow3">
+            <div class="field"><label class="lbl">RANK</label><select id="am-rank"><option>S</option><option>A</option><option selected>B</option><option>C</option></select></div>
+            <div class="field"><label class="lbl">DIFFICULTY (1-5)</label><input type="number" id="am-diff" min="1" max="5" value="3"></div>
+            <div class="field"><label class="lbl">DURATION</label><input type="text" id="am-time" placeholder="30 MIN"></div>
+          </div>
+          <div class="frow">
+            <div class="field"><label class="lbl">CREDIT REWARD</label><input type="number" id="am-creds" placeholder="3500"></div>
+            <div class="field"><label class="lbl">EXP REWARD</label><input type="number" id="am-xp" placeholder="600"></div>
+          </div>
+          <div class="field"><label class="lbl">ADMIN NOTE</label><input type="text" id="am-note" placeholder="Optional tip for admin display"></div>
+          <button class="btn orange" onclick="createMission()">+ CREATE MISSION</button>
+        </div>
+        <div class="adm-sec">
+          <div class="adm-sec-title">ALL MISSIONS</div>
+          <div id="adm-mission-list"></div>
         </div>
       </div>
 
-      <!-- Commands -->
-      <div id="vcmd">
-        <div class="cs"><div class="csl"><div class="p"></div>MISSION COMMANDS</div>
-          <div class="cr"><span class="cn">/sortie</span><span class="cd">Deploy on a mission directly from Discord</span></div>
-          <div class="cr"><span class="cn">/missions</span><span class="cd">List all available missions with rewards</span></div>
-          <div class="cr"><span class="cn">/status</span><span class="cd">Check your active sortie progress</span></div>
-          <div class="cr"><span class="cn">/abort</span><span class="cd">Abort your active sortie (10% credit penalty)</span></div>
-          <div class="cr"><span class="cn">/area [name]</span><span class="cd">View missions available in a specific area</span></div>
-        </div>
-        <div class="cs"><div class="csl"><div class="p"></div>ECONOMY COMMANDS</div>
-          <div class="cr"><span class="cn">/balance</span><span class="cd">View your current credit balance</span></div>
-          <div class="cr"><span class="cn">/work</span><span class="cd">Earn base credits (1h cooldown)</span></div>
-          <div class="cr"><span class="cn">/leaderboard</span><span class="cd">Top operatives ranked by credits and missions</span></div>
-          <div class="cr"><span class="cn">/transfer @u [amt]</span><span class="cd">Transfer credits to another operative</span></div>
-          <div class="cr"><span class="cn">/daily</span><span class="cd">Claim your daily login bonus</span></div>
-        </div>
-        <div class="cs"><div class="csl"><div class="p"></div>PROFILE COMMANDS</div>
-          <div class="cr"><span class="cn">/rank</span><span class="cd">View rank and progress to next tier</span></div>
-          <div class="cr"><span class="cn">/profile [@user]</span><span class="cd">View full operative profile card</span></div>
-          <div class="cr"><span class="cn">/faction</span><span class="cd">Faction standings and active conflict state</span></div>
-          <div class="cr"><span class="cn">/history</span><span class="cd">Your recent mission history</span></div>
-          <div class="cr"><span class="cn">/help</span><span class="cd">All commands and full usage guide</span></div>
+      <!-- ZONES -->
+      <div class="adm-view" id="atab-planets">
+        <div class="adm-sec">
+          <div class="adm-sec-title">DEPLOYMENT ZONES</div>
+          <button class="btn orange" style="margin-bottom:10px;" onclick="openAddPlanet()">+ ADD ZONE</button>
+          <div id="adm-planet-list"></div>
         </div>
       </div>
 
-      <!-- Invite -->
-      <div id="vinv">
-        <div class="ig" style="top:20%;left:50%;transform:translateX(-50%)">WAR SYSTEM</div>
-        <div class="ibox">
-          <div class="br tl"></div><div class="br tr"></div><div class="br bl2"></div><div class="br br2"></div>
-          <div class="it">ADD TO SERVER</div>
-          <div class="is">Deploy the sortie bot to your Discord server.<br>Missions, economy, and faction conflict<br>integrated into your channels.</div>
-          <button class="ib" onclick="alert('Replace with your Discord OAuth2 invite URL.')">▶ INVITE WAR-SYSTEM BOT</button>
-          <div style="font-size:8px;color:var(--text3);letter-spacing:.15em;margin-top:10px;">REQUIRES MANAGE SERVER PERMISSION</div>
+      <!-- QUEUE -->
+      <div class="adm-view" id="atab-queue">
+        <div class="adm-sec">
+          <div class="adm-sec-title">PROOF QUEUE</div>
+          <div id="adm-queue-list"></div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="adm-view" id="atab-settings">
+        <div class="adm-sec">
+          <div class="adm-sec-title">CHANGE PASSWORD</div>
+          <div class="field"><label class="lbl">NEW PASSWORD</label><input type="password" id="new-pw"></div>
+          <div class="field"><label class="lbl">CONFIRM</label><input type="password" id="conf-pw"></div>
+          <button class="btn orange" onclick="changePw()">UPDATE PASSWORD</button>
+          <div id="pw-msg" style="font-size:8px;color:var(--green);letter-spacing:.1em;margin-top:7px;display:none;">PASSWORD UPDATED.</div>
+        </div>
+        <div class="adm-sec">
+          <div class="adm-sec-title">DANGER ZONE</div>
+          <button class="btn danger" style="margin-right:8px;" onclick="clearMissions()">CLEAR ALL MISSIONS</button>
+          <button class="btn danger" onclick="clearZones()">CLEAR ALL ZONES</button>
         </div>
       </div>
     </div>
   </div>
-
-  <div class="btmbar">
-    <span style="white-space:nowrap">WAR SYSTEM — SORTIE COMMAND</span>
-    <div class="tkw"><div class="tki">◈ ORCA NETWORK OPERATIONAL ◈ FACTION CONFLICT: ORCA 58% / GA 42% ◈ TOP OPERATIVE: GHOST-7 [S-CLASS] ◈ NEW MISSION UNLOCKED: SILENT MERIDIAN ◈ NEXT EVENT IN 14:32:07 ◈ ECONOMY LEDGER SYNCHRONIZED ◈</div></div>
-    <span style="white-space:nowrap">v2.4.1 / r1.03</span>
+  <div class="adm-botbar">
+    <span>⚙ ADMIN MODE ACTIVE</span>
+    <div class="tkw"><div class="tki">◈ CREATE MISSIONS ◈ MANAGE ZONES ◈ REVIEW PROOF SUBMISSIONS ◈ GRANT CREDITS ON APPROVAL ◈</div></div>
+    <span>v2.4.1</span>
   </div>
 </div>
 
 <div id="flash"></div>
 
 <script>
-const MISSIONS=[
-  {id:'M-004',area:0,name:'IRON MERIDIAN',rank:'S',diff:5,desc:"Infiltrate GA's automated weapons plant in Sector 12. Disable the primary fabrication array. Expect heavy armored resistance.",objectives:['Eliminate perimeter defense units ×8','Disable fabrication control core','Extract via evacuation point','BONUS: Recover encrypted data shard'],creds:8400,xp:1200,time:'45 MIN',note:'High risk. S-class operative recommended. Reinforcement waves after primary objective.'},
-  {id:'M-007',area:0,name:'NEW FRONTIER',rank:'S',diff:5,desc:'Penetrate the GA orbital relay station. Upload the stolen cipher key. Zero collateral tolerance. Comms blackout in effect.',objectives:['Board relay station undetected','Upload cipher payload to node','Neutralize all station crew','Escape before lockdown triggers'],creds:9600,xp:1500,time:'60 MIN',note:'Stealth approach strongly advised. Alert state triggers immediate GA response.'},
-  {id:'M-008',area:1,name:'SUPPLY DISRUPTION',rank:'A',diff:3,desc:'Destroy the GA eastern supply bridge and disrupt Sector 7 logistics. Standard breach-and-demolish contract.',objectives:['Place charges on all three bridge pylons','Eliminate escort convoy','Detonate on signal'],creds:3200,xp:600,time:'25 MIN',note:'Escort convoy is lightly armored. Straightforward demolition contract.'},
-  {id:'M-014',area:2,name:'GHOST PROTOCOL',rank:'A',diff:4,desc:'Locate and terminate a rogue AC unit operating without faction authorization in the outer districts. Civilian presence confirmed.',objectives:['Locate target AC signal in outer districts','Neutralize hostile unit','Recover intact AC core unit'],creds:5100,xp:900,time:'35 MIN',note:'Target AC equipped with electronic countermeasures. Sensor lock may be disrupted.'},
-  {id:'M-021',area:3,name:'INFRASTRUCTURE BREACH',rank:'B',diff:2,desc:'Intercept a GA supply convoy. Destroy the armored trucks and scatter cargo before reinforcements arrive.',objectives:['Destroy all 5 supply trucks','Eliminate convoy escorts','Escape before GA response unit arrives'],creds:1800,xp:350,time:'20 MIN',note:'Fast mission. Window before response unit arrival is approximately 8 minutes.'},
-  {id:'M-029',area:4,name:'WATCHTOWER',rank:'B',diff:2,desc:'Dismantle sensor infrastructure across the eastern grid. Blind the enemy for 48 hours to support the ORCA advance.',objectives:['Destroy 12 sensor towers','Disable central relay hub'],creds:1500,xp:280,time:'15 MIN',note:'Towers undefended. Relay hub has automated turret defense.'},
-  {id:'M-033',area:5,name:'FLOOD CONTROL',rank:'B',diff:2,desc:'Navigate the flooded district and destroy remaining GA patrol units. Submersible movement required in sectors 3 and 7.',objectives:['Eliminate 8 GA patrol units','Destroy submerged weapons cache'],creds:2100,xp:420,time:'25 MIN',note:'Limited visibility in flooded zones. Radar performance degraded.'},
-  {id:'M-041',area:6,name:'SILENT MERIDIAN',rank:'S',diff:5,desc:'[CLASSIFIED — A-CLASS CLEARANCE REQUIRED TO VIEW FULL BRIEF]',objectives:['[CLASSIFIED]','[CLASSIFIED]'],creds:'???',xp:'???',time:'???',note:'Clearance level insufficient. Complete more A-rank missions to unlock.'},
-];
-const AREAS=['New Frontier','Desolate Plains','Ruined City','Industrial Zone','Desert Wasteland','Flooded District','Orbit Station'];
-const MKS=[[13,22,0],[18,28,0],[22,35,1],[28,32,0],[8,38,1],[15,42,0],[35,48,0],[40,52,0],[32,55,1],[38,60,0],[44,42,1],[50,44,0],[48,30,0],[53,25,1],[56,32,0],[60,28,0],[58,40,1],[62,36,0],[65,48,0],[70,38,1],[72,30,0],[68,22,0],[75,25,0],[78,32,1],[80,42,0],[82,35,0],[85,28,1],[88,38,0],[90,45,0],[92,30,0],[36,68,0],[42,72,1],[40,78,0],[44,82,0],[38,76,1]];
+// ══════════════════ STORAGE ══════════════════
+const KEYS={pw:'ws_pw',planets:'ws_planets',missions:'ws_missions',queue:'ws_queue'};
+let _c={pw:'admin123',planets:[],missions:[],queue:[]};
+const _vids={};
+let currentPlanet=null,currentMission=null,_tmpImg=null;
 
-function buildMarkers(){
-  const l=document.getElementById('ml'); l.innerHTML='';
+async function loadAll(){
+  try{
+    const [pw,pl,ms,q]=await Promise.all([
+      window.storage.get(KEYS.pw).catch(()=>null),
+      window.storage.get(KEYS.planets).catch(()=>null),
+      window.storage.get(KEYS.missions).catch(()=>null),
+      window.storage.get(KEYS.queue).catch(()=>null),
+    ]);
+    if(pw)_c.pw=pw.value;
+    if(pl)_c.planets=JSON.parse(pl.value);
+    if(ms)_c.missions=JSON.parse(ms.value);
+    if(q)_c.queue=JSON.parse(q.value);
+  }catch(e){console.warn(e);}
+}
+async function persist(k,v){try{await window.storage.set(k,typeof v==='string'?v:JSON.stringify(v));}catch(e){console.warn(e);}}
+const getPlanets=()=>_c.planets;
+const getMissions=()=>_c.missions;
+const getQueue=()=>_c.queue;
+const getPw=()=>_c.pw;
+function savePlanets(v){_c.planets=v;persist(KEYS.planets,v);}
+function saveMissions(v){_c.missions=v;persist(KEYS.missions,v);}
+function saveQueue(v){_c.queue=v;persist(KEYS.queue,v);}
+function savePw(v){_c.pw=v;persist(KEYS.pw,v);}
+
+// ══════════════════ SCREEN ROUTING ══════════════════
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='planets')renderPlanets();
+  if(id==='missions')renderMissions();
+  if(id==='admin')renderAdminAll();
+}
+
+function flash(){const f=document.getElementById('flash');f.classList.add('on');setTimeout(()=>f.classList.remove('on'),180);}
+
+// ══════════════════ CLOCK ══════════════════
+function tick(){
+  const n=new Date(),p=x=>String(x).padStart(2,'0');
+  const t=`${p(n.getUTCHours())}:${p(n.getUTCMinutes())}:${p(n.getUTCSeconds())}`;
+  const dt=`${n.getUTCFullYear()}/${p(n.getUTCMonth()+1)}/${p(n.getUTCDate())} ${t}`;
+  const el=id=>document.getElementById(id);
+  if(el('guide-clk'))el('guide-clk').textContent=`${t} ${p(n.getUTCMonth()+1)}/${p(n.getUTCDate())}/${n.getUTCFullYear()}`;
+  if(el('main-clk'))el('main-clk').textContent=dt;
+  ['pl-clk','proof-clk','adm-clk'].forEach(id=>{const e=el(id);if(e)e.textContent=t;});
+}
+setInterval(tick,1000);tick();
+
+// ══════════════════ BOOT SEQUENCE ══════════════════
+async function slp(ms){return new Promise(r=>setTimeout(r,ms));}
+
+async function runBoot(){
+  // Phase 1 — warm bg + title (~2s)
+  await slp(200);
+  document.getElementById('bwarm').classList.add('show');
+  document.getElementById('bdots').classList.add('show');
+  document.getElementById('bcross').classList.add('show');
+  await slp(800);
+  document.getElementById('btitle').classList.add('show');
+  await slp(1800);
+
+  // Phase 2 — globe loading (~3s)
+  document.getElementById('btitle').style.opacity='0';
+  document.getElementById('bwarm').style.opacity='0';
+  await slp(400);
+  document.getElementById('bglobe').classList.add('show');
+  // animate two loading bars
+  const b1=document.getElementById('glb1'),b1p=document.getElementById('glb1p');
+  const b2=document.getElementById('glb2'),b2p=document.getElementById('glb2p');
+  for(let i=0;i<=100;i++){
+    b1.style.width=i+'%';b1p.textContent=i.toFixed(1)+' %';
+    if(i>20){const v=Math.min(100,(i-20)*1.25);b2.style.width=v+'%';b2p.textContent=v.toFixed(1)+' %';}
+    await slp(25);
+  }
+  await slp(300);
+
+  // Phase 3 — MAIN SYSTEM ENGAGED (~2s)
+  document.getElementById('bglobe').style.opacity='0';
+  await slp(300);
+  document.getElementById('bengaged').classList.add('show');
+  await slp(2200);
+
+  // Phase 4 — guide screen
+  document.getElementById('bengaged').style.opacity='0';
+  await slp(300);
+  document.getElementById('bguide').classList.add('show');
+}
+
+function launchMain(){
+  document.getElementById('boot').classList.remove('active');
+  showScreen('main');
+  buildMainMarkers();
+}
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('boot').classList.contains('active')&&document.getElementById('bguide').classList.contains('show'))launchMain();
+});
+
+// ══════════════════ MAIN MENU MARKERS ══════════════════
+const MKS=[[12,22,0],[18,30,0],[23,37,1],[30,34,0],[8,40,1],[16,44,0],[36,50,0],[41,54,0],[33,57,1],[39,62,0],[45,44,1],[51,46,0],[49,32,0],[54,27,1],[57,34,0],[61,30,0],[59,42,1],[63,38,0],[66,50,0],[71,40,1],[73,32,0],[69,24,0],[76,27,0],[79,34,1],[81,44,0],[83,37,0],[86,30,1],[89,40,0],[91,47,0],[93,32,0],[37,70,0],[43,74,1],[41,80,0],[45,84,0],[39,78,1]];
+function buildMainMarkers(){
+  const l=document.getElementById('main-markers');l.innerHTML='';
   MKS.forEach(([x,y,t])=>{
-    const d=document.createElement('div'); d.className='fm';
-    d.style.left=x+'%'; d.style.top=y+'%';
-    const c=t===0?'#c83020':t===1?'#d0d0d0':'#e87a20';
-    const s=t===0?'#901810':t===1?'#808080':'#b05010';
-    const inner=t===1?'<path d="M6 9L13 9M9.5 5L9.5 13" stroke="#606060" stroke-width="1.2"/>':'<path d="M5 6L13 14M13 6L5 14" stroke="'+s+'" stroke-width="1"/>';
-    d.innerHTML=`<svg viewBox="0 0 18 22" xmlns="http://www.w3.org/2000/svg"><path d="M9 2L17 2L17 14L9 21L1 14L1 2Z" fill="${c}" stroke="${s}" stroke-width="0.8"/>${inner}</svg>`;
+    const d=document.createElement('div');
+    d.style.cssText=`position:absolute;left:${x}%;top:${y}%;width:16px;height:20px;transform:translate(-50%,-100%);`;
+    const c=t===0?'#c83020':t===1?'#d0d0c0':'#e87a20';
+    const s=t===0?'#901810':t===1?'#808070':'#b05010';
+    const inner=t===1?`<path d="M5 8L11 8M8 4L8 12" stroke="#606050" stroke-width="1.2"/>`:`<path d="M4 5L12 13M12 5L4 13" stroke="${s}" stroke-width="1"/>`;
+    d.innerHTML=`<svg viewBox="0 0 16 20" xmlns="http://www.w3.org/2000/svg"><path d="M8 1L15 1L15 13L8 19L1 13L1 1Z" fill="${c}" stroke="${s}" stroke-width="0.8"/>${inner}</svg>`;
     l.appendChild(d);
   });
 }
 
-// BOOT
-const bls=document.querySelectorAll('.bl');
-const pf=document.getElementById('pf'),pp=document.getElementById('pp'),sp=document.getElementById('sp');
-let rdy=false;
-async function slp(ms){return new Promise(r=>setTimeout(r,ms));}
-async function boot(){
-  await slp(350);
-  for(let i=0;i<bls.length;i++){
-    bls[i].classList.add('on');
-    const p=Math.round((i+1)/bls.length*100);
-    pf.style.width=p+'%'; pp.textContent=p+'%';
-    await slp(155+Math.random()*115);
+// ══════════════════ PLANETS ══════════════════
+function renderPlanets(){
+  const planets=getPlanets(),missions=getMissions();
+  const grid=document.getElementById('pl-grid');
+  const countEl=document.getElementById('pl-count');
+  countEl.textContent=planets.length+' ZONE'+(planets.length!==1?'S':'');
+  grid.innerHTML='';
+  if(!planets.length){
+    grid.innerHTML='<div class="pl-empty">NO ZONES CONFIGURED<br><span style="font-size:8px;color:var(--text3)">Admin must add zones from the Extra menu.</span></div>';
+    return;
   }
-  await slp(180); sp.style.opacity='1'; rdy=true;
-}
-function launch(){if(!rdy)return; document.getElementById('intro').classList.add('out'); document.getElementById('ui').classList.add('vis'); setTimeout(()=>document.getElementById('intro').style.display='none',700);}
-document.addEventListener('keydown',launch);
-document.getElementById('intro').addEventListener('click',launch);
-
-// CLOCK
-function tick(){
-  const n=new Date(),pad=x=>String(x).padStart(2,'0');
-  const t=`${pad(n.getUTCHours())}:${pad(n.getUTCMinutes())}:${pad(n.getUTCSeconds())}`;
-  const ds=`${pad(n.getUTCMonth()+1)}/${pad(n.getUTCDate())}/${n.getUTCFullYear()}`;
-  document.getElementById('iclk').textContent=`${t} ${ds}`;
-  document.getElementById('mc').textContent=t;
-  document.getElementById('fc').textContent=t+' UTC';
-}
-setInterval(tick,1000); tick();
-setInterval(()=>{document.getElementById('pg').textContent=(36+Math.floor(Math.random()*18))+'ms';},4200);
-
-// TABS
-function tab(id,btn){
-  document.querySelectorAll('.ni').forEach(b=>b.classList.remove('act')); btn.classList.add('act');
-  document.getElementById('vcmd').classList.toggle('op',id==='cmd');
-  document.getElementById('vinv').classList.toggle('op',id==='inv');
-  document.getElementById('alist').style.display=id==='world'?'':'none';
-}
-function sec(id,el){
-  document.querySelectorAll('.wni').forEach(x=>x.classList.remove('act')); el.classList.add('act');
-  document.getElementById('alist').style.display=id==='sortie'?'':'none';
-  document.getElementById('it').textContent=id==='sortie'?'Select the area you will go to.':id.toUpperCase()+' — Coming soon.';
-}
-
-// AREA SELECT
-function area(i,el){
-  document.querySelectorAll('.at').forEach(x=>x.classList.remove('sel')); el.classList.add('sel');
-  document.getElementById('zn').textContent=AREAS[i];
-}
-
-// MISSION PANEL
-let cm=null;
-function openM(id){
-  cm=MISSIONS.find(x=>x.id===id); if(!cm) return;
-  document.getElementById('mpt').textContent=cm.name;
-  document.getElementById('mpi').textContent=`${cm.id}  ·  DIFFICULTY ${cm.diff}/5  ·  EST. ${cm.time}`;
-  document.getElementById('mpr').textContent=cm.rank;
-  document.getElementById('mpd').textContent=cm.desc;
-  document.getElementById('mpo').innerHTML=cm.objectives.map(o=>`<div class="mpobj">${o}</div>`).join('');
-  document.getElementById('rc').textContent=cm.creds;
-  document.getElementById('rx').textContent=cm.xp;
-  document.getElementById('rt').textContent=cm.time;
-  document.getElementById('rd').textContent='●'.repeat(cm.diff)+'○'.repeat(5-cm.diff);
-  document.getElementById('mpnote').textContent=cm.note;
-  document.getElementById('mpanel').classList.add('op');
-}
-function closeMP(){document.getElementById('mpanel').classList.remove('op');}
-function deploy(){
-  if(!cm) return; closeMP();
-  const f=document.getElementById('flash'); f.classList.add('on'); setTimeout(()=>f.classList.remove('on'),180);
-  setTimeout(()=>alert(`SORTIE DISPATCHED — ${cm.name}\n\nWire your bot API here:\nfetch('/api/sortie',{method:'POST',body:JSON.stringify({missionId:'${cm.id}'})})`)  ,230);
-}
-
-// Double-click area thumbnails to open first mission for that area
-document.querySelectorAll('.at').forEach((el,i)=>{
-  el.addEventListener('dblclick',()=>{
-    const m=MISSIONS.find(x=>x.area===i); if(m) openM(m.id);
+  planets.forEach(p=>{
+    const mc=missions.filter(m=>m.planetId===p.id).length;
+    const card=document.createElement('div');
+    card.className='pl-card';
+    card.innerHTML=`<img src="${p.img}" alt="${p.name}"><div class="pl-card-overlay"><div class="pl-card-name">${p.name}</div><div class="pl-card-meta">${mc} MISSION${mc!==1?'S':''} AVAILABLE</div></div><div class="pl-card-corner"></div><div class="pl-card-corner2"></div>`;
+    card.onclick=()=>enterPlanet(p);
+    grid.appendChild(card);
   });
-});
+}
 
-buildMarkers(); boot();
+function enterPlanet(p){
+  currentPlanet=p;
+  document.getElementById('ms-title').textContent='SELECT MISSION';
+  document.getElementById('ms-zone-name').textContent=p.name;
+  // build sidebar
+  const ms=getMissions().filter(m=>m.planetId===p.id);
+  const area=document.getElementById('ms-area-content');
+  area.innerHTML=`<div class="ms-area-planet"><img class="ms-area-planet-img" src="${p.img}"><div class="ms-area-planet-name">${p.name}</div><div class="ms-area-planet-sub">${p.desc||'DEPLOYMENT ZONE'}</div></div>`;
+  ms.forEach(m=>{
+    const row=document.createElement('div');
+    row.className='ms-mission-thumb';
+    row.innerHTML=`<div class="ms-mission-img-placeholder"><div class="ms-mip-rank">${m.rank}</div></div><div class="ms-mission-info"><div class="ms-mission-name">${m.name}</div><div class="ms-mission-meta">${m.id} · ${m.creds} CR · DIFF ${m.diff}/5</div></div>`;
+    row.onclick=()=>{
+      document.querySelectorAll('.ms-mission-thumb').forEach(x=>x.classList.remove('sel'));
+      row.classList.add('sel');
+      openMissionDetail(m.id);
+    };
+    area.appendChild(row);
+  });
+  if(!ms.length){
+    const empty=document.createElement('div');
+    empty.style.cssText='padding:16px 12px;font-size:9px;color:var(--text3);letter-spacing:.12em;line-height:1.8;';
+    empty.textContent='NO MISSIONS ASSIGNED TO THIS ZONE';
+    area.appendChild(empty);
+  }
+  document.getElementById('ms-instruct').textContent='Select the area you will go to.';
+  showScreen('missions');
+}
+
+function renderMissions(){/* handled by enterPlanet */}
+
+// ══════════════════ MISSION DETAIL ══════════════════
+function openMissionDetail(id){
+  const m=getMissions().find(x=>x.id===id);if(!m)return;
+  currentMission=m;
+  document.getElementById('mdp-title').textContent=m.name;
+  document.getElementById('mdp-id').textContent=`${m.id}  ·  DIFFICULTY ${m.diff}/5  ·  EST. ${m.time||'--'}`;
+  document.getElementById('mdp-rank').textContent=m.rank;
+  document.getElementById('mdp-desc').textContent=m.desc||'';
+  document.getElementById('mdp-obj').innerHTML=(m.objectives||'').split('\n').filter(x=>x.trim()).map(o=>`<div class="mdp-obj">${o}</div>`).join('');
+  document.getElementById('mdp-creds').textContent=m.creds||'0';
+  document.getElementById('mdp-xp').textContent=m.xp||'0';
+  document.getElementById('mdp-time').textContent=m.time||'--';
+  document.getElementById('mdp-diff').textContent='●'.repeat(m.diff)+'○'.repeat(5-m.diff);
+  document.getElementById('mdp-note').textContent=m.note||'';
+  document.getElementById('ms-instruct').textContent='Select the mission you will go on.';
+  document.getElementById('mdetail-panel').classList.add('open');
+}
+function closeMissionDetail(){document.getElementById('mdetail-panel').classList.remove('open');}
+
+// ══════════════════ PROOF ══════════════════
+function beginDeploy(){
+  if(!currentMission)return;
+  document.getElementById('proof-name').textContent=currentMission.name;
+  document.getElementById('proof-mid').textContent=currentMission.id+'  ·  COMPLETION PROOF REQUIRED';
+  document.getElementById('proof-status').innerHTML='<div class="psd"></div><span>AWAITING PROOF SUBMISSION</span>';
+  document.getElementById('proof-op').value='';
+  document.getElementById('proof-notes').value='';
+  document.getElementById('video-input').value='';
+  const va=document.getElementById('video-area');
+  va.innerHTML='<div class="va-icon">▶</div><div class="va-lbl">VIDEO PREVIEW</div>';
+  showScreen('proof');
+}
+
+function previewVideo(input){
+  const file=input.files[0];if(!file)return;
+  const url=URL.createObjectURL(file);
+  const va=document.getElementById('video-area');
+  va.innerHTML='';
+  const vid=document.createElement('video');
+  vid.src=url;vid.controls=true;
+  vid.style.cssText='width:100%;height:100%;object-fit:contain;background:#000;display:block;';
+  va.appendChild(vid);
+  // store for admin review
+  if(currentMission)window._pendingVideoUrl=url;
+}
+
+function submitProof(){
+  const op=document.getElementById('proof-op').value.trim();
+  const notes=document.getElementById('proof-notes').value.trim();
+  const vi=document.getElementById('video-input');
+  const st=document.getElementById('proof-status');
+  if(!op){st.innerHTML='<div class="psd err"></div><span style="color:var(--red)">ERROR: ENTER OPERATIVE NAME</span>';return;}
+  if(!vi.files[0]){st.innerHTML='<div class="psd err"></div><span style="color:var(--red)">ERROR: UPLOAD VIDEO FIRST</span>';return;}
+  const entryId='PQ-'+Date.now();
+  if(window._pendingVideoUrl)_vids[entryId]=window._pendingVideoUrl;
+  const queue=getQueue();
+  queue.push({id:entryId,missionId:currentMission.id,missionName:currentMission.name,planetName:currentPlanet?currentPlanet.name:'—',operative:op,notes,creds:currentMission.creds,xp:currentMission.xp,timestamp:new Date().toISOString(),status:'pending',videoName:vi.files[0].name});
+  saveQueue(queue);
+  flash();
+  st.innerHTML='<div class="psd ok"></div><span style="color:var(--green)">PROOF SUBMITTED — AWAITING ADMIN REVIEW</span>';
+  setTimeout(()=>showScreen('missions'),2200);
+}
+
+// ══════════════════ ADD PLANET ══════════════════
+function openAddPlanet(){
+  _tmpImg=null;
+  document.getElementById('pl-img-input').value='';
+  document.getElementById('pl-name-inp').value='';
+  document.getElementById('pl-desc-inp').value='';
+  document.getElementById('img-prev').innerHTML='<span class="img-prev-lbl">CLICK TO UPLOAD IMAGE</span>';
+  document.getElementById('add-planet-modal').classList.add('open');
+}
+function closeAddPlanet(){document.getElementById('add-planet-modal').classList.remove('open');}
+function previewPlanetImg(input){
+  const file=input.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>{_tmpImg=e.target.result;document.getElementById('img-prev').innerHTML=`<img src="${_tmpImg}" style="width:100%;height:100%;object-fit:cover;">`;};
+  r.readAsDataURL(file);
+}
+function savePlanet(){
+  const name=document.getElementById('pl-name-inp').value.trim();
+  if(!name){showErr('Zone name required.');return;}
+  if(!_tmpImg){showErr('Please upload an image.');return;}
+  const desc=document.getElementById('pl-desc-inp').value.trim();
+  const planets=getPlanets();
+  planets.push({id:'P-'+Date.now(),name:name.toUpperCase(),desc,img:_tmpImg});
+  savePlanets(planets);
+  closeAddPlanet();renderPlanets();renderAdmPlanets();updatePlanetSelect();flash();
+}
+function showErr(msg){alert(msg);}
+
+// ══════════════════ ADMIN ══════════════════
+function goAdmin(){showScreen('adminlogin');}
+function checkAdmin(){
+  const pw=document.getElementById('adm-pw').value;
+  const err=document.getElementById('al-err');
+  if(pw===getPw()){err.style.display='none';document.getElementById('adm-pw').value='';showScreen('admin');}
+  else{err.style.display='block';}
+}
+function admTab(id,el){
+  document.querySelectorAll('.adm-ni').forEach(x=>x.classList.remove('act'));el.classList.add('act');
+  document.querySelectorAll('.adm-view').forEach(x=>x.classList.remove('act'));
+  document.getElementById('atab-'+id).classList.add('act');
+  if(id==='missions')renderAdmMissions();
+  if(id==='planets')renderAdmPlanets();
+  if(id==='queue')renderAdmQueue();
+}
+function renderAdminAll(){renderAdmMissions();renderAdmPlanets();renderAdmQueue();updatePlanetSelect();}
+function updatePlanetSelect(){
+  const sel=document.getElementById('am-planet');
+  sel.innerHTML='<option value="">— Select Zone —</option>'+getPlanets().map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+}
+function createMission(){
+  const name=document.getElementById('am-name').value.trim();
+  const planetId=document.getElementById('am-planet').value;
+  if(!name||!planetId)return;
+  const ms=getMissions();
+  ms.push({id:'M-'+String(ms.length+1).padStart(3,'0'),planetId,name:name.toUpperCase(),desc:document.getElementById('am-desc').value.trim(),objectives:document.getElementById('am-obj').value.trim(),rank:document.getElementById('am-rank').value,diff:parseInt(document.getElementById('am-diff').value)||3,time:document.getElementById('am-time').value.trim(),creds:document.getElementById('am-creds').value.trim(),xp:document.getElementById('am-xp').value.trim(),note:document.getElementById('am-note').value.trim(),created:Date.now()});
+  saveMissions(ms);
+  ['am-name','am-desc','am-obj','am-time','am-creds','am-xp','am-note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('am-planet').value='';
+  renderAdmMissions();flash();
+}
+function renderAdmMissions(){
+  const ms=getMissions(),pl=getPlanets();
+  const list=document.getElementById('adm-mission-list');
+  if(!ms.length){list.innerHTML='<div class="empty-adm">NO MISSIONS YET</div>';return;}
+  list.innerHTML=ms.map(m=>{
+    const p=pl.find(x=>x.id===m.planetId);
+    return`<div class="amc"><div class="amc-info"><div class="amc-name">${m.id} — ${m.name} <span class="rbadge rank-${m.rank}">${m.rank}</span></div><div class="amc-meta">ZONE: ${p?p.name:'UNLINKED'} · CR: ${m.creds||0} · DIFF: ${m.diff}/5</div></div><div class="amc-acts"><button class="btn danger" style="padding:3px 8px;font-size:7px;" onclick="delMission('${m.id}')">DEL</button></div></div>`;
+  }).join('');
+}
+function delMission(id){saveMissions(getMissions().filter(m=>m.id!==id));renderAdmMissions();}
+function renderAdmPlanets(){
+  const pl=getPlanets();
+  const list=document.getElementById('adm-planet-list');
+  if(!pl.length){list.innerHTML='<div class="empty-adm">NO ZONES YET</div>';return;}
+  list.innerHTML=pl.map(p=>`<div class="amc"><img src="${p.img}" style="width:55px;height:38px;object-fit:cover;border:1px solid var(--border);flex-shrink:0;filter:saturate(.4);"><div class="amc-info"><div class="amc-name">${p.name}</div><div class="amc-meta">${p.desc||'—'} · ${getMissions().filter(m=>m.planetId===p.id).length} missions</div></div><div class="amc-acts"><button class="btn danger" style="padding:3px 8px;font-size:7px;" onclick="delPlanet('${p.id}')">DEL</button></div></div>`).join('');
+}
+function delPlanet(id){savePlanets(getPlanets().filter(p=>p.id!==id));renderAdmPlanets();renderPlanets();}
+function renderAdmQueue(){
+  const queue=getQueue();
+  const pending=queue.filter(q=>q.status==='pending').length;
+  const badge=document.getElementById('queue-badge');
+  badge.style.display=pending?'':'none';badge.textContent=pending?`[${pending}]`:'';
+  const list=document.getElementById('adm-queue-list');
+  list.innerHTML='';
+  if(!queue.length){list.innerHTML='<div class="empty-adm">NO SUBMISSIONS YET</div>';return;}
+  queue.slice().reverse().forEach(q=>{
+    const card=document.createElement('div');card.className='pqc';
+    const hd=document.createElement('div');hd.className='pqc-hd';
+    hd.innerHTML=`<div class="pqc-title">${q.missionName} <span class="sb sb-${q.status}">${q.status.toUpperCase()}</span></div><div class="pqc-time">${new Date(q.timestamp).toLocaleString()}</div>`;
+    const meta=document.createElement('div');meta.className='pqc-meta';
+    meta.innerHTML=`OPERATIVE: ${q.operative}<br>ZONE: ${q.planetName} · ${q.missionId} · ${q.creds} CR + ${q.xp} XP${q.notes?'<br>NOTES: '+q.notes:''}`;
+    const vidWrap=document.createElement('div');vidWrap.className='pqc-vid';
+    if(_vids[q.id]){const v=document.createElement('video');v.src=_vids[q.id];v.controls=true;v.style.cssText='width:100%;height:100%;object-fit:contain;background:#000;';vidWrap.appendChild(v);}
+    else{vidWrap.innerHTML=`<div class="pqc-vid-lbl">📁 ${q.videoName||'VIDEO SUBMITTED'} — review this session</div>`;}
+    card.appendChild(hd);card.appendChild(meta);card.appendChild(vidWrap);
+    if(q.status==='pending'){
+      const acts=document.createElement('div');acts.className='pqc-acts';
+      const ab=document.createElement('button');ab.className='btn ok';ab.style.cssText='padding:4px 10px;font-size:8px;';ab.textContent=`✓ APPROVE — GRANT ${q.creds} CR`;
+      ab.onclick=()=>{const queue2=getQueue();const e=queue2.find(x=>x.id===q.id);if(e){e.status='approved';saveQueue(queue2);renderAdmQueue();flash();}};
+      const rb=document.createElement('button');rb.className='btn danger';rb.style.cssText='padding:4px 10px;font-size:8px;';rb.textContent='✕ REJECT';
+      rb.onclick=()=>{const queue2=getQueue();const e=queue2.find(x=>x.id===q.id);if(e){e.status='rejected';saveQueue(queue2);renderAdmQueue();}};
+      acts.appendChild(ab);acts.appendChild(rb);card.appendChild(acts);
+    }
+    list.appendChild(card);
+  });
+}
+function changePw(){
+  const np=document.getElementById('new-pw').value;
+  const cp=document.getElementById('conf-pw').value;
+  if(!np||np!==cp)return;
+  savePw(np);
+  document.getElementById('new-pw').value='';document.getElementById('conf-pw').value='';
+  const msg=document.getElementById('pw-msg');msg.style.display='block';setTimeout(()=>msg.style.display='none',3000);
+}
+function clearMissions(){saveMissions([]);renderAdmMissions();}
+function clearZones(){savePlanets([]);renderPlanets();renderAdmPlanets();}
+
+loadAll().then(runBoot);
 </script>
 </body>
 </html>
