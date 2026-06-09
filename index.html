@@ -4,537 +4,224 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WAR SYSTEM — SORTIE COMMAND</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Titillium+Web:wght@200;300;400;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
-  --bg:#000;
-  --map-bg:#060d18;
-  --panel-bg:rgba(6,14,26,0.92);
-  --border:#1e4060;
-  --border2:#2a5a80;
-  --cyan:#4dd8e8;
-  --cyan2:#2aabbc;
-  --cyan-dim:#1a6070;
-  --orange:#e8721a;
-  --orange2:#c05810;
-  --text:#7ab8cc;
-  --text2:#4a7a90;
-  --text3:#2a4a5a;
-  --white:#d8ecf4;
-  --red:#c02820;
-  --green:#28a858;
-  --warm-bg:#c8c4a0; /* acvd loading bg */
+  --navy:#050c14;--navy2:#081525;--panel:#0a1a2a;
+  --border:#1a3a5a;--border2:#204870;--border3:#0d2035;
+  --cyan:#4fc8d8;--cyan2:#2a8fa0;--cyan3:#1a5a6a;--cyan4:#0d3040;
+  --orange:#e87a20;--orange2:#b05818;
+  --text:#8ab8cc;--text2:#4a7a8a;--text3:#2a4a5a;
+  --white:#c8dce8;--red:#c83020;--red2:#8a1a10;
+  --green:#2aaa60;--green2:#0d4a28;
 }
-html,body{width:100%;height:100%;background:#000;color:var(--white);font-family:'Share Tech Mono',monospace;overflow:hidden;}
+html,body{width:100%;height:100%;background:var(--navy);color:var(--text);font-family:'Share Tech Mono',monospace;overflow:hidden;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.06) 3px,rgba(0,0,0,0.06) 4px);pointer-events:none;z-index:9998;}
 
-/* scanlines */
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.12) 2px,rgba(0,0,0,0.12) 4px);pointer-events:none;z-index:9997;}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;}
+.screen.active{display:flex;}
 
-.screen{position:fixed;inset:0;display:none;}
-.screen.active{display:block;}
-
-/* ════════════════════════════════
-   BOOT — PHASE 1: warm globe fade
-   ════════════════════════════════ */
-#boot{background:#000;overflow:hidden;}
-
-.boot-warm-bg{
-  position:absolute;inset:0;
-  background:radial-gradient(ellipse 80% 70% at 50% 55%, #b8b49000 0%, #a8a47840 30%, #888060 60%, #606050 80%, #303028 100%);
-  opacity:0;transition:opacity 1.2s ease;
-}
-.boot-warm-bg.show{opacity:1;}
-
-/* dot grid */
-.boot-dotgrid{
-  position:absolute;inset:0;
-  background-image:radial-gradient(circle,rgba(80,80,60,0.5) 1px,transparent 1px);
-  background-size:32px 32px;
-  opacity:0;transition:opacity 1s ease;
-}
-.boot-dotgrid.show{opacity:1;}
-
-/* vertical crosshair line on warm bg */
-.boot-crosshair{
-  position:absolute;left:50%;top:0;bottom:0;
-  width:1px;background:rgba(100,100,80,0.3);
-  opacity:0;transition:opacity 1s ease;
-}
-.boot-crosshair.show{opacity:1;}
-
-/* Phase 1 title bar — "ARMORED CORE VERDICT DAY INITIAL SETTINGS >>>" */
-.boot-title-bar{
-  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  display:flex;align-items:center;gap:0;
-  opacity:0;transition:opacity 0.4s ease;
-  white-space:nowrap;
-}
-.boot-title-bar.show{opacity:1;}
-.btb-sq{width:52px;height:44px;border:1px solid rgba(200,200,180,0.5);background:rgba(100,100,80,0.1);}
-.btb-sq2{width:52px;height:44px;border:1px solid rgba(200,200,180,0.5);background:rgba(100,100,80,0.1);}
-.btb-text{padding:0 18px;text-align:center;}
-.btb-top{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:400;color:#e06830;letter-spacing:.15em;}
-.btb-main{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:var(--cyan);letter-spacing:.08em;text-shadow:0 0 20px rgba(77,216,232,0.8);}
-.btb-sub{font-size:10px;color:rgba(220,220,200,0.7);letter-spacing:.18em;margin-top:2px;}
-
-/* ════════════════════════════════
-   BOOT — PHASE 2: 3D globe loading
-   ════════════════════════════════ */
-.boot-globe-screen{
-  position:absolute;inset:0;
-  background:radial-gradient(ellipse 90% 80% at 50% 50%, #b0ac8840 0%, #a0a07060 30%, #707058 60%, #404038 100%);
-  display:flex;align-items:center;justify-content:center;
-  opacity:0;transition:opacity 0.6s ease;pointer-events:none;
-}
-.boot-globe-screen.show{opacity:1;}
-
-.globe-wrap{position:relative;width:420px;height:420px;}
-.globe-svg{width:100%;height:100%;}
-
-/* concentric rings */
-.globe-ring{position:absolute;border-radius:50%;border:1px solid rgba(100,180,200,0.2);}
-
-.globe-loading-box{
-  position:absolute;bottom:80px;left:50%;transform:translateX(-50%);
-  width:520px;
-  background:rgba(20,30,40,0.85);
-  border:1px solid rgba(77,216,232,0.3);
-  padding:10px 16px;
-  text-align:center;
-}
-.glb-title{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;color:var(--white);letter-spacing:.3em;margin-bottom:8px;}
-.glb-bar-wrap{margin-bottom:5px;}
-.glb-bar-track{height:6px;background:rgba(77,216,232,0.1);border:1px solid rgba(77,216,232,0.2);margin-bottom:4px;overflow:hidden;}
-.glb-bar-fill{height:100%;background:var(--cyan2);box-shadow:0 0 8px var(--cyan2);width:0%;transition:width 0.08s linear;}
-.glb-pct{font-size:10px;color:var(--cyan);text-align:right;letter-spacing:.1em;}
-
-/* ════════════════════════════════
-   BOOT — PHASE 3: MAIN SYSTEM ENGAGED
-   ════════════════════════════════ */
-.boot-engaged-screen{
-  position:absolute;inset:0;
-  background:radial-gradient(ellipse 100% 80% at 50% 40%, #303828 0%, #202820 40%, #101810 70%, #080c08 100%);
-  overflow:hidden;
-  opacity:0;transition:opacity 0.5s ease;pointer-events:none;
-}
-.boot-engaged-screen.show{opacity:1;}
-
-/* blurry map silhouette behind */
-.eng-map-bg{
-  position:absolute;inset:0;
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 560'%3E%3Crect width='1000' height='560' fill='%23101810'/%3E%3Cpath d='M85 80L180 70L240 100L255 170L240 220L180 270L90 290L60 240L55 170L70 110Z' fill='%23182018' opacity='.6'/%3E%3Cpath d='M435 60L500 55L545 90L540 180L480 230L430 220L415 155L420 90Z' fill='%23182018' opacity='.5'/%3E%3Cpath d='M505 55L820 50L825 160L720 180L540 130L510 80Z' fill='%23182018' opacity='.5'/%3E%3Cpath d='M440 140L540 130L545 280L460 360L415 280L415 195Z' fill='%23182018' opacity='.5'/%3E%3C/svg%3E") center/cover;
-  filter:blur(8px);
-  opacity:0.7;
-}
-
-/* dot grid */
-.eng-dotgrid{
-  position:absolute;inset:0;
-  background-image:radial-gradient(circle,rgba(60,100,60,0.3) 1px,transparent 1px);
-  background-size:32px 32px;
-}
-
-/* floating orbs */
-.orb{
-  position:absolute;border-radius:50%;
-  background:radial-gradient(circle at 35% 35%, rgba(200,220,180,0.4), rgba(100,140,100,0.1) 60%, transparent 80%);
-  border:1px solid rgba(150,180,150,0.2);
-}
-
-/* the main band */
-.eng-band{
-  position:absolute;top:50%;left:0;right:0;transform:translateY(-50%);
-  background:rgba(0,0,0,0.75);
-  padding:28px 0 24px;
-  text-align:center;
-  border-top:1px solid rgba(77,216,232,0.15);
-  border-bottom:1px solid rgba(77,216,232,0.15);
-}
-.eng-top{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:400;color:rgba(77,216,232,0.7);letter-spacing:.35em;text-transform:uppercase;}
-.eng-main{font-family:'Rajdhani',sans-serif;font-size:52px;font-weight:700;color:var(--cyan);letter-spacing:.15em;text-transform:uppercase;text-shadow:0 0 40px rgba(77,216,232,0.6),0 0 80px rgba(77,216,232,0.3);}
-.eng-sub{font-size:8px;color:rgba(77,216,232,0.25);letter-spacing:.2em;margin-top:6px;overflow:hidden;white-space:nowrap;}
-
-/* ════════════════════════════════
-   BOOT — PHASE 4: guide tips
-   ════════════════════════════════ */
-.boot-guide-screen{
-  position:absolute;inset:0;
-  background:radial-gradient(ellipse 100% 80% at 50% 40%, #202820 0%, #141c14 50%, #080c08 100%);
-  opacity:0;transition:opacity 0.4s ease;pointer-events:none;
-  overflow:hidden;
-}
-.boot-guide-screen.show{opacity:1;pointer-events:all;}
-
-/* same map/dotgrid bg as engaged */
-.guide-map-bg{position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 560'%3E%3Crect width='1000' height='560' fill='%23101810'/%3E%3Cpath d='M85 80L180 70L240 100L255 170L240 220L180 270L90 290L60 240L55 170L70 110Z' fill='%23182018' opacity='.6'/%3E%3Cpath d='M435 60L500 55L545 90L540 180L480 230L430 220L415 155L420 90Z' fill='%23182018' opacity='.5'/%3E%3Cpath d='M505 55L820 50L825 160L720 180L540 130L510 80Z' fill='%23182018' opacity='.5'/%3E%3Cpath d='M440 140L540 130L545 280L460 360L415 280L415 195Z' fill='%23182018' opacity='.5'/%3E%3C/svg%3E") center/cover;filter:blur(6px);opacity:0.5;}
-.guide-dotgrid{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(60,100,60,0.25) 1px,transparent 1px);background-size:32px 32px;}
-
-/* "MAIN SYSTEM ENGAGED" ghost text behind */
-.guide-ghost{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;user-select:none;}
-.guide-ghost-top{font-family:'Rajdhani',sans-serif;font-size:clamp(28px,5vw,48px);font-weight:700;color:rgba(77,216,232,0.06);letter-spacing:.3em;text-transform:uppercase;}
-.guide-ghost-main{font-family:'Rajdhani',sans-serif;font-size:clamp(48px,9vw,90px);font-weight:700;color:rgba(77,216,232,0.05);letter-spacing:.15em;text-transform:uppercase;}
-
-/* orange timestamp bar */
-.guide-timebar{
-  position:absolute;top:0;left:0;right:0;
-  display:flex;align-items:center;justify-content:center;
-  padding:6px 0;
-}
-.guide-timebar-inner{
-  border:1px solid rgba(200,120,40,0.5);
-  padding:3px 20px;
-  font-size:11px;color:var(--orange);letter-spacing:.2em;
-  background:rgba(0,0,0,0.5);
-  min-width:280px;text-align:center;
-}
-.guide-timebar-brackets{
-  position:absolute;top:4px;left:calc(50% - 160px);right:calc(50% - 160px);
-  height:20px;pointer-events:none;
-}
-
-/* player bar */
-.guide-playerbar{
-  position:absolute;top:34px;left:0;right:0;
-  display:flex;align-items:center;justify-content:center;
-}
-.guide-playerbar-inner{
-  background:rgba(20,50,80,0.7);
-  border:1px solid rgba(40,90,130,0.6);
-  padding:5px 0;
-  width:calc(100% - 40px);max-width:1160px;
-  text-align:center;
-  font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:400;
-  color:var(--cyan);letter-spacing:.1em;
-}
-
-/* guide panel */
-.guide-panel{
-  position:absolute;
-  top:70px;left:20px;right:20px;
-  bottom:80px;
-  display:flex;flex-direction:column;
-}
-.guide-panel-title{
-  font-size:11px;color:var(--white);letter-spacing:.2em;
-  font-family:'Rajdhani',sans-serif;font-weight:400;
-  text-align:center;padding:5px 0;
-}
-.guide-panel-box{
-  flex:1;
-  background:rgba(10,24,40,0.75);
-  border:1px solid rgba(77,216,232,0.2);
-  padding:18px 20px;
-  position:relative;
-}
-.guide-panel-box::before{content:'';position:absolute;top:0;left:0;width:8px;height:8px;border-top:1px solid var(--cyan-dim);border-left:1px solid var(--cyan-dim);}
-.guide-panel-box::after{content:'';position:absolute;bottom:0;right:0;width:8px;height:8px;border-bottom:1px solid var(--cyan-dim);border-right:1px solid var(--cyan-dim);}
-.guide-h{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--white);letter-spacing:.1em;margin-bottom:12px;}
-.guide-line{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--white);letter-spacing:.05em;line-height:1.9;padding-left:4px;}
-.guide-line::before{content:'· ';color:var(--white);}
-
-.guide-counter{
-  text-align:center;
-  padding:6px 0;
-  font-size:11px;color:var(--white);letter-spacing:.15em;
-}
-
-/* guide bottom bar */
-.guide-bottom{
-  position:absolute;bottom:0;left:0;right:0;
-  background:rgba(10,30,50,0.85);
-  border-top:1px solid rgba(40,80,110,0.5);
-}
-.guide-pips{
-  display:flex;justify-content:flex-end;align-items:center;
-  padding:5px 16px;gap:3px;
-}
-.guide-pip{width:14px;height:8px;background:rgba(77,216,232,0.15);border:1px solid rgba(77,216,232,0.2);}
-.guide-pip.on{background:rgba(77,216,232,0.5);border-color:rgba(77,216,232,0.6);}
-.guide-start{
-  text-align:center;padding:6px 0;
-  font-size:11px;color:var(--white);letter-spacing:.2em;
-  animation:gblink 1s steps(1) infinite;
-}
-@keyframes gblink{0%,100%{opacity:1}50%{opacity:0}}
-.guide-footer-line{
-  font-size:9px;color:rgba(180,180,160,0.5);letter-spacing:.1em;
-  text-align:center;padding:3px 0 5px;
-}
-
-/* ════════════════════════════════
-   MAIN — World Menu style
-   ════════════════════════════════ */
-#main{background:#000;}
-
-/* pure black bg with dark map */
-.main-map-bg{
-  position:absolute;inset:0;
-  background:#000;
-}
-.main-map-svg{position:absolute;inset:0;width:100%;height:100%;opacity:1;}
-
-/* starfield dots */
-.main-stars{
-  position:absolute;inset:0;
-  background-image:radial-gradient(circle,rgba(255,255,255,0.25) 1px,transparent 1px);
-  background-size:60px 60px;
-}
-
-/* ACVD crosshair cursor overlay on map area */
-.main-crosshair{
-  position:absolute;inset:0;pointer-events:none;
-}
-
-/* top-right date + manual */
-.main-topright{
-  position:absolute;top:12px;right:16px;
-  text-align:right;
-  font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:400;
-  color:rgba(220,220,200,0.7);letter-spacing:.08em;
-}
-.main-manual{
-  display:flex;align-items:center;gap:5px;
-  color:rgba(180,180,160,0.5);font-size:11px;letter-spacing:.12em;
-  margin-top:2px;cursor:pointer;
-  font-family:'Share Tech Mono',monospace;
-}
-.main-manual:hover{color:rgba(220,220,200,0.8);}
-.main-manual-arrow{color:rgba(180,180,160,0.5);font-size:9px;}
-
-/* team info box */
-.main-teaminfo{
-  position:absolute;top:8px;right:90px;
-  background:rgba(6,14,26,0.85);
-  border:1px solid rgba(40,80,110,0.6);
-  padding:5px 10px;
-  display:flex;align-items:center;gap:8px;
-  font-family:'Share Tech Mono',monospace;
-}
-.ti-label{font-size:8px;color:rgba(180,180,160,0.5);letter-spacing:.1em;display:block;margin-bottom:2px;}
-.ti-shield{
-  width:28px;height:28px;
-  background:rgba(20,40,60,0.8);
-  border:1px solid rgba(60,100,140,0.5);
-  display:flex;align-items:center;justify-content:center;
-  font-size:10px;color:rgba(200,200,180,0.6);flex-shrink:0;
-}
-.ti-name{font-size:11px;color:var(--white);letter-spacing:.06em;}
-
-/* World Menu title */
-.main-menu-title{
-  position:absolute;top:14px;left:18px;
-  font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:400;
-  color:var(--white);letter-spacing:.08em;
-}
-
-/* nav list */
-.main-nav{
-  position:absolute;top:52px;left:18px;
-  display:flex;flex-direction:column;gap:2px;
-}
-.main-nav-item{
-  display:flex;align-items:center;gap:8px;
-  padding:4px 6px;
-  cursor:pointer;
-  font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:400;
-  color:var(--white);letter-spacing:.06em;
-  transition:background 0.1s;
-  position:relative;
-}
-.main-nav-item:hover{background:rgba(77,216,232,0.05);}
-.main-nav-item.act::before{content:'›';position:absolute;left:-10px;color:var(--white);font-size:14px;}
-.main-nav-item.disabled{color:rgba(100,110,120,0.6);cursor:default;}
-.main-nav-item.disabled:hover{background:transparent;}
-.nav-sq{width:10px;height:10px;background:var(--orange);flex-shrink:0;}
-.nav-sq.dim{background:rgba(100,110,120,0.5);}
-
-/* bottom instruction bar */
-.main-instruct{
-  position:absolute;bottom:0;left:0;right:0;
-  background:rgba(6,14,26,0.85);
-  border-top:1px solid rgba(40,80,110,0.4);
-  padding:5px 16px;
-  font-family:'Share Tech Mono',monospace;font-size:9px;
-  color:var(--orange);letter-spacing:.08em;
-}
-
-/* ════════════════════════════════
-   PLANETS — Select Zone
-   ════════════════════════════════ */
-#planets{background:#000;display:none;}
-#planets.active{display:flex;flex-direction:column;}
-
-.pl-topbar{
-  height:30px;background:rgba(6,14,26,0.97);
-  border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 16px;flex-shrink:0;
-}
-.pl-topbar-title{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;color:var(--cyan);letter-spacing:.2em;}
-.pl-topbar-right{display:flex;align-items:center;gap:14px;font-size:9px;color:var(--text2);letter-spacing:.1em;}
-.pl-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--cyan2);margin-right:4px;animation:pd 2s ease-in-out infinite;}
+/* ── SHARED ── */
+.br{position:absolute;width:10px;height:10px;}
+.br.tl{top:-1px;left:-1px;border-top:1px solid var(--cyan2);border-left:1px solid var(--cyan2);}
+.br.tr{top:-1px;right:-1px;border-top:1px solid var(--cyan2);border-right:1px solid var(--cyan2);}
+.br.bl{bottom:-1px;left:-1px;border-bottom:1px solid var(--cyan2);border-left:1px solid var(--cyan2);}
+.br.br2{bottom:-1px;right:-1px;border-bottom:1px solid var(--cyan2);border-right:1px solid var(--cyan2);}
+.topbar{height:32px;background:rgba(10,26,42,.97);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 18px;flex-shrink:0;}
+.tb-title{font-size:11px;color:var(--cyan);letter-spacing:.25em;}
+.tb-right{display:flex;align-items:center;gap:18px;font-size:9px;color:var(--text2);letter-spacing:.1em;}
+.tb-right .lv{color:var(--cyan);}
+.dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--cyan2);margin-right:5px;animation:pd 2s ease-in-out infinite;}
 @keyframes pd{0%,100%{opacity:1}50%{opacity:.4}}
-.pl-lv{color:var(--cyan);}
-
-.pl-body{flex:1;overflow:hidden;display:flex;flex-direction:column;}
-.pl-header{padding:12px 20px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(40,80,110,0.3);}
-.pl-header h2{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;color:var(--white);letter-spacing:.2em;text-transform:uppercase;}
-.pl-header-sub{font-size:8px;color:var(--text2);letter-spacing:.15em;}
-
-.pl-grid-wrap{flex:1;overflow-y:auto;padding:16px 20px;}
-.pl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;}
-
-.pl-card{
-  position:relative;background:rgba(6,14,26,0.8);
-  border:1px solid var(--border);
-  cursor:pointer;aspect-ratio:1;overflow:hidden;
-  transition:border-color .2s;
-}
-.pl-card:hover{border-color:var(--cyan2);}
-.pl-card img{width:100%;height:100%;object-fit:cover;filter:saturate(.65) brightness(.75);transition:filter .2s;}
-.pl-card:hover img{filter:saturate(.85) brightness(.9);}
-.pl-card-overlay{
-  position:absolute;inset:0;
-  background:linear-gradient(to top,rgba(0,0,0,.92) 0%,rgba(0,0,0,.4) 50%,transparent 100%);
-  display:flex;flex-direction:column;justify-content:flex-end;padding:10px;
-}
-.pl-card-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;color:var(--white);letter-spacing:.1em;text-transform:uppercase;}
-.pl-card-meta{font-size:8px;color:var(--cyan2);letter-spacing:.12em;margin-top:2px;}
-.pl-card-corner{position:absolute;top:5px;left:5px;width:7px;height:7px;border-top:1px solid var(--cyan2);border-left:1px solid var(--cyan2);}
-.pl-card-corner2{position:absolute;bottom:5px;right:5px;width:7px;height:7px;border-bottom:1px solid var(--cyan2);border-right:1px solid var(--cyan2);}
-
-.pl-empty{grid-column:1/-1;text-align:center;padding:60px 0;font-size:10px;color:var(--text3);letter-spacing:.15em;line-height:2.2;}
-
-.pl-botbar{height:22px;background:rgba(6,14,26,0.97);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:8px;color:var(--text2);letter-spacing:.1em;flex-shrink:0;}
-.tkw{flex:1;overflow:hidden;margin:0 12px;}
-.tki{white-space:nowrap;font-size:8px;color:var(--text3);letter-spacing:.1em;animation:tk 45s linear infinite;}
+.botbar{height:24px;background:rgba(8,21,37,.97);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:8px;color:var(--text2);letter-spacing:.1em;flex-shrink:0;}
+.tkw{flex:1;overflow:hidden;margin:0 14px;}
+.tki{white-space:nowrap;font-size:8px;color:var(--text3);letter-spacing:.1em;animation:tk 50s linear infinite;}
 @keyframes tk{from{transform:translateX(80vw)}to{transform:translateX(-100%)}}
+input,textarea,select{background:var(--panel);border:1px solid var(--border);color:var(--white);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:.08em;padding:7px 9px;outline:none;width:100%;}
+input:focus,textarea:focus,select:focus{border-color:var(--cyan2);}
+textarea{resize:vertical;min-height:65px;}
+label.lbl{font-size:8px;color:var(--text2);letter-spacing:.2em;display:block;margin-bottom:3px;}
+.field{margin-bottom:11px;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;}
+.btn{background:rgba(74,200,216,.08);border:1px solid var(--cyan3);color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:.2em;padding:8px 18px;cursor:pointer;transition:background .15s;}
+.btn:hover{background:rgba(74,200,216,.18);}
+.btn.danger{background:rgba(200,48,32,.08);border-color:var(--red2);color:var(--red);}
+.btn.danger:hover{background:rgba(200,48,32,.18);}
+.btn.ok{background:rgba(42,170,96,.08);border-color:var(--green2);color:var(--green);}
+.btn.ok:hover{background:rgba(42,170,96,.18);}
+.btn.orange{background:rgba(232,122,32,.08);border-color:var(--orange2);color:var(--orange);}
+.btn.orange:hover{background:rgba(232,122,32,.18);}
+::-webkit-scrollbar{width:3px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border2);}
+#flash{position:fixed;inset:0;pointer-events:none;z-index:9999;background:rgba(74,200,216,.07);opacity:0;transition:opacity .08s;}
+#flash.on{opacity:1;}
+.sl{font-size:8px;color:var(--text2);letter-spacing:.25em;margin-bottom:7px;padding-bottom:4px;border-bottom:1px solid var(--border);}
+.empty-msg{text-align:center;padding:40px 0;font-size:9px;color:var(--text3);letter-spacing:.15em;line-height:2.2;}
 
-/* modal */
-.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:none;align-items:center;justify-content:center;}
-.modal-ov.open{display:flex;}
-.modal{background:rgba(8,18,32,0.98);border:1px solid var(--border2);width:clamp(300px,40vw,440px);position:relative;}
-.modal-hd{border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;}
-.modal-hd-t{font-size:9px;color:var(--cyan);letter-spacing:.25em;}
-.modal-close{background:none;border:none;color:var(--text2);cursor:pointer;font-size:13px;}
-.modal-close:hover{color:var(--white);}
-.modal-bd{padding:16px;}
-.img-prev{width:100%;aspect-ratio:16/9;background:rgba(6,14,26,0.8);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:10px;cursor:pointer;}
-.img-prev img{width:100%;height:100%;object-fit:cover;}
-.img-prev-lbl{font-size:8px;color:var(--text3);letter-spacing:.15em;}
-.modal-ft{border-top:1px solid var(--border);padding:10px 16px;display:flex;justify-content:flex-end;gap:8px;}
-.mbrk{position:absolute;width:8px;height:8px;}
-.mbrk.tl{top:-1px;left:-1px;border-top:1px solid var(--cyan2);border-left:1px solid var(--cyan2);}
-.mbrk.tr{top:-1px;right:-1px;border-top:1px solid var(--cyan2);border-right:1px solid var(--cyan2);}
-.mbrk.bl{bottom:-1px;left:-1px;border-bottom:1px solid var(--cyan2);border-left:1px solid var(--cyan2);}
-.mbrk.br{bottom:-1px;right:-1px;border-bottom:1px solid var(--cyan2);border-right:1px solid var(--cyan2);}
+/* ══════════════════════════════════
+   BOOT
+══════════════════════════════════ */
+#boot{background:var(--navy);align-items:center;justify-content:center;}
+.boot-ghost{position:absolute;font-family:'Titillium Web',sans-serif;font-weight:200;font-size:clamp(36px,8vw,90px);color:rgba(74,200,216,.05);letter-spacing:.12em;text-align:center;line-height:1.1;pointer-events:none;user-select:none;text-transform:uppercase;}
+.boot-panel{position:relative;width:clamp(400px,60vw,700px);background:rgba(10,26,42,.94);border:1px solid var(--border2);z-index:2;}
+.boot-ph{background:rgba(10,26,42,.98);border-bottom:1px solid var(--border);padding:9px 16px;display:flex;align-items:center;justify-content:space-between;}
+.boot-ph .t{font-size:10px;color:var(--cyan);letter-spacing:.25em;}
+.boot-ph .s{font-size:8px;color:var(--text2);letter-spacing:.15em;}
+.boot-pb{padding:16px 20px 12px;min-height:100px;}
+.bl{font-size:10px;line-height:2;color:var(--text2);letter-spacing:.07em;opacity:0;transition:opacity .1s;}
+.bl.on{opacity:1;}
+.bl .ok{color:var(--cyan);}
+.bl .wn{color:var(--orange);}
+.boot-pf{border-top:1px solid var(--border);padding:9px 16px;display:flex;align-items:center;gap:10px;}
+.prog-t{flex:1;height:2px;background:var(--border);overflow:hidden;}
+.prog-f{height:100%;background:var(--cyan2);width:0%;transition:width .1s linear;}
+.prog-p{font-size:9px;color:var(--cyan2);min-width:28px;}
+.boot-start{position:absolute;bottom:52px;left:0;right:0;text-align:center;font-size:11px;color:var(--cyan2);letter-spacing:.3em;animation:blk 1s steps(1) infinite;}
+@keyframes blk{0%,100%{opacity:1}50%{opacity:0}}
+.boot-ibar{position:absolute;bottom:0;left:0;right:0;height:26px;background:rgba(10,26,42,.95);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:8px;color:var(--text2);letter-spacing:.15em;}
+.boot-tbar{position:absolute;top:0;left:0;right:0;height:32px;background:rgba(10,26,42,.95);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--orange);letter-spacing:.2em;}
 
-/* ════════════════════════════════
-   MISSIONS — Select Mission style
-   ════════════════════════════════ */
-#missions{background:#000;display:none;}
-#missions.active{display:flex;flex-direction:column;}
+/* ══════════════════════════════════
+   SOLAR SYSTEM SELECT
+══════════════════════════════════ */
+#solar{background:var(--navy);}
+.solar-body{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.solar-header{padding:14px 24px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.solar-header h2{font-family:'Titillium Web',sans-serif;font-weight:300;font-size:16px;color:var(--white);letter-spacing:.2em;text-transform:uppercase;}
+.solar-grid-wrap{flex:1;overflow-y:auto;padding:22px 24px;}
+.solar-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
 
-.ms-topbar{height:30px;background:rgba(6,14,26,0.97);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;flex-shrink:0;}
-.ms-title{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;color:var(--white);letter-spacing:.1em;}
-.ms-manual{font-size:9px;color:var(--text2);letter-spacing:.15em;display:flex;align-items:center;gap:4px;cursor:pointer;}
-.ms-manual:hover{color:var(--white);}
+.ss-card{position:relative;background:var(--navy2);border:1px solid var(--border);cursor:pointer;aspect-ratio:4/3;overflow:hidden;transition:border-color .2s;}
+.ss-card:hover{border-color:var(--cyan2);}
+.ss-card:hover .ss-img{filter:saturate(.9) brightness(.9);}
+.ss-card:hover .ss-corner,.ss-card:hover .ss-corner2{border-color:var(--cyan);}
+.ss-img{width:100%;height:100%;object-fit:cover;filter:saturate(.6) brightness(.7);transition:filter .2s;}
+/* star field fallback when no img */
+.ss-bg{width:100%;height:100%;background:radial-gradient(ellipse at center,#0d2035 0%,#050c14 100%);}
+.ss-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(5,12,20,.95) 0%,rgba(5,12,20,.3) 50%,transparent 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:12px;}
+.ss-name{font-family:'Titillium Web',sans-serif;font-weight:600;font-size:14px;color:var(--white);letter-spacing:.1em;text-transform:uppercase;}
+.ss-meta{font-size:8px;color:var(--cyan2);letter-spacing:.15em;margin-top:3px;}
+.ss-corner{position:absolute;top:5px;left:5px;width:8px;height:8px;border-top:1px solid var(--cyan3);border-left:1px solid var(--cyan3);transition:border-color .2s;}
+.ss-corner2{position:absolute;bottom:5px;right:5px;width:8px;height:8px;border-bottom:1px solid var(--cyan3);border-right:1px solid var(--cyan3);transition:border-color .2s;}
 
-.ms-body{flex:1;overflow:hidden;display:grid;grid-template-columns:280px 1fr;}
+/* ══════════════════════════════════
+   SOLAR SYSTEM VIEW (orbital)
+══════════════════════════════════ */
+#solarview{background:var(--navy);}
+.sv-body{flex:1;overflow:hidden;display:grid;grid-template-columns:220px 1fr;}
 
-/* left area list (like ACVD thumbnails) */
-.ms-area{
-  background:rgba(4,10,18,0.97);
-  border-right:1px solid var(--border);
-  display:flex;flex-direction:column;overflow-y:auto;
-}
-.ms-area-hd{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px;font-size:9px;color:var(--text2);letter-spacing:.18em;}
-.ms-area-hd::before{content:'';display:inline-block;width:6px;height:6px;background:var(--text3);}
+/* left sidebar */
+.sv-sb{background:rgba(8,21,37,.97);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
+.sv-sb-hd{padding:10px 14px;border-bottom:1px solid var(--border);font-size:9px;color:var(--text2);letter-spacing:.2em;}
+.sv-ss-info{padding:12px 14px;border-bottom:1px solid var(--border3);}
+.sv-ss-name{font-family:'Titillium Web',sans-serif;font-weight:600;font-size:14px;color:var(--white);letter-spacing:.1em;text-transform:uppercase;}
+.sv-ss-desc{font-size:8px;color:var(--cyan2);letter-spacing:.12em;margin-top:3px;}
+.sv-planet-list{padding:6px 0;}
+.sv-planet-item{display:flex;align-items:center;gap:9px;padding:8px 14px;cursor:pointer;transition:background .1s;position:relative;}
+.sv-planet-item:hover{background:rgba(74,200,216,.04);}
+.sv-planet-item.act{background:rgba(74,200,216,.07);border-left:2px solid var(--cyan2);}
+.sv-planet-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.sv-planet-name{font-family:'Titillium Web',sans-serif;font-weight:300;font-size:12px;color:var(--white);letter-spacing:.07em;}
+.sv-planet-meta{font-size:7px;color:var(--text2);letter-spacing:.1em;margin-top:1px;}
+.sv-back{padding:10px 14px;border-top:1px solid var(--border);margin-top:auto;}
 
-.ms-area-planet{padding:10px 12px;border-bottom:1px solid rgba(26,58,90,0.4);}
-.ms-area-planet-img{width:100%;height:72px;object-fit:cover;border:1px solid var(--border);filter:saturate(.5) brightness(.7);margin-bottom:7px;}
-.ms-area-planet-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;color:var(--white);letter-spacing:.1em;text-transform:uppercase;}
-.ms-area-planet-sub{font-size:8px;color:var(--cyan2);letter-spacing:.12em;margin-top:2px;}
+/* right orbital canvas area */
+.sv-canvas-wrap{position:relative;overflow:hidden;background:var(--navy);}
+canvas#orbital{position:absolute;inset:0;width:100%;height:100%;}
+.sv-zone-label{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-family:'Titillium Web',sans-serif;font-size:13px;font-weight:300;color:var(--white);letter-spacing:.2em;pointer-events:none;}
+.sv-instruct{position:absolute;bottom:0;left:0;right:0;height:24px;background:rgba(8,21,37,.97);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 14px;font-size:9px;color:var(--cyan2);letter-spacing:.1em;}
 
-.ms-mission-thumb{
-  display:flex;align-items:center;
-  padding:0 12px 0 0;
-  border-bottom:1px solid rgba(26,58,90,0.25);
-  cursor:pointer;
-  position:relative;
-  transition:background .1s;
-}
-.ms-mission-thumb:hover{background:rgba(77,216,232,0.04);}
-.ms-mission-thumb.sel{background:rgba(77,216,232,0.06);border-left:2px solid var(--cyan2);}
-.ms-mission-img{width:80px;height:52px;object-fit:cover;flex-shrink:0;filter:saturate(.4) brightness(.6);background:rgba(10,20,35,0.8);}
-.ms-mission-img-placeholder{width:80px;height:52px;flex-shrink:0;background:rgba(10,20,35,0.8);border-right:1px solid var(--border);display:flex;align-items:center;justify-content:center;}
-.ms-mip-rank{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:18px;color:var(--orange);letter-spacing:.05em;}
-.ms-mission-info{padding:8px 10px;flex:1;}
-.ms-mission-name{font-family:'Rajdhani',sans-serif;font-weight:600;font-size:12px;color:var(--white);letter-spacing:.06em;}
-.ms-mission-meta{font-size:8px;color:var(--text2);letter-spacing:.1em;margin-top:3px;}
+/* ══════════════════════════════════
+   MISSIONS
+══════════════════════════════════ */
+#missions{background:var(--navy);}
+.ms-body{flex:1;overflow:hidden;display:grid;grid-template-columns:240px 1fr;}
+.ms-sb{background:rgba(8,21,37,.97);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
+.ms-sb-hd{padding:10px 14px;border-bottom:1px solid var(--border);font-size:9px;color:var(--text2);letter-spacing:.2em;}
+.ms-planet-info{padding:11px 14px;border-bottom:1px solid var(--border3);}
+.ms-planet-img{width:100%;height:74px;object-fit:cover;border:1px solid var(--border);filter:saturate(.5) brightness(.7);margin-bottom:7px;}
+.ms-planet-name{font-family:'Titillium Web',sans-serif;font-weight:600;font-size:13px;color:var(--white);letter-spacing:.1em;text-transform:uppercase;}
+.ms-planet-sub{font-size:8px;color:var(--cyan2);letter-spacing:.12em;margin-top:2px;}
+.ms-stat{display:flex;justify-content:space-between;font-size:9px;color:var(--text2);padding:3px 0;border-bottom:1px solid rgba(26,58,90,.3);}
+.ms-stat:last-child{border:none;}
+.ms-stat .v{color:var(--text);}
+.ms-stat .vc{color:var(--cyan);}
+.ms-back{padding:10px 14px;}
 
-.ms-back-btn{padding:10px 12px;border-top:1px solid var(--border);margin-top:auto;}
+.ms-list-wrap{flex:1;overflow-y:auto;padding:18px 20px;}
+.ms-sec-hd{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.ms-sec-hd h2{font-size:10px;color:var(--cyan);letter-spacing:.2em;}
+.ms-sec-line{flex:1;height:1px;background:linear-gradient(90deg,rgba(74,200,216,.3),transparent);}
 
-/* right map/detail area */
-.ms-right{position:relative;overflow:hidden;background:#000;}
-.ms-map-bg{position:absolute;inset:0;}
-.ms-map-svg{position:absolute;inset:0;width:100%;height:100%;}
-.ms-map-stars{position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,0.2) 1px,transparent 1px);background-size:60px 60px;}
-.ms-zone-name{position:absolute;top:14px;left:50%;transform:translateX(-50%);font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:400;color:var(--white);letter-spacing:.2em;pointer-events:none;}
-
-.ms-instruct{position:absolute;bottom:0;left:0;right:0;padding:5px 14px;background:rgba(4,10,18,0.85);border-top:1px solid rgba(40,80,110,0.3);font-size:9px;color:var(--orange);letter-spacing:.08em;font-family:'Share Tech Mono',monospace;}
+.mcard{background:var(--panel);border:1px solid var(--border);padding:13px;margin-bottom:9px;cursor:pointer;position:relative;transition:border-color .15s,background .15s;}
+.mcard:hover{border-color:rgba(74,200,216,.4);background:rgba(74,200,216,.025);}
+.mcard::before{content:'';position:absolute;top:0;left:0;width:8px;height:8px;border-top:1px solid transparent;border-left:1px solid transparent;transition:border-color .15s;}
+.mcard:hover::before{border-color:var(--cyan2);}
+.mcard-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:5px;}
+.mcard-id{font-size:8px;color:var(--text3);letter-spacing:.15em;}
+.mcard-rank{font-family:'Titillium Web',sans-serif;font-weight:600;font-size:12px;letter-spacing:.1em;padding:1px 6px;border:1px solid;}
+.rank-S{color:#ffd060;border-color:rgba(255,208,96,.4);background:rgba(255,208,96,.06);}
+.rank-A{color:var(--orange);border-color:rgba(232,122,32,.4);background:rgba(232,122,32,.06);}
+.rank-B{color:var(--text);border-color:rgba(138,184,204,.3);background:rgba(138,184,204,.04);}
+.rank-C{color:var(--text2);border-color:rgba(74,122,138,.3);}
+.mcard-name{font-family:'Titillium Web',sans-serif;font-weight:600;font-size:14px;color:var(--white);letter-spacing:.07em;margin-bottom:4px;}
+.mcard-desc{font-size:10px;color:var(--text2);line-height:1.6;margin-bottom:9px;}
+.mcard-foot{display:flex;align-items:center;justify-content:space-between;}
+.mcard-reward{display:flex;align-items:center;gap:5px;}
+.mcard-rl{font-size:8px;color:var(--text3);letter-spacing:.1em;}
+.mcard-rv{font-family:'Titillium Web',sans-serif;font-weight:600;font-size:13px;color:var(--orange);}
+.dpips{display:flex;gap:2px;}
+.dp{width:7px;height:7px;border:1px solid rgba(74,200,216,.25);}
+.dp.on{background:var(--cyan2);border-color:var(--cyan2);}
+.deploy-btn{font-size:9px;color:var(--navy);background:var(--cyan2);border:none;padding:5px 11px;cursor:pointer;letter-spacing:.15em;font-family:'Share Tech Mono',monospace;transition:background .15s;}
+.deploy-btn:hover{background:var(--cyan);}
 
 /* mission detail panel */
-#mdetail-panel{position:absolute;inset:0;background:rgba(4,10,18,0.97);display:none;flex-direction:column;z-index:40;}
+#mdetail-panel{position:absolute;inset:0;background:rgba(5,12,20,.97);display:none;flex-direction:column;z-index:40;}
 #mdetail-panel.open{display:flex;}
-.mdp-hd{border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:flex-start;justify-content:space-between;}
-.mdp-title{font-family:'Rajdhani',sans-serif;font-weight:300;font-size:20px;color:var(--white);letter-spacing:.12em;text-transform:uppercase;}
+.mdp-hd{border-bottom:1px solid var(--border);padding:13px 18px;display:flex;align-items:flex-start;justify-content:space-between;}
+.mdp-title{font-family:'Titillium Web',sans-serif;font-weight:300;font-size:20px;color:var(--white);letter-spacing:.12em;text-transform:uppercase;}
 .mdp-id{font-size:8px;color:var(--text2);letter-spacing:.2em;margin-top:3px;}
-.mdp-rank{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:30px;color:var(--orange);letter-spacing:.1em;}
+.mdp-rank{font-family:'Titillium Web',sans-serif;font-weight:200;font-size:32px;color:var(--orange);letter-spacing:.1em;}
 .mdp-body{flex:1;overflow-y:auto;padding:16px 18px;display:flex;gap:16px;}
 .mdp-col{flex:1;}
-.mdp-side{width:190px;flex-shrink:0;}
+.mdp-side{width:195px;flex-shrink:0;}
 .mdp-sl{font-size:8px;color:var(--text2);letter-spacing:.25em;margin-bottom:6px;padding-bottom:3px;border-bottom:1px solid var(--border);}
-.mdp-desc{font-size:10px;color:var(--text);line-height:1.8;letter-spacing:.04em;margin-bottom:14px;border-left:2px solid var(--border);padding-left:10px;}
-.mdp-obj{display:flex;gap:6px;font-size:10px;color:var(--text);padding:4px 0;border-bottom:1px solid rgba(26,58,90,.3);letter-spacing:.04em;}
+.mdp-desc{font-size:11px;color:var(--text);line-height:1.8;letter-spacing:.04em;margin-bottom:13px;border-left:2px solid var(--border);padding-left:10px;}
+.mdp-obj{display:flex;gap:7px;font-size:10px;color:var(--text);padding:4px 0;border-bottom:1px solid rgba(26,58,90,.3);letter-spacing:.04em;}
 .mdp-obj::before{content:'·';color:var(--cyan2);flex-shrink:0;}
-.mdp-chip{background:rgba(6,14,26,0.8);border:1px solid var(--border);padding:9px 11px;margin-bottom:7px;}
-.mdp-chip-l{font-size:7px;color:var(--text2);letter-spacing:.15em;}
-.mdp-chip-v{font-family:'Rajdhani',sans-serif;font-weight:300;font-size:18px;color:var(--cyan);margin-top:2px;letter-spacing:.08em;}
-.mdp-ft{border-top:1px solid var(--border);padding:12px 18px;display:flex;gap:8px;align-items:center;}
-.mdp-note{flex:1;font-size:8px;color:var(--text2);letter-spacing:.06em;line-height:1.7;border-left:1px solid var(--border);padding-left:10px;}
+.mdp-chip{background:var(--navy2);border:1px solid var(--border);padding:9px 11px;margin-bottom:7px;}
+.mdp-cl{font-size:8px;color:var(--text2);letter-spacing:.15em;}
+.mdp-cv{font-family:'Titillium Web',sans-serif;font-weight:300;font-size:18px;color:var(--cyan);margin-top:2px;letter-spacing:.08em;}
+.mdp-note{font-size:9px;color:var(--text2);letter-spacing:.06em;line-height:1.7;border-top:1px solid var(--border);padding-top:10px;margin-top:6px;}
+.mdp-ft{border-top:1px solid var(--border);padding:12px 18px;display:flex;gap:9px;align-items:center;}
 
-/* ════════════════════════════════
-   PROOF SUBMISSION
-   ════════════════════════════════ */
-#proof{background:rgba(4,10,18,0.98);display:none;flex-direction:column;}
-#proof.active{display:flex;}
-.proof-topbar{height:30px;background:rgba(6,14,26,0.97);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;flex-shrink:0;}
-.proof-topbar-title{font-size:11px;color:var(--cyan);letter-spacing:.2em;}
+/* ══════════════════════════════════
+   PROOF
+══════════════════════════════════ */
+#proof{background:var(--navy);}
 .proof-body{flex:1;overflow-y:auto;display:flex;align-items:center;justify-content:center;padding:20px;}
-.proof-box{width:clamp(300px,50vw,560px);background:rgba(6,14,26,0.95);border:1px solid var(--border2);position:relative;}
+.proof-box{width:clamp(300px,50vw,560px);background:var(--panel);border:1px solid var(--border2);position:relative;}
 .proof-bh{border-bottom:1px solid var(--border);padding:12px 18px;}
-.proof-title{font-family:'Rajdhani',sans-serif;font-weight:300;font-size:17px;color:var(--white);letter-spacing:.12em;text-transform:uppercase;}
+.proof-title{font-family:'Titillium Web',sans-serif;font-weight:300;font-size:17px;color:var(--white);letter-spacing:.12em;text-transform:uppercase;}
 .proof-sub{font-size:8px;color:var(--text2);letter-spacing:.15em;margin-top:3px;}
 .proof-bd{padding:16px 18px;}
-.proof-status{display:flex;align-items:center;gap:7px;padding:6px 9px;background:rgba(4,10,18,0.8);border:1px solid var(--border);font-size:9px;color:var(--text2);letter-spacing:.1em;margin-bottom:12px;}
+.proof-status{display:flex;align-items:center;gap:7px;padding:6px 9px;background:var(--navy2);border:1px solid var(--border);font-size:9px;color:var(--text2);letter-spacing:.1em;margin-bottom:12px;}
 .psd{width:5px;height:5px;border-radius:50%;background:var(--orange);box-shadow:0 0 5px var(--orange);}
 .psd.ok{background:var(--green);box-shadow:0 0 5px var(--green);}
 .psd.err{background:var(--red);box-shadow:0 0 5px var(--red);}
-.proof-ft{border-top:1px solid var(--border);padding:11px 18px;display:flex;gap:8px;}
-
-.video-area{width:100%;aspect-ratio:16/9;background:rgba(4,10,18,0.9);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;margin-bottom:4px;overflow:hidden;}
+.video-area{width:100%;aspect-ratio:16/9;background:var(--navy2);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;overflow:hidden;margin-bottom:4px;}
 .video-area video{width:100%;height:100%;object-fit:contain;background:#000;display:block;}
 .va-icon{font-size:22px;color:var(--text3);}
 .va-lbl{font-size:8px;color:var(--text3);letter-spacing:.15em;}
+.proof-ft{border-top:1px solid var(--border);padding:12px 18px;display:flex;gap:9px;}
 
-/* ════════════════════════════════
-   ADMIN
-   ════════════════════════════════ */
-#adminlogin{background:rgba(4,10,18,0.98);display:none;flex-direction:column;align-items:center;justify-content:center;}
-#adminlogin.active{display:flex;}
-.albox{width:clamp(280px,34vw,380px);background:rgba(6,14,26,0.95);border:1px solid var(--border2);position:relative;}
+/* ══════════════════════════════════
+   ADMIN LOGIN
+══════════════════════════════════ */
+#adminlogin{background:var(--navy);align-items:center;justify-content:center;}
+.albox{width:clamp(280px,34vw,380px);background:var(--panel);border:1px solid var(--border2);position:relative;}
 .albox-hd{border-bottom:1px solid var(--border);padding:11px 16px;}
 .albox-title{font-size:9px;color:var(--orange);letter-spacing:.3em;}
 .albox-sub{font-size:7px;color:var(--text2);letter-spacing:.15em;margin-top:2px;}
@@ -542,375 +229,168 @@ body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradi
 .al-err{font-size:8px;color:var(--red);letter-spacing:.1em;margin-bottom:8px;display:none;}
 .albox-ft{border-top:1px solid var(--border);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;}
 
-#admin{background:rgba(4,10,18,0.98);display:none;flex-direction:column;}
-#admin.active{display:flex;}
-.adm-topbar{height:30px;background:rgba(6,14,26,0.97);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;flex-shrink:0;}
-.adm-topbar-title{font-size:11px;color:var(--orange);letter-spacing:.2em;}
-.adm-body{flex:1;overflow:hidden;display:grid;grid-template-columns:170px 1fr;}
-.adm-sb{background:rgba(4,10,18,0.97);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+/* ══════════════════════════════════
+   ADMIN PANEL
+══════════════════════════════════ */
+#admin{background:var(--navy);}
+.adm-body{flex:1;overflow:hidden;display:grid;grid-template-columns:175px 1fr;}
+.adm-sb{background:rgba(8,21,37,.97);border-right:1px solid var(--border);display:flex;flex-direction:column;}
 .adm-sb-hd{padding:9px 13px;border-bottom:1px solid var(--border);font-size:7px;color:var(--orange);letter-spacing:.25em;}
-.adm-ni{padding:9px 13px;font-size:10px;color:var(--text2);letter-spacing:.1em;cursor:pointer;transition:background .1s;border-bottom:1px solid rgba(26,58,90,0.3);display:flex;align-items:center;gap:7px;}
-.adm-ni:hover{background:rgba(77,216,232,0.04);}
-.adm-ni.act{color:var(--cyan);background:rgba(77,216,232,0.06);border-left:2px solid var(--cyan2);}
+.adm-ni{padding:9px 13px;font-size:10px;color:var(--text2);letter-spacing:.1em;cursor:pointer;transition:background .1s;border-bottom:1px solid rgba(26,58,90,.3);display:flex;align-items:center;gap:7px;}
+.adm-ni:hover{background:rgba(74,200,216,.04);}
+.adm-ni.act{color:var(--cyan);background:rgba(74,200,216,.06);border-left:2px solid var(--cyan2);}
 .adm-ni-pip{width:4px;height:4px;background:currentColor;flex-shrink:0;}
 .adm-content{flex:1;overflow-y:auto;padding:18px 22px;}
 .adm-view{display:none;}
 .adm-view.act{display:block;}
 .adm-sec{margin-bottom:22px;}
 .adm-sec-title{font-size:8px;color:var(--orange);letter-spacing:.25em;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid var(--border);}
-.adm-botbar{height:22px;background:rgba(6,14,26,0.97);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:8px;color:var(--orange);letter-spacing:.1em;flex-shrink:0;}
-
-/* queue badge */
 #queue-badge{margin-left:auto;font-size:7px;color:var(--orange);display:none;}
-
-/* mission admin cards */
-.amc{background:rgba(6,14,26,0.8);border:1px solid var(--border);padding:10px;margin-bottom:7px;display:flex;align-items:center;gap:10px;}
+.amc{background:var(--navy2);border:1px solid var(--border);padding:10px;margin-bottom:7px;display:flex;align-items:center;gap:10px;}
 .amc-info{flex:1;}
 .amc-name{font-size:11px;color:var(--white);letter-spacing:.06em;}
 .amc-meta{font-size:7px;color:var(--text2);letter-spacing:.1em;margin-top:2px;}
 .amc-acts{display:flex;gap:5px;}
-
-/* proof queue */
-.pqc{background:rgba(6,14,26,0.8);border:1px solid var(--border);padding:11px;margin-bottom:8px;}
+.pqc{background:var(--navy2);border:1px solid var(--border);padding:11px;margin-bottom:8px;}
 .pqc-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
 .pqc-title{font-size:10px;color:var(--white);letter-spacing:.06em;}
 .pqc-time{font-size:7px;color:var(--text3);letter-spacing:.1em;}
 .pqc-meta{font-size:8px;color:var(--text2);letter-spacing:.07em;line-height:1.8;margin-bottom:9px;}
-.pqc-vid{width:100%;aspect-ratio:16/9;background:rgba(4,10,18,0.9);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin-bottom:9px;overflow:hidden;}
+.pqc-vid{width:100%;aspect-ratio:16/9;background:var(--navy);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin-bottom:9px;overflow:hidden;}
 .pqc-vid video{width:100%;height:100%;object-fit:contain;background:#000;}
 .pqc-vid-lbl{font-size:8px;color:var(--text3);letter-spacing:.12em;}
 .pqc-acts{display:flex;gap:7px;}
 .sb{font-size:7px;padding:2px 7px;border:1px solid;letter-spacing:.1em;}
 .sb-pending{color:var(--orange);border-color:rgba(232,114,26,.4);}
-.sb-approved{color:var(--green);border-color:rgba(40,168,88,.4);}
+.sb-approved{color:var(--green);border-color:rgba(42,170,96,.4);}
 .sb-rejected{color:var(--red);border-color:rgba(192,40,32,.4);}
-.empty-adm{text-align:center;padding:36px 0;font-size:8px;color:var(--text3);letter-spacing:.15em;line-height:2;}
 
-/* ════════ SHARED INPUTS / BUTTONS ════════ */
-input,textarea,select{
-  background:rgba(6,14,26,0.9);border:1px solid var(--border);
-  color:var(--white);font-family:'Share Tech Mono',monospace;
-  font-size:9px;letter-spacing:.08em;padding:7px 9px;outline:none;width:100%;
-}
-input:focus,textarea:focus,select:focus{border-color:var(--cyan2);}
-textarea{resize:vertical;min-height:65px;}
-label.lbl{font-size:7px;color:var(--text2);letter-spacing:.2em;display:block;margin-bottom:3px;}
-.field{margin-bottom:10px;}
-.frow{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
-.btn{background:rgba(77,216,232,0.08);border:1px solid var(--cyan-dim);color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:.2em;padding:8px 18px;cursor:pointer;transition:background .15s;}
-.btn:hover{background:rgba(77,216,232,0.18);}
-.btn.danger{background:rgba(192,40,32,.08);border-color:rgba(192,40,32,.3);color:var(--red);}
-.btn.danger:hover{background:rgba(192,40,32,.18);}
-.btn.ok{background:rgba(40,168,88,.08);border-color:rgba(40,168,88,.3);color:var(--green);}
-.btn.ok:hover{background:rgba(40,168,88,.18);}
-.btn.orange{background:rgba(232,114,26,.08);border-color:rgba(232,114,26,.3);color:var(--orange);}
-.btn.orange:hover{background:rgba(232,114,26,.18);}
-
-/* diff pips */
-.dpips{display:flex;gap:2px;}
-.dp{width:7px;height:7px;border:1px solid rgba(77,216,232,0.2);}
-.dp.on{background:var(--cyan2);border-color:var(--cyan2);}
-
-/* rank badges */
-.rank-S{color:#ffd060;border-color:rgba(255,208,96,.4);background:rgba(255,208,96,.05);}
-.rank-A{color:var(--orange);border-color:rgba(232,114,26,.4);background:rgba(232,114,26,.05);}
-.rank-B{color:var(--text);border-color:rgba(122,184,204,.3);background:rgba(122,184,204,.04);}
-.rank-C{color:var(--text2);border-color:rgba(74,122,138,.3);}
-.rbadge{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:11px;letter-spacing:.1em;padding:1px 6px;border:1px solid;}
-
-::-webkit-scrollbar{width:3px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:var(--border2);}
-
-#flash{position:fixed;inset:0;pointer-events:none;z-index:9999;background:rgba(77,216,232,0.06);opacity:0;transition:opacity .08s;}
-#flash.on{opacity:1;}
+/* modal */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:none;align-items:center;justify-content:center;}
+.modal-ov.open{display:flex;}
+.modal{background:var(--panel);border:1px solid var(--border2);width:clamp(300px,42vw,460px);position:relative;}
+.modal-hd{border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;}
+.modal-hd-t{font-size:9px;color:var(--cyan);letter-spacing:.25em;}
+.modal-close{background:none;border:none;color:var(--text2);cursor:pointer;font-size:13px;}
+.modal-close:hover{color:var(--white);}
+.modal-bd{padding:16px;}
+.img-prev{width:100%;aspect-ratio:16/9;background:var(--navy2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:10px;cursor:pointer;}
+.img-prev img{width:100%;height:100%;object-fit:cover;}
+.img-prev-lbl{font-size:8px;color:var(--text3);letter-spacing:.15em;}
+.modal-ft{border-top:1px solid var(--border);padding:10px 16px;display:flex;justify-content:flex-end;gap:8px;}
 </style>
 </head>
 <body>
 
-<!-- ══════════════ BOOT ══════════════ -->
+<!-- ══ BOOT ══ -->
 <div id="boot" class="screen active">
-  <!-- Phase 1: warm globe title -->
-  <div class="boot-warm-bg" id="bwarm"></div>
-  <div class="boot-dotgrid" id="bdots"></div>
-  <div class="boot-crosshair" id="bcross"></div>
-  <div class="boot-title-bar" id="btitle">
-    <div class="btb-sq"></div>
-    <div class="btb-text">
-      <div class="btb-top">ARMORED CORE</div>
-      <div class="btb-main">VERDICT DAY</div>
-      <div class="btb-sub">INITIAL SETTINGS &gt;&gt;&gt;</div>
+  <div class="boot-tbar"><span id="boot-clk">12:00:00 06/08/2026</span></div>
+  <div class="boot-ghost">WAR SYSTEM<br>ENGAGED</div>
+  <div class="boot-panel">
+    <div class="br tl"></div><div class="br tr"></div><div class="br bl"></div><div class="br br2"></div>
+    <div class="boot-ph"><span class="t">SORTIE COMMAND — INITIAL SETTINGS</span><span class="s">SYSTEM BOOT</span></div>
+    <div class="boot-pb">
+      <div class="bl" id="b0">CONNECTING TO DISCORD GATEWAY ................. <span class="ok">OK</span></div>
+      <div class="bl" id="b1">AUTHENTICATING BOT TOKEN ...................... <span class="ok">OK</span></div>
+      <div class="bl" id="b2">LOADING SOLAR SYSTEM DATABASE ................. <span class="ok">OK</span></div>
+      <div class="bl" id="b3">LOADING PLANET DATABASE ....................... <span class="ok">OK</span></div>
+      <div class="bl" id="b4">SYNCHRONIZING OPERATIVE LEDGER ............... <span class="ok">OK</span></div>
+      <div class="bl" id="b5">SCANNING ACTIVE SORTIES ....................... <span class="wn">3 IN PROGRESS</span></div>
+      <div class="bl" id="b6">ENCRYPTING COMMAND CHANNEL ................... <span class="ok">SECURE</span></div>
+      <div class="bl" id="b7">WAR SYSTEM INTERFACE .......................... <span class="ok">READY</span></div>
     </div>
-    <div class="btb-sq2"></div>
+    <div class="boot-pf"><div class="prog-t"><div class="prog-f" id="pf"></div></div><div class="prog-p" id="pp">0%</div></div>
   </div>
-
-  <!-- Phase 2: 3D globe loading -->
-  <div class="boot-globe-screen" id="bglobe">
-    <div class="globe-wrap">
-      <!-- concentric rings -->
-      <div class="globe-ring" style="inset:-40px;border-color:rgba(100,180,200,0.08);"></div>
-      <div class="globe-ring" style="inset:-80px;border-color:rgba(100,180,200,0.06);"></div>
-      <div class="globe-ring" style="inset:-120px;border-color:rgba(100,180,200,0.04);"></div>
-      <svg class="globe-svg" viewBox="0 0 420 420" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <radialGradient id="globeGrad" cx="40%" cy="35%" r="65%">
-            <stop offset="0%" stop-color="#d0c898"/>
-            <stop offset="40%" stop-color="#a09870"/>
-            <stop offset="70%" stop-color="#706850"/>
-            <stop offset="100%" stop-color="#302820"/>
-          </radialGradient>
-          <radialGradient id="shineGrad" cx="35%" cy="30%" r="50%">
-            <stop offset="0%" stop-color="rgba(255,255,230,0.15)"/>
-            <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
-          </radialGradient>
-          <clipPath id="globeClip"><circle cx="210" cy="210" r="200"/></clipPath>
-        </defs>
-        <circle cx="210" cy="210" r="200" fill="url(#globeGrad)"/>
-        <!-- continent silhouettes -->
-        <g clip-path="url(#globeClip)" fill="rgba(60,56,40,0.6)" stroke="rgba(80,76,56,0.3)" stroke-width="0.5">
-          <path d="M60 130 L140 120 L175 145 L185 185 L175 220 L140 245 L75 255 L45 215 L42 175 L52 148Z"/>
-          <path d="M130 290 L155 278 L172 284 L180 305 L175 335 L160 358 L140 362 L120 348 L112 322 L118 300Z"/>
-          <path d="M220 105 L245 100 L265 110 L268 140 L258 165 L238 175 L218 168 L208 148 L210 122Z"/>
-          <path d="M222 185 L265 178 L272 230 L260 272 L240 295 L218 290 L205 260 L202 225Z"/>
-          <path d="M278 100 L360 90 L388 105 L392 135 L375 158 L345 166 L308 162 L285 150 L272 128Z"/>
-          <path d="M305 172 L330 168 L342 180 L338 200 L318 208 L302 200Z"/>
-          <path d="M348 250 L380 240 L400 248 L405 268 L396 285 L372 292 L350 284 L340 268Z"/>
-          <ellipse cx="385" cy="155" rx="12" ry="22"/>
-        </g>
-        <!-- grid lines -->
-        <g clip-path="url(#globeClip)" stroke="rgba(100,180,200,0.12)" stroke-width="0.5" fill="none">
-          <line x1="10" y1="210" x2="410" y2="210"/>
-          <line x1="210" y1="10" x2="210" y2="410"/>
-          <ellipse cx="210" cy="210" rx="200" ry="65"/>
-          <ellipse cx="210" cy="210" rx="200" ry="130"/>
-          <ellipse cx="210" cy="210" rx="130" ry="200"/>
-          <ellipse cx="210" cy="210" rx="65" ry="200"/>
-        </g>
-        <circle cx="210" cy="210" r="200" fill="url(#shineGrad)"/>
-        <circle cx="210" cy="210" r="200" fill="none" stroke="rgba(100,180,200,0.25)" stroke-width="1"/>
-      </svg>
-    </div>
-    <div class="globe-loading-box">
-      <div class="glb-title">LOADING</div>
-      <div class="glb-bar-wrap">
-        <div class="glb-bar-track"><div class="glb-bar-fill" id="glb1"></div></div>
-        <div class="glb-pct" id="glb1p">0.0 %</div>
-      </div>
-      <div class="glb-bar-wrap">
-        <div class="glb-bar-track"><div class="glb-bar-fill" id="glb2" style="width:0%"></div></div>
-        <div class="glb-pct" id="glb2p">0.0 %</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Phase 3: MAIN SYSTEM ENGAGED -->
-  <div class="boot-engaged-screen" id="bengaged">
-    <div class="eng-map-bg"></div>
-    <div class="eng-dotgrid"></div>
-    <!-- floating orbs -->
-    <div class="orb" style="width:120px;height:120px;top:15%;left:8%;"></div>
-    <div class="orb" style="width:80px;height:80px;top:30%;left:55%;"></div>
-    <div class="orb" style="width:160px;height:160px;top:55%;left:20%;"></div>
-    <div class="orb" style="width:100px;height:100px;top:20%;right:5%;"></div>
-    <div class="orb" style="width:60px;height:60px;top:60%;right:15%;"></div>
-    <div class="orb" style="width:90px;height:90px;top:65%;right:40%;"></div>
-    <div class="orb" style="width:55px;height:55px;top:12%;left:40%;"></div>
-    <div class="eng-band">
-      <div class="eng-top">MAIN SYSTEM</div>
-      <div class="eng-main">ENGAGED</div>
-      <div class="eng-sub" id="eng-sub-text">INITIALIZING SORTIE COMMAND INTERFACE — LOADING OPERATIVE DATABASE — SYNCHRONIZING FACTION DATA — PREPARING MISSION ROSTER — VERIFYING CREDENTIALS —</div>
-    </div>
-  </div>
-
-  <!-- Phase 4: Guide tips -->
-  <div class="boot-guide-screen" id="bguide" onclick="launchMain()">
-    <div class="guide-map-bg"></div>
-    <div class="guide-dotgrid"></div>
-    <div class="guide-ghost">
-      <div class="guide-ghost-top">MAIN SYSTEM</div>
-      <div class="guide-ghost-main">ENGAGED</div>
-    </div>
-    <!-- orange timestamp bar -->
-    <div class="guide-timebar">
-      <div class="guide-timebar-inner" id="guide-clk">23:24:01 06/08/2026</div>
-    </div>
-    <!-- player bar -->
-    <div class="guide-playerbar">
-      <div class="guide-playerbar-inner">Unknown</div>
-    </div>
-    <!-- main guide panel -->
-    <div class="guide-panel">
-      <div class="guide-panel-title">WAR SYSTEM™: Sortie Command™ Basic Guide</div>
-      <div class="guide-panel-box">
-        <div class="guide-h">System Guide 1</div>
-        <div class="guide-line">Select a deployment zone from the planet roster to view available missions.</div>
-        <div class="guide-line">Each zone has missions assigned by the admin with unique rewards and objectives.</div>
-        <div class="guide-line">Deploy to a mission, complete it, then submit video proof to claim your credits.</div>
-        <div class="guide-line">Credits are awarded by admin upon proof verification.</div>
-      </div>
-      <div class="guide-counter">1 / 1</div>
-    </div>
-    <!-- bottom pips + start -->
-    <div class="guide-bottom">
-      <div class="guide-pips">
-        <div class="guide-pip on"></div>
-        <div class="guide-pip on"></div>
-        <div class="guide-pip on"></div>
-        <div class="guide-pip on"></div>
-        <div class="guide-pip on"></div>
-        <div class="guide-pip"></div>
-        <div class="guide-pip"></div>
-      </div>
-      <div class="guide-start">✕ Start Game</div>
-      <div class="guide-footer-line">© Sortie Command Interface &nbsp;·&nbsp; v2.4.1 / r1.03</div>
-    </div>
-  </div>
+  <div class="boot-start" id="boot-start" style="opacity:0">[ PRESS ANY KEY TO CONTINUE ]</div>
+  <div class="boot-ibar"><span>SORTIE COMMAND INTERFACE</span><span>v2.4.1 / r1.03</span></div>
 </div>
 
-<!-- ══════════════ WORLD MENU (main) ══════════════ -->
-<div id="main" class="screen">
-  <div class="main-map-bg">
-    <svg class="main-map-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-      <rect width="1000" height="600" fill="#000"/>
-      <!-- continents dark -->
-      <path d="M85 100L180 88L240 118L255 195L240 248L180 300L90 320L58 268L52 195L68 128Z" fill="#111a10"/>
-      <path d="M132 335L165 320L185 328L195 355L188 390L168 418L142 425L118 408L110 378L118 348Z" fill="#111a10"/>
-      <path d="M440 75L505 68L550 100L545 205L485 258L433 245L414 175L418 102Z" fill="#111a10"/>
-      <path d="M425 220L545 208L552 328L535 395L490 428L448 418L425 380L412 310L412 248Z" fill="#111a10"/>
-      <path d="M558 65L635 55L700 60L758 70L805 85L830 110L835 148L820 172L790 185L755 190L720 182L695 168L672 155L648 148L622 152L598 158L575 152L558 135L548 115Z" fill="#111a10"/>
-      <path d="M630 195L668 188L690 200L695 228L682 256L660 270L638 264L624 244L620 218Z" fill="#111a10"/>
-      <path d="M722 198L752 192L768 204L762 222L740 230L720 222Z" fill="#111a10"/>
-      <path d="M758 365L808 350L848 353L880 365L890 390L882 418L862 438L830 448L800 444L770 430L752 408L745 385Z" fill="#111a10"/>
-      <ellipse cx="818" cy="148" rx="10" ry="22" fill="#111a10"/>
-    </svg>
-    <div class="main-stars"></div>
-  </div>
-  <!-- faction markers layer -->
-  <div id="main-markers"></div>
-
-  <div class="main-menu-title">World Menu</div>
-  <nav class="main-nav">
-    <div class="main-nav-item" onclick="showScreen('planets')">
-      <div class="nav-sq"></div>Workshop
-    </div>
-    <div class="main-nav-item" onclick="showScreen('planets')">
-      <div class="nav-sq"></div>Sortie
-    </div>
-    <div class="main-nav-item" onclick="showScreen('planets')">
-      <div class="nav-sq"></div>Player Data
-    </div>
-    <div class="main-nav-item disabled">
-      <div class="nav-sq dim"></div>Leaderboards
-    </div>
-    <div class="main-nav-item disabled">
-      <div class="nav-sq dim"></div>Free Battle
-    </div>
-    <div class="main-nav-item" onclick="goAdmin()">
-      <div class="nav-sq"></div>Extra
-    </div>
-  </nav>
-
-  <div class="main-topright">
-    <div id="main-clk">2026/06/08 23:24:52</div>
-    <div class="main-manual"><span class="main-manual-arrow">▶</span> Manual</div>
-  </div>
-
-  <div class="main-teaminfo">
-    <div class="ti-label">■ Team Information</div>
-    <div class="ti-shield">◈</div>
-    <div class="ti-name">gg/armoredcore</div>
-  </div>
-
-  <div class="main-instruct" id="main-instruct">Select a menu option.</div>
-</div>
-
-<!-- ══════════════ PLANET SELECT ══════════════ -->
-<div id="planets" class="screen">
-  <div class="pl-topbar">
-    <span class="pl-topbar-title">WAR SYSTEM — SELECT ZONE</span>
-    <div class="pl-topbar-right">
-      <span><span class="pl-dot"></span>BOT <span class="pl-lv">ONLINE</span></span>
-      <span id="pl-clk">--:--:--</span>
+<!-- ══ SOLAR SYSTEM SELECT ══ -->
+<div id="solar" class="screen">
+  <div class="topbar">
+    <span class="tb-title">WAR SYSTEM — SELECT SOLAR SYSTEM</span>
+    <div class="tb-right">
+      <span><span class="dot"></span>BOT <span class="lv">ONLINE</span></span>
+      <span id="sol-clk">--:--:--</span>
       <button class="btn orange" style="padding:3px 10px;font-size:8px;" onclick="goAdmin()">⚙ ADMIN</button>
     </div>
   </div>
-  <div class="pl-body">
-    <div class="pl-header">
-      <h2>Select Deployment Zone</h2>
-      <span class="pl-header-sub" id="pl-count">0 ZONES</span>
+  <div class="solar-body">
+    <div class="solar-header">
+      <h2>Select Solar System</h2>
+      <span style="font-size:8px;color:var(--text2);letter-spacing:.15em;" id="sol-count">0 SYSTEMS</span>
     </div>
-    <div class="pl-grid-wrap">
-      <div class="pl-grid" id="pl-grid"></div>
+    <div class="solar-grid-wrap">
+      <div class="solar-grid" id="solar-grid"></div>
     </div>
   </div>
-  <div class="pl-botbar">
-    <button class="btn" style="padding:2px 10px;font-size:8px;" onclick="showScreen('main')">◀ BACK</button>
-    <div class="tkw"><div class="tki">◈ SELECT A ZONE TO VIEW MISSIONS ◈ ADMIN PANEL: EXTRA MENU ◈ SUBMIT VIDEO PROOF AFTER MISSION COMPLETION ◈ CREDITS AWARDED ON ADMIN CONFIRMATION ◈</div></div>
+  <div class="botbar">
+    <span>SELECT A SOLAR SYSTEM TO VIEW ITS PLANETS</span>
+    <div class="tkw"><div class="tki">◈ CHOOSE A SOLAR SYSTEM ◈ SELECT A PLANET ◈ VIEW AVAILABLE MISSIONS ◈ DEPLOY AND SUBMIT PROOF TO EARN CREDITS ◈</div></div>
     <span>v2.4.1</span>
   </div>
 </div>
 
-<!-- add planet modal -->
-<div class="modal-ov" id="add-planet-modal">
-  <div class="modal">
-    <div class="mbrk tl"></div><div class="mbrk tr"></div><div class="mbrk bl"></div><div class="mbrk br"></div>
-    <div class="modal-hd">
-      <span class="modal-hd-t">ADD DEPLOYMENT ZONE</span>
-      <button class="modal-close" onclick="closeAddPlanet()">✕</button>
+<!-- ══ SOLAR SYSTEM ORBITAL VIEW ══ -->
+<div id="solarview" class="screen">
+  <div class="topbar">
+    <span class="tb-title" id="sv-topbar-title">WAR SYSTEM — SYSTEM</span>
+    <div class="tb-right">
+      <span><span class="dot"></span>BOT <span class="lv">ONLINE</span></span>
+      <span id="sv-clk">--:--:--</span>
     </div>
-    <div class="modal-bd">
-      <div class="img-prev" id="img-prev" onclick="document.getElementById('pl-img-input').click()">
-        <span class="img-prev-lbl">CLICK TO UPLOAD IMAGE</span>
+  </div>
+  <div class="sv-body">
+    <!-- sidebar -->
+    <div class="sv-sb">
+      <div class="sv-sb-hd">SYSTEM INFO</div>
+      <div class="sv-ss-info" id="sv-ss-info"></div>
+      <div class="sv-planet-list" id="sv-planet-list"></div>
+      <div class="sv-back">
+        <button class="btn" style="width:100%;padding:6px;font-size:8px;" onclick="showScreen('solar')">◀ CHANGE SYSTEM</button>
       </div>
-      <input type="file" id="pl-img-input" accept="image/*" style="display:none" onchange="previewPlanetImg(this)">
-      <div class="field"><label class="lbl">ZONE NAME</label><input type="text" id="pl-name-inp" placeholder="e.g. PROXIMA KELD"></div>
-      <div class="field"><label class="lbl">DESCRIPTION (optional)</label><input type="text" id="pl-desc-inp" placeholder="e.g. Hostile arid wasteland"></div>
     </div>
-    <div class="modal-ft">
-      <button class="btn" style="padding:5px 12px;font-size:8px;" onclick="closeAddPlanet()">CANCEL</button>
-      <button class="btn orange" style="padding:5px 12px;font-size:8px;" onclick="savePlanet()">ADD ZONE</button>
+    <!-- orbital canvas -->
+    <div class="sv-canvas-wrap" id="sv-canvas-wrap">
+      <canvas id="orbital"></canvas>
+      <div class="sv-zone-label" id="sv-zone-label"></div>
+      <div class="sv-instruct" id="sv-instruct">Click a planet to view its missions.</div>
     </div>
+  </div>
+  <div class="botbar">
+    <span id="sv-bottom">SELECT A PLANET TO VIEW MISSIONS</span>
+    <div class="tkw"><div class="tki" id="sv-ticker">◈ WAR SYSTEM OPERATIONAL ◈</div></div>
+    <span>v2.4.1</span>
   </div>
 </div>
 
-<!-- ══════════════ MISSIONS ══════════════ -->
+<!-- ══ MISSIONS ══ -->
 <div id="missions" class="screen">
-  <div class="ms-topbar">
-    <span class="ms-title" id="ms-title">SELECT MISSION</span>
-    <div class="ms-manual"><span style="color:var(--text2);font-size:8px;">▶</span> Manual</div>
+  <div class="topbar">
+    <span class="tb-title" id="ms-topbar-title">WAR SYSTEM — MISSIONS</span>
+    <div class="tb-right">
+      <span><span class="dot"></span>BOT <span class="lv">ONLINE</span></span>
+      <span id="ms-clk">--:--:--</span>
+    </div>
   </div>
   <div class="ms-body">
-    <!-- left list -->
-    <div class="ms-area">
-      <div class="ms-area-hd">Area List</div>
-      <div id="ms-area-content"></div>
-      <div class="ms-back-btn">
-        <button class="btn" style="width:100%;padding:6px;font-size:8px;" onclick="showScreen('planets')">◀ CHANGE ZONE</button>
+    <div class="ms-sb">
+      <div class="ms-sb-hd">PLANET INFO</div>
+      <div id="ms-planet-info"></div>
+      <div class="ms-back">
+        <button class="btn" style="width:100%;padding:6px;font-size:8px;" onclick="showScreen('solarview')">◀ BACK TO SYSTEM</button>
       </div>
     </div>
-    <!-- right map -->
-    <div class="ms-right" id="ms-right">
-      <div class="ms-map-bg">
-        <svg class="ms-map-svg" viewBox="0 0 720 500" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-          <rect width="720" height="500" fill="#050d18"/>
-          <defs><pattern id="mgp" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse"><line x1="15" y1="12" x2="15" y2="18" stroke="rgba(77,216,232,0.15)" stroke-width="0.5"/><line x1="12" y1="15" x2="18" y2="15" stroke="rgba(77,216,232,0.15)" stroke-width="0.5"/></pattern></defs>
-          <rect width="720" height="500" fill="url(#mgp)"/>
-          <path d="M42 80L108 70L148 92L158 138L148 172L108 200L50 212L32 178L28 138L38 100Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.4"/>
-          <path d="M75 230L98 220L112 226L120 248L116 272L104 290L86 295L68 283L62 262L68 240Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.4"/>
-          <path d="M310 58L352 52L380 68L378 130L342 162L310 155L298 115L300 72Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.4"/>
-          <path d="M298 168L378 158L384 238L372 282L348 302L318 296L300 268L292 220Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.4"/>
-          <path d="M392 52L445 44L488 50L520 58L540 72L548 98L542 122L525 135L502 140L480 136L460 126L440 118L418 122L400 118L386 104L382 82Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.4"/>
-          <path d="M440 148L462 144L476 152L474 172L458 182L440 178L430 164Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.4"/>
-          <path d="M530 260L560 250L582 254L590 272L584 290L564 300L542 295L528 280Z" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.4"/>
-          <ellipse cx="560" cy="108" rx="8" ry="18" fill="#0d1e2e" stroke="#1a3a5a" stroke-width="0.4"/>
-        </svg>
-        <div class="ms-map-stars"></div>
+    <div style="flex:1;overflow:hidden;position:relative;">
+      <div class="ms-list-wrap" id="ms-list-wrap" style="height:100%;overflow-y:auto;">
+        <div class="ms-sec-hd">
+          <h2>AVAILABLE MISSIONS</h2>
+          <div class="ms-sec-line"></div>
+          <span style="font-size:8px;color:var(--text3);white-space:nowrap;" id="ms-count"></span>
+        </div>
+        <div id="ms-list"></div>
       </div>
-      <div id="ms-markers"></div>
-      <div class="ms-zone-name" id="ms-zone-name"></div>
-      <div class="ms-instruct" id="ms-instruct">Select the area you will go to.</div>
-      <!-- mission detail panel -->
+      <!-- mission detail overlay -->
       <div id="mdetail-panel">
         <div class="mdp-hd">
           <div><div class="mdp-title" id="mdp-title">MISSION</div><div class="mdp-id" id="mdp-id">M-000</div></div>
@@ -922,55 +402,52 @@ label.lbl{font-size:7px;color:var(--text2);letter-spacing:.2em;display:block;mar
             <div class="mdp-desc" id="mdp-desc"></div>
             <div class="mdp-sl">OBJECTIVES</div>
             <div id="mdp-obj"></div>
-            <div class="mdp-note" id="mdp-note" style="font-size:8px;color:var(--text2);letter-spacing:.06em;line-height:1.7;border-top:1px solid var(--border);padding-top:10px;margin-top:8px;"></div>
+            <div class="mdp-note" id="mdp-note"></div>
           </div>
           <div class="mdp-side">
             <div class="mdp-sl">REWARDS</div>
-            <div class="mdp-chip"><div class="mdp-chip-l">CREDITS</div><div class="mdp-chip-v" id="mdp-creds">0</div></div>
-            <div class="mdp-chip"><div class="mdp-chip-l">EXP</div><div class="mdp-chip-v" id="mdp-xp">0</div></div>
-            <div class="mdp-chip"><div class="mdp-chip-l">DURATION</div><div class="mdp-chip-v" id="mdp-time" style="font-size:13px;">--</div></div>
-            <div class="mdp-chip"><div class="mdp-chip-l">DIFFICULTY</div><div class="mdp-chip-v" id="mdp-diff" style="font-size:13px;">●●●○○</div></div>
-            <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px;">
-              <button class="btn orange" onclick="beginDeploy()">▶ DEPLOY</button>
-              <button class="btn" onclick="closeMissionDetail()">◀ BACK</button>
+            <div class="mdp-chip"><div class="mdp-cl">CREDITS</div><div class="mdp-cv" id="mdp-creds">0</div></div>
+            <div class="mdp-chip"><div class="mdp-cl">EXP</div><div class="mdp-cv" id="mdp-xp">0</div></div>
+            <div class="mdp-chip"><div class="mdp-cl">DURATION</div><div class="mdp-cv" id="mdp-time" style="font-size:13px;">--</div></div>
+            <div class="mdp-chip"><div class="mdp-cl">DIFFICULTY</div><div class="mdp-cv" id="mdp-diff" style="font-size:13px;">●●●○○</div></div>
+            <div style="margin-top:12px;display:flex;flex-direction:column;gap:7px;">
+              <button class="btn orange" onclick="beginDeploy()">▶ DEPLOY TO SORTIE</button>
+              <button class="btn" onclick="document.getElementById('mdetail-panel').classList.remove('open')">◀ BACK</button>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-  <div style="height:22px;background:rgba(6,14,26,0.97);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 14px;font-size:8px;color:var(--text2);letter-spacing:.1em;flex-shrink:0;">
-    <span id="ms-bottom-instruct">Select the mission you will go on.</span>
+  <div class="botbar">
+    <span>CLICK A MISSION TO VIEW DETAILS</span>
+    <div class="tkw"><div class="tki">◈ DEPLOY TO BEGIN SORTIE ◈ SUBMIT VIDEO PROOF AFTER COMPLETION ◈ CREDITS AWARDED ON ADMIN CONFIRMATION ◈</div></div>
+    <span>v2.4.1</span>
   </div>
 </div>
 
-<!-- ══════════════ PROOF ══════════════ -->
+<!-- ══ PROOF ══ -->
 <div id="proof" class="screen">
-  <div class="proof-topbar">
-    <span class="proof-topbar-title">WAR SYSTEM — PROOF SUBMISSION</span>
-    <div style="display:flex;align-items:center;gap:14px;font-size:9px;color:var(--text2);letter-spacing:.1em;">
-      <span><span class="pl-dot"></span>BOT <span class="pl-lv">ONLINE</span></span>
+  <div class="topbar">
+    <span class="tb-title">WAR SYSTEM — PROOF SUBMISSION</span>
+    <div class="tb-right">
+      <span><span class="dot"></span>BOT <span class="lv">ONLINE</span></span>
       <span id="proof-clk">--:--:--</span>
     </div>
   </div>
   <div class="proof-body">
     <div class="proof-box">
-      <div class="mbrk tl"></div><div class="mbrk tr"></div><div class="mbrk bl"></div><div class="mbrk br"></div>
+      <div class="br tl"></div><div class="br tr"></div><div class="br bl"></div><div class="br br2"></div>
       <div class="proof-bh">
         <div class="proof-title" id="proof-name">MISSION NAME</div>
         <div class="proof-sub" id="proof-mid">M-000 · COMPLETION PROOF REQUIRED</div>
       </div>
       <div class="proof-bd">
-        <div class="proof-status" id="proof-status">
-          <div class="psd"></div><span>AWAITING PROOF SUBMISSION</span>
-        </div>
+        <div class="proof-status" id="proof-status"><div class="psd"></div><span>AWAITING PROOF SUBMISSION</span></div>
         <div class="field"><label class="lbl">OPERATIVE NAME / DISCORD TAG</label><input type="text" id="proof-op" placeholder="e.g. GHOST-7 / ghost7#0001"></div>
         <div class="field">
           <label class="lbl">VIDEO PROOF</label>
-          <div class="video-area" id="video-area">
-            <div class="va-icon">▶</div>
-            <div class="va-lbl">VIDEO PREVIEW</div>
-          </div>
+          <div class="video-area" id="video-area"><div class="va-icon">▶</div><div class="va-lbl">VIDEO PREVIEW</div></div>
           <input type="file" id="video-input" accept="video/*" style="display:none" onchange="previewVideo(this)">
           <button class="btn" style="width:100%;padding:5px;font-size:8px;margin-top:4px;" onclick="document.getElementById('video-input').click()">📁 CHOOSE VIDEO FILE</button>
         </div>
@@ -984,51 +461,86 @@ label.lbl{font-size:7px;color:var(--text2);letter-spacing:.2em;display:block;mar
   </div>
 </div>
 
-<!-- ══════════════ ADMIN LOGIN ══════════════ -->
+<!-- ══ ADMIN LOGIN ══ -->
 <div id="adminlogin" class="screen">
   <div class="albox">
-    <div class="mbrk tl"></div><div class="mbrk tr"></div><div class="mbrk bl"></div><div class="mbrk br"></div>
-    <div class="albox-hd">
-      <div class="albox-title">⚙ ADMIN ACCESS</div>
-      <div class="albox-sub">RESTRICTED — AUTHORIZED PERSONNEL ONLY</div>
-    </div>
+    <div class="br tl"></div><div class="br tr"></div><div class="br bl"></div><div class="br br2"></div>
+    <div class="albox-hd"><div class="albox-title">⚙ ADMIN ACCESS</div><div class="albox-sub">RESTRICTED — AUTHORIZED PERSONNEL ONLY</div></div>
     <div class="albox-bd">
       <div class="al-err" id="al-err">INCORRECT PASSWORD. ACCESS DENIED.</div>
       <div class="field"><label class="lbl">PASSWORD</label><input type="password" id="adm-pw" placeholder="Enter password" onkeydown="if(event.key==='Enter')checkAdmin()"></div>
     </div>
     <div class="albox-ft">
-      <button class="btn" style="padding:5px 12px;font-size:8px;" onclick="showScreen('main')">◀ BACK</button>
+      <button class="btn" style="padding:5px 12px;font-size:8px;" onclick="showScreen('solar')">◀ BACK</button>
       <button class="btn orange" style="padding:5px 12px;font-size:8px;" onclick="checkAdmin()">AUTHENTICATE ▶</button>
     </div>
   </div>
 </div>
 
-<!-- ══════════════ ADMIN PANEL ══════════════ -->
+<!-- ══ ADMIN PANEL ══ -->
 <div id="admin" class="screen">
-  <div class="adm-topbar">
-    <span class="adm-topbar-title">⚙ ADMIN PANEL — WAR SYSTEM</span>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <button class="btn" style="padding:3px 10px;font-size:8px;" onclick="showScreen('main')">◀ EXIT</button>
-      <span style="font-size:9px;color:var(--text2);letter-spacing:.1em;" id="adm-clk">--:--:--</span>
+  <div class="topbar" style="border-bottom-color:var(--orange2);">
+    <span class="tb-title" style="color:var(--orange);">⚙ ADMIN PANEL — WAR SYSTEM</span>
+    <div class="tb-right">
+      <button class="btn" style="padding:3px 10px;font-size:8px;" onclick="showScreen('solar')">◀ EXIT ADMIN</button>
+      <span id="adm-clk">--:--:--</span>
     </div>
   </div>
   <div class="adm-body">
     <div class="adm-sb">
       <div class="adm-sb-hd">ADMIN MENU</div>
-      <div class="adm-ni act" onclick="admTab('missions',this)"><div class="adm-ni-pip"></div>Missions</div>
-      <div class="adm-ni" onclick="admTab('planets',this)"><div class="adm-ni-pip"></div>Zones</div>
+      <div class="adm-ni act" onclick="admTab('solar',this)"><div class="adm-ni-pip"></div>Solar Systems</div>
+      <div class="adm-ni" onclick="admTab('planets',this)"><div class="adm-ni-pip"></div>Planets</div>
+      <div class="adm-ni" onclick="admTab('missions',this)"><div class="adm-ni-pip"></div>Missions</div>
       <div class="adm-ni" onclick="admTab('queue',this)"><div class="adm-ni-pip"></div>Proof Queue<span id="queue-badge"></span></div>
       <div class="adm-ni" onclick="admTab('settings',this)"><div class="adm-ni-pip"></div>Settings</div>
     </div>
     <div class="adm-content">
 
+      <!-- SOLAR SYSTEMS -->
+      <div class="adm-view act" id="atab-solar">
+        <div class="adm-sec">
+          <div class="adm-sec-title">ADD SOLAR SYSTEM</div>
+          <div class="field"><label class="lbl">SYSTEM NAME</label><input type="text" id="as-name" placeholder="e.g. KEPLER-22"></div>
+          <div class="field"><label class="lbl">DESCRIPTION</label><input type="text" id="as-desc" placeholder="e.g. Outer rim contested zone"></div>
+          <div class="field"><label class="lbl">BACKGROUND IMAGE (optional)</label>
+            <input type="file" id="as-img" accept="image/*" style="display:none" onchange="previewSolarImg(this)">
+            <div class="img-prev" id="as-img-prev" onclick="document.getElementById('as-img').click()"><span class="img-prev-lbl">CLICK TO UPLOAD BG IMAGE</span></div>
+          </div>
+          <button class="btn orange" onclick="createSolar()">+ ADD SYSTEM</button>
+        </div>
+        <div class="adm-sec">
+          <div class="adm-sec-title">ALL SOLAR SYSTEMS</div>
+          <div id="adm-solar-list"></div>
+        </div>
+      </div>
+
+      <!-- PLANETS -->
+      <div class="adm-view" id="atab-planets">
+        <div class="adm-sec">
+          <div class="adm-sec-title">ADD PLANET</div>
+          <div class="field"><label class="lbl">ASSIGN TO SOLAR SYSTEM</label><select id="ap-solar"><option value="">— Select System —</option></select></div>
+          <div class="field"><label class="lbl">PLANET NAME</label><input type="text" id="ap-name" placeholder="e.g. PROXIMA KELD"></div>
+          <div class="field"><label class="lbl">DESCRIPTION</label><input type="text" id="ap-desc" placeholder="e.g. Hostile arid wasteland"></div>
+          <div class="field"><label class="lbl">PLANET IMAGE</label>
+            <input type="file" id="ap-img" accept="image/*" style="display:none" onchange="previewPlanetImg(this)">
+            <div class="img-prev" id="ap-img-prev" onclick="document.getElementById('ap-img').click()"><span class="img-prev-lbl">CLICK TO UPLOAD IMAGE</span></div>
+          </div>
+          <button class="btn orange" onclick="createPlanet()">+ ADD PLANET</button>
+        </div>
+        <div class="adm-sec">
+          <div class="adm-sec-title">ALL PLANETS</div>
+          <div id="adm-planet-list"></div>
+        </div>
+      </div>
+
       <!-- MISSIONS -->
-      <div class="adm-view act" id="atab-missions">
+      <div class="adm-view" id="atab-missions">
         <div class="adm-sec">
           <div class="adm-sec-title">CREATE MISSION</div>
           <div class="frow">
             <div class="field"><label class="lbl">MISSION NAME</label><input type="text" id="am-name" placeholder="e.g. IRON MERIDIAN"></div>
-            <div class="field"><label class="lbl">ASSIGN TO ZONE</label><select id="am-planet"><option value="">— Select Zone —</option></select></div>
+            <div class="field"><label class="lbl">ASSIGN TO PLANET</label><select id="am-planet"><option value="">— Select Planet —</option></select></div>
           </div>
           <div class="field"><label class="lbl">DESCRIPTION</label><textarea id="am-desc" placeholder="Mission briefing..."></textarea></div>
           <div class="field"><label class="lbl">OBJECTIVES (one per line)</label><textarea id="am-obj" placeholder="Eliminate target&#10;Secure the data&#10;Extract to LZ"></textarea></div>
@@ -1041,21 +553,12 @@ label.lbl{font-size:7px;color:var(--text2);letter-spacing:.2em;display:block;mar
             <div class="field"><label class="lbl">CREDIT REWARD</label><input type="number" id="am-creds" placeholder="3500"></div>
             <div class="field"><label class="lbl">EXP REWARD</label><input type="number" id="am-xp" placeholder="600"></div>
           </div>
-          <div class="field"><label class="lbl">ADMIN NOTE</label><input type="text" id="am-note" placeholder="Optional tip for admin display"></div>
+          <div class="field"><label class="lbl">ADMIN NOTE</label><input type="text" id="am-note" placeholder="Optional tip"></div>
           <button class="btn orange" onclick="createMission()">+ CREATE MISSION</button>
         </div>
         <div class="adm-sec">
           <div class="adm-sec-title">ALL MISSIONS</div>
           <div id="adm-mission-list"></div>
-        </div>
-      </div>
-
-      <!-- ZONES -->
-      <div class="adm-view" id="atab-planets">
-        <div class="adm-sec">
-          <div class="adm-sec-title">DEPLOYMENT ZONES</div>
-          <button class="btn orange" style="margin-bottom:10px;" onclick="openAddPlanet()">+ ADD ZONE</button>
-          <div id="adm-planet-list"></div>
         </div>
       </div>
 
@@ -1078,15 +581,16 @@ label.lbl{font-size:7px;color:var(--text2);letter-spacing:.2em;display:block;mar
         </div>
         <div class="adm-sec">
           <div class="adm-sec-title">DANGER ZONE</div>
-          <button class="btn danger" style="margin-right:8px;" onclick="clearMissions()">CLEAR ALL MISSIONS</button>
-          <button class="btn danger" onclick="clearZones()">CLEAR ALL ZONES</button>
+          <button class="btn danger" style="margin-right:8px;" onclick="clearAll('missions')">CLEAR MISSIONS</button>
+          <button class="btn danger" style="margin-right:8px;" onclick="clearAll('planets')">CLEAR PLANETS</button>
+          <button class="btn danger" onclick="clearAll('solar')">CLEAR SYSTEMS</button>
         </div>
       </div>
     </div>
   </div>
-  <div class="adm-botbar">
-    <span>⚙ ADMIN MODE ACTIVE</span>
-    <div class="tkw"><div class="tki">◈ CREATE MISSIONS ◈ MANAGE ZONES ◈ REVIEW PROOF SUBMISSIONS ◈ GRANT CREDITS ON APPROVAL ◈</div></div>
+  <div class="botbar" style="border-top-color:var(--orange2);">
+    <span style="color:var(--orange);">⚙ ADMIN MODE ACTIVE</span>
+    <div class="tkw"><div class="tki">◈ MANAGE SOLAR SYSTEMS ◈ ADD PLANETS ◈ CREATE MISSIONS ◈ REVIEW PROOF SUBMISSIONS ◈ GRANT CREDITS ◈</div></div>
     <span>v2.4.1</span>
   </div>
 </div>
@@ -1094,179 +598,306 @@ label.lbl{font-size:7px;color:var(--text2);letter-spacing:.2em;display:block;mar
 <div id="flash"></div>
 
 <script>
-// ══════════════════ STORAGE ══════════════════
-const KEYS={pw:'ws_pw',planets:'ws_planets',missions:'ws_missions',queue:'ws_queue'};
-let _c={pw:'admin123',planets:[],missions:[],queue:[]};
+// ══════════════ STORAGE ══════════════
+const KEYS={pw:'ws2_pw',solar:'ws2_solar',planets:'ws2_planets',missions:'ws2_missions',queue:'ws2_queue'};
+let _c={pw:'admin123',solar:[],planets:[],missions:[],queue:[]};
 const _vids={};
-let currentPlanet=null,currentMission=null,_tmpImg=null;
+let curSolar=null,curPlanet=null,curMission=null;
+let _tmpSolarImg=null,_tmpPlanetImg=null;
 
 async function loadAll(){
   try{
-    const [pw,pl,ms,q]=await Promise.all([
-      window.storage.get(KEYS.pw).catch(()=>null),
-      window.storage.get(KEYS.planets).catch(()=>null),
-      window.storage.get(KEYS.missions).catch(()=>null),
-      window.storage.get(KEYS.queue).catch(()=>null),
-    ]);
-    if(pw)_c.pw=pw.value;
-    if(pl)_c.planets=JSON.parse(pl.value);
-    if(ms)_c.missions=JSON.parse(ms.value);
-    if(q)_c.queue=JSON.parse(q.value);
+    const keys=Object.keys(KEYS);
+    const results=await Promise.all(keys.map(k=>window.storage.get(KEYS[k]).catch(()=>null)));
+    keys.forEach((k,i)=>{if(results[i])_c[k]=k==='pw'?results[i].value:JSON.parse(results[i].value);});
   }catch(e){console.warn(e);}
 }
-async function persist(k,v){try{await window.storage.set(k,typeof v==='string'?v:JSON.stringify(v));}catch(e){console.warn(e);}}
+async function persist(k,v){try{await window.storage.set(KEYS[k],typeof v==='string'?v:JSON.stringify(v));}catch(e){console.warn(e);}}
+const getSolar=()=>_c.solar;
 const getPlanets=()=>_c.planets;
 const getMissions=()=>_c.missions;
 const getQueue=()=>_c.queue;
 const getPw=()=>_c.pw;
-function savePlanets(v){_c.planets=v;persist(KEYS.planets,v);}
-function saveMissions(v){_c.missions=v;persist(KEYS.missions,v);}
-function saveQueue(v){_c.queue=v;persist(KEYS.queue,v);}
-function savePw(v){_c.pw=v;persist(KEYS.pw,v);}
+function saveSolar(v){_c.solar=v;persist('solar',v);}
+function savePlanets(v){_c.planets=v;persist('planets',v);}
+function saveMissions(v){_c.missions=v;persist('missions',v);}
+function saveQueue(v){_c.queue=v;persist('queue',v);}
+function savePw(v){_c.pw=v;persist('pw',v);}
 
-// ══════════════════ SCREEN ROUTING ══════════════════
+// ══════════════ ROUTING ══════════════
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  if(id==='planets')renderPlanets();
-  if(id==='missions')renderMissions();
+  if(id==='solar')renderSolarSelect();
+  if(id==='solarview'&&curSolar)renderSolarView();
+  if(id==='missions'&&curPlanet)renderMissions();
   if(id==='admin')renderAdminAll();
 }
-
 function flash(){const f=document.getElementById('flash');f.classList.add('on');setTimeout(()=>f.classList.remove('on'),180);}
 
-// ══════════════════ CLOCK ══════════════════
+// ══════════════ CLOCK ══════════════
 function tick(){
   const n=new Date(),p=x=>String(x).padStart(2,'0');
   const t=`${p(n.getUTCHours())}:${p(n.getUTCMinutes())}:${p(n.getUTCSeconds())}`;
-  const dt=`${n.getUTCFullYear()}/${p(n.getUTCMonth()+1)}/${p(n.getUTCDate())} ${t}`;
-  const el=id=>document.getElementById(id);
-  if(el('guide-clk'))el('guide-clk').textContent=`${t} ${p(n.getUTCMonth()+1)}/${p(n.getUTCDate())}/${n.getUTCFullYear()}`;
-  if(el('main-clk'))el('main-clk').textContent=dt;
-  ['pl-clk','proof-clk','adm-clk'].forEach(id=>{const e=el(id);if(e)e.textContent=t;});
+  const ds=`${p(n.getUTCMonth()+1)}/${p(n.getUTCDate())}/${n.getUTCFullYear()}`;
+  const e=id=>{const el=document.getElementById(id);if(el)el.textContent=t;};
+  if(document.getElementById('boot-clk'))document.getElementById('boot-clk').textContent=`${t} ${ds}`;
+  ['sol-clk','sv-clk','ms-clk','proof-clk','adm-clk'].forEach(e);
 }
 setInterval(tick,1000);tick();
 
-// ══════════════════ BOOT SEQUENCE ══════════════════
+// ══════════════ BOOT ══════════════
+const bls=document.querySelectorAll('#boot .bl');
+const pf=document.getElementById('pf'),pp=document.getElementById('pp'),bs=document.getElementById('boot-start');
+let bootReady=false;
 async function slp(ms){return new Promise(r=>setTimeout(r,ms));}
-
 async function runBoot(){
-  // Phase 1 — warm bg + title (~2s)
-  await slp(200);
-  document.getElementById('bwarm').classList.add('show');
-  document.getElementById('bdots').classList.add('show');
-  document.getElementById('bcross').classList.add('show');
-  await slp(800);
-  document.getElementById('btitle').classList.add('show');
-  await slp(1800);
-
-  // Phase 2 — globe loading (~3s)
-  document.getElementById('btitle').style.opacity='0';
-  document.getElementById('bwarm').style.opacity='0';
-  await slp(400);
-  document.getElementById('bglobe').classList.add('show');
-  // animate two loading bars
-  const b1=document.getElementById('glb1'),b1p=document.getElementById('glb1p');
-  const b2=document.getElementById('glb2'),b2p=document.getElementById('glb2p');
-  for(let i=0;i<=100;i++){
-    b1.style.width=i+'%';b1p.textContent=i.toFixed(1)+' %';
-    if(i>20){const v=Math.min(100,(i-20)*1.25);b2.style.width=v+'%';b2p.textContent=v.toFixed(1)+' %';}
-    await slp(25);
+  await slp(300);
+  for(let i=0;i<bls.length;i++){
+    bls[i].classList.add('on');
+    const p=Math.round((i+1)/bls.length*100);
+    pf.style.width=p+'%';pp.textContent=p+'%';
+    await slp(150+Math.random()*100);
   }
-  await slp(300);
-
-  // Phase 3 — MAIN SYSTEM ENGAGED (~2s)
-  document.getElementById('bglobe').style.opacity='0';
-  await slp(300);
-  document.getElementById('bengaged').classList.add('show');
-  await slp(2200);
-
-  // Phase 4 — guide screen
-  document.getElementById('bengaged').style.opacity='0';
-  await slp(300);
-  document.getElementById('bguide').classList.add('show');
+  await slp(200);bs.style.opacity='1';bootReady=true;
 }
+function launchApp(){if(!bootReady)return;document.getElementById('boot').classList.remove('active');showScreen('solar');}
+document.addEventListener('keydown',e=>{if(document.getElementById('boot').classList.contains('active'))launchApp();});
+document.getElementById('boot').addEventListener('click',e=>{if(e.target.closest('.boot-panel'))return;launchApp();});
 
-function launchMain(){
-  document.getElementById('boot').classList.remove('active');
-  showScreen('main');
-  buildMainMarkers();
-}
-document.addEventListener('keydown',e=>{
-  if(document.getElementById('boot').classList.contains('active')&&document.getElementById('bguide').classList.contains('show'))launchMain();
-});
-
-// ══════════════════ MAIN MENU MARKERS ══════════════════
-const MKS=[[12,22,0],[18,30,0],[23,37,1],[30,34,0],[8,40,1],[16,44,0],[36,50,0],[41,54,0],[33,57,1],[39,62,0],[45,44,1],[51,46,0],[49,32,0],[54,27,1],[57,34,0],[61,30,0],[59,42,1],[63,38,0],[66,50,0],[71,40,1],[73,32,0],[69,24,0],[76,27,0],[79,34,1],[81,44,0],[83,37,0],[86,30,1],[89,40,0],[91,47,0],[93,32,0],[37,70,0],[43,74,1],[41,80,0],[45,84,0],[39,78,1]];
-function buildMainMarkers(){
-  const l=document.getElementById('main-markers');l.innerHTML='';
-  MKS.forEach(([x,y,t])=>{
-    const d=document.createElement('div');
-    d.style.cssText=`position:absolute;left:${x}%;top:${y}%;width:16px;height:20px;transform:translate(-50%,-100%);`;
-    const c=t===0?'#c83020':t===1?'#d0d0c0':'#e87a20';
-    const s=t===0?'#901810':t===1?'#808070':'#b05010';
-    const inner=t===1?`<path d="M5 8L11 8M8 4L8 12" stroke="#606050" stroke-width="1.2"/>`:`<path d="M4 5L12 13M12 5L4 13" stroke="${s}" stroke-width="1"/>`;
-    d.innerHTML=`<svg viewBox="0 0 16 20" xmlns="http://www.w3.org/2000/svg"><path d="M8 1L15 1L15 13L8 19L1 13L1 1Z" fill="${c}" stroke="${s}" stroke-width="0.8"/>${inner}</svg>`;
-    l.appendChild(d);
-  });
-}
-
-// ══════════════════ PLANETS ══════════════════
-function renderPlanets(){
-  const planets=getPlanets(),missions=getMissions();
-  const grid=document.getElementById('pl-grid');
-  const countEl=document.getElementById('pl-count');
-  countEl.textContent=planets.length+' ZONE'+(planets.length!==1?'S':'');
+// ══════════════ SOLAR SELECT ══════════════
+function renderSolarSelect(){
+  const sys=getSolar();
+  document.getElementById('sol-count').textContent=sys.length+' SYSTEM'+(sys.length!==1?'S':'');
+  const grid=document.getElementById('solar-grid');
   grid.innerHTML='';
-  if(!planets.length){
-    grid.innerHTML='<div class="pl-empty">NO ZONES CONFIGURED<br><span style="font-size:8px;color:var(--text3)">Admin must add zones from the Extra menu.</span></div>';
+  if(!sys.length){
+    grid.innerHTML='<div class="empty-msg" style="grid-column:1/-1">NO SOLAR SYSTEMS CONFIGURED<br><span style="font-size:8px;color:var(--text3)">Admin must add systems from the admin panel.</span></div>';
     return;
   }
-  planets.forEach(p=>{
-    const mc=missions.filter(m=>m.planetId===p.id).length;
-    const card=document.createElement('div');
-    card.className='pl-card';
-    card.innerHTML=`<img src="${p.img}" alt="${p.name}"><div class="pl-card-overlay"><div class="pl-card-name">${p.name}</div><div class="pl-card-meta">${mc} MISSION${mc!==1?'S':''} AVAILABLE</div></div><div class="pl-card-corner"></div><div class="pl-card-corner2"></div>`;
-    card.onclick=()=>enterPlanet(p);
+  sys.forEach(s=>{
+    const pc=getPlanets().filter(p=>p.solarId===s.id).length;
+    const mc=getMissions().filter(m=>{const pl=getPlanets().find(p=>p.id===m.planetId);return pl&&pl.solarId===s.id;}).length;
+    const card=document.createElement('div');card.className='ss-card';
+    if(s.img){
+      card.innerHTML=`<img class="ss-img" src="${s.img}" alt="${s.name}">`;
+    } else {
+      card.innerHTML=`<div class="ss-bg"></div>`;
+    }
+    card.innerHTML+=`<div class="ss-overlay"><div class="ss-name">${s.name}</div><div class="ss-meta">${pc} PLANET${pc!==1?'S':''} · ${mc} MISSION${mc!==1?'S':''}</div></div><div class="ss-corner"></div><div class="ss-corner2"></div>`;
+    card.onclick=()=>enterSolar(s);
     grid.appendChild(card);
   });
 }
 
-function enterPlanet(p){
-  currentPlanet=p;
-  document.getElementById('ms-title').textContent='SELECT MISSION';
-  document.getElementById('ms-zone-name').textContent=p.name;
-  // build sidebar
-  const ms=getMissions().filter(m=>m.planetId===p.id);
-  const area=document.getElementById('ms-area-content');
-  area.innerHTML=`<div class="ms-area-planet"><img class="ms-area-planet-img" src="${p.img}"><div class="ms-area-planet-name">${p.name}</div><div class="ms-area-planet-sub">${p.desc||'DEPLOYMENT ZONE'}</div></div>`;
-  ms.forEach(m=>{
-    const row=document.createElement('div');
-    row.className='ms-mission-thumb';
-    row.innerHTML=`<div class="ms-mission-img-placeholder"><div class="ms-mip-rank">${m.rank}</div></div><div class="ms-mission-info"><div class="ms-mission-name">${m.name}</div><div class="ms-mission-meta">${m.id} · ${m.creds} CR · DIFF ${m.diff}/5</div></div>`;
-    row.onclick=()=>{
-      document.querySelectorAll('.ms-mission-thumb').forEach(x=>x.classList.remove('sel'));
-      row.classList.add('sel');
-      openMissionDetail(m.id);
-    };
-    area.appendChild(row);
+// ══════════════ ORBITAL VIEW ══════════════
+let orbAnim=null;
+let hoveredPlanet=null;
+
+const PLANET_COLORS=['#4fc8d8','#e87a20','#8ab8cc','#c8dce8','#2aaa60','#e8c840','#c84040','#a040c8','#40a8c8'];
+
+function enterSolar(s){
+  curSolar=s;
+  document.getElementById('sv-topbar-title').textContent='WAR SYSTEM — '+s.name.toUpperCase();
+  document.getElementById('sv-zone-label').textContent=s.name.toUpperCase();
+  showScreen('solarview');
+}
+
+function renderSolarView(){
+  const planets=getPlanets().filter(p=>p.solarId===curSolar.id);
+
+  // Sidebar
+  document.getElementById('sv-ss-info').innerHTML=`
+    <div class="sv-ss-name">${curSolar.name}</div>
+    <div class="sv-ss-desc">${curSolar.desc||'SOLAR SYSTEM'}</div>
+    <div style="margin-top:8px;font-size:9px;color:var(--text2);">
+      <div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(26,58,90,.3);"><span>PLANETS</span><span style="color:var(--cyan)">${planets.length}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:3px 0;"><span>MISSIONS</span><span style="color:var(--cyan)">${getMissions().filter(m=>{const pl=getPlanets().find(p=>p.id===m.planetId);return pl&&pl.solarId===curSolar.id;}).length}</span></div>
+    </div>`;
+
+  const plist=document.getElementById('sv-planet-list');
+  plist.innerHTML='';
+  planets.forEach((p,i)=>{
+    const mc=getMissions().filter(m=>m.planetId===p.id).length;
+    const color=PLANET_COLORS[i%PLANET_COLORS.length];
+    const row=document.createElement('div');row.className='sv-planet-item';
+    row.innerHTML=`<div class="sv-planet-dot" style="background:${color};box-shadow:0 0 6px ${color}50;"></div><div><div class="sv-planet-name">${p.name}</div><div class="sv-planet-meta">${mc} MISSION${mc!==1?'S':''}</div></div>`;
+    row.onclick=()=>enterPlanet(p);
+    plist.appendChild(row);
   });
-  if(!ms.length){
-    const empty=document.createElement('div');
-    empty.style.cssText='padding:16px 12px;font-size:9px;color:var(--text3);letter-spacing:.12em;line-height:1.8;';
-    empty.textContent='NO MISSIONS ASSIGNED TO THIS ZONE';
-    area.appendChild(empty);
+
+  startOrbital(planets);
+}
+
+function startOrbital(planets){
+  if(orbAnim)cancelAnimationFrame(orbAnim);
+  const wrap=document.getElementById('sv-canvas-wrap');
+  const canvas=document.getElementById('orbital');
+  canvas.width=wrap.clientWidth;
+  canvas.height=wrap.clientHeight;
+  const ctx=canvas.getContext('2d');
+  const cx=canvas.width/2,cy=canvas.height/2;
+
+  // Build planet orbit data
+  const minR=Math.min(cx,cy)*0.18;
+  const maxR=Math.min(cx,cy)*0.82;
+  const orbitData=planets.map((p,i)=>{
+    const r=planets.length===1?minR+(maxR-minR)*.5:minR+((maxR-minR)/(Math.max(planets.length-1,1)))*i;
+    return{
+      planet:p,
+      orbitR:r,
+      angle:((Math.PI*2)/planets.length)*i,
+      speed:(0.0003+Math.random()*0.0002)*(i%2===0?1:-1),
+      size:Math.max(8,14-i*0.8),
+      color:PLANET_COLORS[i%PLANET_COLORS.length],
+      moons:Math.floor(Math.random()*2),
+    };
+  });
+
+  // Mouse hover
+  hoveredPlanet=null;
+  canvas.onmousemove=e=>{
+    const rect=canvas.getBoundingClientRect();
+    const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+    hoveredPlanet=null;
+    orbitData.forEach(od=>{
+      const px=cx+Math.cos(od.angle)*od.orbitR;
+      const py=cy+Math.sin(od.angle)*od.orbitR;
+      if(Math.hypot(mx-px,my-py)<od.size+6){hoveredPlanet=od;canvas.style.cursor='pointer';}
+    });
+    if(!hoveredPlanet)canvas.style.cursor='default';
+  };
+  canvas.onclick=e=>{
+    const rect=canvas.getBoundingClientRect();
+    const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+    orbitData.forEach(od=>{
+      const px=cx+Math.cos(od.angle)*od.orbitR;
+      const py=cy+Math.sin(od.angle)*od.orbitR;
+      if(Math.hypot(mx-px,my-py)<od.size+8){enterPlanet(od.planet);}
+    });
+  };
+
+  let lastT=0;
+  function draw(ts){
+    const dt=ts-lastT;lastT=ts;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // starfield
+    ctx.fillStyle='rgba(8,21,37,1)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    // stars
+    const seed=12345;
+    for(let i=0;i<120;i++){
+      const sx=((seed*i*7+i*31)%canvas.width);
+      const sy=((seed*i*13+i*17)%canvas.height);
+      const sa=(Math.sin(ts*0.0005+i)*0.3+0.5);
+      ctx.beginPath();ctx.arc(sx,sy,Math.random()<0.1?1.2:.5,0,Math.PI*2);
+      ctx.fillStyle=`rgba(200,220,240,${sa*0.6})`;ctx.fill();
+    }
+
+    // sun / star at center
+    const sunGrad=ctx.createRadialGradient(cx,cy,0,cx,cy,40);
+    sunGrad.addColorStop(0,'rgba(255,240,180,0.9)');
+    sunGrad.addColorStop(0.3,'rgba(232,160,40,0.6)');
+    sunGrad.addColorStop(1,'rgba(232,120,20,0)');
+    ctx.beginPath();ctx.arc(cx,cy,40,0,Math.PI*2);ctx.fillStyle=sunGrad;ctx.fill();
+    // sun core
+    ctx.beginPath();ctx.arc(cx,cy,16,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,240,180,0.95)';ctx.fill();
+
+    orbitData.forEach(od=>{
+      od.angle+=od.speed*dt;
+      const px=cx+Math.cos(od.angle)*od.orbitR;
+      const py=cy+Math.sin(od.angle)*od.orbitR;
+      const isHovered=hoveredPlanet===od;
+
+      // orbit ring
+      ctx.beginPath();ctx.ellipse(cx,cy,od.orbitR,od.orbitR,0,0,Math.PI*2);
+      ctx.strokeStyle=isHovered?'rgba(74,200,216,0.25)':'rgba(26,58,90,0.5)';
+      ctx.lineWidth=isHovered?1:0.5;ctx.setLineDash([4,8]);ctx.stroke();ctx.setLineDash([]);
+
+      // planet glow
+      if(isHovered){
+        const g=ctx.createRadialGradient(px,py,0,px,py,od.size*2.5);
+        g.addColorStop(0,od.color+'60');g.addColorStop(1,'transparent');
+        ctx.beginPath();ctx.arc(px,py,od.size*2.5,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+      }
+
+      // planet body
+      const pg=ctx.createRadialGradient(px-od.size*.3,py-od.size*.3,0,px,py,od.size);
+      pg.addColorStop(0,'rgba(255,255,255,0.3)');
+      pg.addColorStop(0.4,od.color);
+      pg.addColorStop(1,od.color+'80');
+      ctx.beginPath();ctx.arc(px,py,od.size,0,Math.PI*2);ctx.fillStyle=pg;ctx.fill();
+      if(isHovered){ctx.strokeStyle=od.color;ctx.lineWidth=1.5;ctx.stroke();}
+
+      // name label
+      ctx.font=isHovered?'bold 11px Share Tech Mono':'10px Share Tech Mono';
+      ctx.fillStyle=isHovered?'#c8dce8':'#4a7a8a';
+      ctx.textAlign='center';
+      ctx.fillText(od.planet.name.toUpperCase(),px,py+od.size+14);
+
+      // mission count badge
+      const mc=getMissions().filter(m=>m.planetId===od.planet.id).length;
+      if(mc>0){
+        ctx.font='8px Share Tech Mono';
+        ctx.fillStyle='rgba(74,200,216,0.8)';
+        ctx.fillText(mc+' MISSION'+(mc!==1?'S':''),px,py+od.size+24);
+      }
+    });
+
+    orbAnim=requestAnimationFrame(draw);
   }
-  document.getElementById('ms-instruct').textContent='Select the area you will go to.';
+  orbAnim=requestAnimationFrame(draw);
+}
+
+function enterPlanet(p){
+  if(orbAnim)cancelAnimationFrame(orbAnim);
+  curPlanet=p;
   showScreen('missions');
 }
 
-function renderMissions(){/* handled by enterPlanet */}
+// ══════════════ MISSIONS ══════════════
+function renderMissions(){
+  const missions=getMissions().filter(m=>m.planetId===curPlanet.id);
+  document.getElementById('ms-topbar-title').textContent='WAR SYSTEM — '+curPlanet.name.toUpperCase();
+  document.getElementById('ms-count').textContent=missions.length+' AVAILABLE';
 
-// ══════════════════ MISSION DETAIL ══════════════════
-function openMissionDetail(id){
+  // planet sidebar
+  const pi=document.getElementById('ms-planet-info');
+  pi.innerHTML=`
+    <div class="ms-planet-info">
+      ${curPlanet.img?`<img class="ms-planet-img" src="${curPlanet.img}">`:''}
+      <div class="ms-planet-name">${curPlanet.name}</div>
+      <div class="ms-planet-sub">${curPlanet.desc||'DEPLOYMENT ZONE'}</div>
+      <div style="margin-top:8px;">
+        <div class="ms-stat"><span>MISSIONS</span><span class="v vc">${missions.length}</span></div>
+        <div class="ms-stat"><span>SYSTEM</span><span class="v">${curSolar?curSolar.name:'—'}</span></div>
+        <div class="ms-stat"><span>STATUS</span><span class="v" style="color:var(--green)">ACCESSIBLE</span></div>
+      </div>
+    </div>`;
+
+  const list=document.getElementById('ms-list');
+  if(!missions.length){
+    list.innerHTML='<div class="empty-msg">NO MISSIONS ON THIS PLANET<br><span style="font-size:8px;color:var(--text3)">Admin must assign missions to this planet.</span></div>';
+    return;
+  }
+  list.innerHTML=missions.map(m=>`
+    <div class="mcard" onclick="openMission('${m.id}')">
+      <div class="mcard-top"><div class="mcard-id">${m.id}</div><div class="mcard-rank rank-${m.rank}">${m.rank}</div></div>
+      <div class="mcard-name">${m.name}</div>
+      <div class="mcard-desc">${(m.desc||'').substring(0,100)}${m.desc&&m.desc.length>100?'...':''}</div>
+      <div class="mcard-foot">
+        <div class="mcard-reward"><span class="mcard-rl">CREDS</span><span class="mcard-rv">${m.creds||0}</span></div>
+        <div class="dpips">${[1,2,3,4,5].map(i=>`<div class="dp ${i<=m.diff?'on':''}"></div>`).join('')}</div>
+        <button class="deploy-btn" onclick="event.stopPropagation();openMission('${m.id}')">DEPLOY ▶</button>
+      </div>
+    </div>`).join('');
+}
+
+function openMission(id){
   const m=getMissions().find(x=>x.id===id);if(!m)return;
-  currentMission=m;
+  curMission=m;
   document.getElementById('mdp-title').textContent=m.name;
   document.getElementById('mdp-id').textContent=`${m.id}  ·  DIFFICULTY ${m.diff}/5  ·  EST. ${m.time||'--'}`;
   document.getElementById('mdp-rank').textContent=m.rank;
@@ -1277,38 +908,34 @@ function openMissionDetail(id){
   document.getElementById('mdp-time').textContent=m.time||'--';
   document.getElementById('mdp-diff').textContent='●'.repeat(m.diff)+'○'.repeat(5-m.diff);
   document.getElementById('mdp-note').textContent=m.note||'';
-  document.getElementById('ms-instruct').textContent='Select the mission you will go on.';
   document.getElementById('mdetail-panel').classList.add('open');
 }
-function closeMissionDetail(){document.getElementById('mdetail-panel').classList.remove('open');}
 
-// ══════════════════ PROOF ══════════════════
+// ══════════════ PROOF ══════════════
 function beginDeploy(){
-  if(!currentMission)return;
-  document.getElementById('proof-name').textContent=currentMission.name;
-  document.getElementById('proof-mid').textContent=currentMission.id+'  ·  COMPLETION PROOF REQUIRED';
+  if(!curMission)return;
+  document.getElementById('proof-name').textContent=curMission.name;
+  document.getElementById('proof-mid').textContent=curMission.id+'  ·  COMPLETION PROOF REQUIRED';
   document.getElementById('proof-status').innerHTML='<div class="psd"></div><span>AWAITING PROOF SUBMISSION</span>';
   document.getElementById('proof-op').value='';
   document.getElementById('proof-notes').value='';
   document.getElementById('video-input').value='';
+  window._pendingVidUrl=null;
   const va=document.getElementById('video-area');
   va.innerHTML='<div class="va-icon">▶</div><div class="va-lbl">VIDEO PREVIEW</div>';
   showScreen('proof');
 }
-
 function previewVideo(input){
   const file=input.files[0];if(!file)return;
   const url=URL.createObjectURL(file);
+  window._pendingVidUrl=url;
   const va=document.getElementById('video-area');
   va.innerHTML='';
   const vid=document.createElement('video');
   vid.src=url;vid.controls=true;
   vid.style.cssText='width:100%;height:100%;object-fit:contain;background:#000;display:block;';
   va.appendChild(vid);
-  // store for admin review
-  if(currentMission)window._pendingVideoUrl=url;
 }
-
 function submitProof(){
   const op=document.getElementById('proof-op').value.trim();
   const notes=document.getElementById('proof-notes').value.trim();
@@ -1316,64 +943,101 @@ function submitProof(){
   const st=document.getElementById('proof-status');
   if(!op){st.innerHTML='<div class="psd err"></div><span style="color:var(--red)">ERROR: ENTER OPERATIVE NAME</span>';return;}
   if(!vi.files[0]){st.innerHTML='<div class="psd err"></div><span style="color:var(--red)">ERROR: UPLOAD VIDEO FIRST</span>';return;}
-  const entryId='PQ-'+Date.now();
-  if(window._pendingVideoUrl)_vids[entryId]=window._pendingVideoUrl;
-  const queue=getQueue();
-  queue.push({id:entryId,missionId:currentMission.id,missionName:currentMission.name,planetName:currentPlanet?currentPlanet.name:'—',operative:op,notes,creds:currentMission.creds,xp:currentMission.xp,timestamp:new Date().toISOString(),status:'pending',videoName:vi.files[0].name});
-  saveQueue(queue);
-  flash();
+  const id='PQ-'+Date.now();
+  if(window._pendingVidUrl)_vids[id]=window._pendingVidUrl;
+  const q=getQueue();
+  q.push({id,missionId:curMission.id,missionName:curMission.name,planetName:curPlanet?curPlanet.name:'—',solarName:curSolar?curSolar.name:'—',operative:op,notes,creds:curMission.creds,xp:curMission.xp,timestamp:new Date().toISOString(),status:'pending',videoName:vi.files[0].name});
+  saveQueue(q);flash();
   st.innerHTML='<div class="psd ok"></div><span style="color:var(--green)">PROOF SUBMITTED — AWAITING ADMIN REVIEW</span>';
   setTimeout(()=>showScreen('missions'),2200);
 }
 
-// ══════════════════ ADD PLANET ══════════════════
-function openAddPlanet(){
-  _tmpImg=null;
-  document.getElementById('pl-img-input').value='';
-  document.getElementById('pl-name-inp').value='';
-  document.getElementById('pl-desc-inp').value='';
-  document.getElementById('img-prev').innerHTML='<span class="img-prev-lbl">CLICK TO UPLOAD IMAGE</span>';
-  document.getElementById('add-planet-modal').classList.add('open');
-}
-function closeAddPlanet(){document.getElementById('add-planet-modal').classList.remove('open');}
-function previewPlanetImg(input){
-  const file=input.files[0];if(!file)return;
-  const r=new FileReader();
-  r.onload=e=>{_tmpImg=e.target.result;document.getElementById('img-prev').innerHTML=`<img src="${_tmpImg}" style="width:100%;height:100%;object-fit:cover;">`;};
-  r.readAsDataURL(file);
-}
-function savePlanet(){
-  const name=document.getElementById('pl-name-inp').value.trim();
-  if(!name){showErr('Zone name required.');return;}
-  if(!_tmpImg){showErr('Please upload an image.');return;}
-  const desc=document.getElementById('pl-desc-inp').value.trim();
-  const planets=getPlanets();
-  planets.push({id:'P-'+Date.now(),name:name.toUpperCase(),desc,img:_tmpImg});
-  savePlanets(planets);
-  closeAddPlanet();renderPlanets();renderAdmPlanets();updatePlanetSelect();flash();
-}
-function showErr(msg){alert(msg);}
-
-// ══════════════════ ADMIN ══════════════════
+// ══════════════ ADMIN ══════════════
 function goAdmin(){showScreen('adminlogin');}
 function checkAdmin(){
   const pw=document.getElementById('adm-pw').value;
   const err=document.getElementById('al-err');
   if(pw===getPw()){err.style.display='none';document.getElementById('adm-pw').value='';showScreen('admin');}
-  else{err.style.display='block';}
+  else err.style.display='block';
 }
 function admTab(id,el){
   document.querySelectorAll('.adm-ni').forEach(x=>x.classList.remove('act'));el.classList.add('act');
   document.querySelectorAll('.adm-view').forEach(x=>x.classList.remove('act'));
   document.getElementById('atab-'+id).classList.add('act');
-  if(id==='missions')renderAdmMissions();
-  if(id==='planets')renderAdmPlanets();
+  if(id==='solar')renderAdmSolar();
+  if(id==='planets'){renderAdmPlanets();updateSolarSelect();}
+  if(id==='missions'){renderAdmMissions();updatePlanetSelect();}
   if(id==='queue')renderAdmQueue();
 }
-function renderAdminAll(){renderAdmMissions();renderAdmPlanets();renderAdmQueue();updatePlanetSelect();}
+function renderAdminAll(){renderAdmSolar();renderAdmPlanets();renderAdmMissions();renderAdmQueue();updateSolarSelect();updatePlanetSelect();}
+
+// solar system img preview
+let _tmpSolarImgData=null;
+function previewSolarImg(input){
+  const f=input.files[0];if(!f)return;
+  const r=new FileReader();r.onload=e=>{_tmpSolarImgData=e.target.result;document.getElementById('as-img-prev').innerHTML=`<img src="${_tmpSolarImgData}" style="width:100%;height:100%;object-fit:cover;">`;};r.readAsDataURL(f);
+}
+function createSolar(){
+  const name=document.getElementById('as-name').value.trim();
+  if(!name)return;
+  const sys=getSolar();
+  sys.push({id:'SS-'+Date.now(),name:name.toUpperCase(),desc:document.getElementById('as-desc').value.trim(),img:_tmpSolarImgData||null});
+  saveSolar(sys);
+  document.getElementById('as-name').value='';document.getElementById('as-desc').value='';
+  document.getElementById('as-img-prev').innerHTML='<span class="img-prev-lbl">CLICK TO UPLOAD BG IMAGE</span>';
+  _tmpSolarImgData=null;document.getElementById('as-img').value='';
+  renderAdmSolar();updateSolarSelect();flash();
+}
+function renderAdmSolar(){
+  const sys=getSolar();
+  const list=document.getElementById('adm-solar-list');
+  if(!sys.length){list.innerHTML='<div class="empty-msg">NO SYSTEMS YET</div>';return;}
+  list.innerHTML=sys.map(s=>`<div class="amc">
+    ${s.img?`<img src="${s.img}" style="width:55px;height:38px;object-fit:cover;border:1px solid var(--border);filter:saturate(.4);flex-shrink:0;">`:'<div style="width:55px;height:38px;background:var(--navy2);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--text3);">SYS</div>'}
+    <div class="amc-info"><div class="amc-name">${s.name}</div><div class="amc-meta">${s.desc||'—'} · ${getPlanets().filter(p=>p.solarId===s.id).length} planets</div></div>
+    <div class="amc-acts"><button class="btn danger" style="padding:3px 8px;font-size:7px;" onclick="delSolar('${s.id}')">DEL</button></div>
+  </div>`).join('');
+}
+function delSolar(id){saveSolar(getSolar().filter(s=>s.id!==id));renderAdmSolar();updateSolarSelect();}
+
+// planet img preview
+let _tmpPlanetImgData=null;
+function previewPlanetImg(input){
+  const f=input.files[0];if(!f)return;
+  const r=new FileReader();r.onload=e=>{_tmpPlanetImgData=e.target.result;document.getElementById('ap-img-prev').innerHTML=`<img src="${_tmpPlanetImgData}" style="width:100%;height:100%;object-fit:cover;">`;};r.readAsDataURL(f);
+}
+function createPlanet(){
+  const solarId=document.getElementById('ap-solar').value;
+  const name=document.getElementById('ap-name').value.trim();
+  if(!solarId||!name)return;
+  const pl=getPlanets();
+  pl.push({id:'P-'+Date.now(),solarId,name:name.toUpperCase(),desc:document.getElementById('ap-desc').value.trim(),img:_tmpPlanetImgData||null});
+  savePlanets(pl);
+  document.getElementById('ap-name').value='';document.getElementById('ap-desc').value='';
+  document.getElementById('ap-img-prev').innerHTML='<span class="img-prev-lbl">CLICK TO UPLOAD IMAGE</span>';
+  _tmpPlanetImgData=null;document.getElementById('ap-img').value='';document.getElementById('ap-solar').value='';
+  renderAdmPlanets();updatePlanetSelect();flash();
+}
+function updateSolarSelect(){
+  const sel=document.getElementById('ap-solar');
+  sel.innerHTML='<option value="">— Select System —</option>'+getSolar().map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+}
+function renderAdmPlanets(){
+  const pl=getPlanets(),sys=getSolar();
+  const list=document.getElementById('adm-planet-list');
+  if(!pl.length){list.innerHTML='<div class="empty-msg">NO PLANETS YET</div>';return;}
+  list.innerHTML=pl.map(p=>{
+    const s=sys.find(x=>x.id===p.solarId);
+    return`<div class="amc">
+      ${p.img?`<img src="${p.img}" style="width:55px;height:38px;object-fit:cover;border:1px solid var(--border);filter:saturate(.4);flex-shrink:0;">`:'<div style="width:55px;height:38px;background:var(--navy2);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;color:var(--text3);">PLN</div>'}
+      <div class="amc-info"><div class="amc-name">${p.name}</div><div class="amc-meta">SYSTEM: ${s?s.name:'UNLINKED'} · ${getMissions().filter(m=>m.planetId===p.id).length} missions</div></div>
+      <div class="amc-acts"><button class="btn danger" style="padding:3px 8px;font-size:7px;" onclick="delPlanet('${p.id}')">DEL</button></div>
+    </div>`;}).join('');
+}
+function delPlanet(id){savePlanets(getPlanets().filter(p=>p.id!==id));renderAdmPlanets();}
 function updatePlanetSelect(){
   const sel=document.getElementById('am-planet');
-  sel.innerHTML='<option value="">— Select Zone —</option>'+getPlanets().map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+  sel.innerHTML='<option value="">— Select Planet —</option>'+getPlanets().map(p=>{const s=getSolar().find(x=>x.id===p.solarId);return`<option value="${p.id}">${p.name}${s?' ('+s.name+')':''}</option>`;}).join('');
 }
 function createMission(){
   const name=document.getElementById('am-name').value.trim();
@@ -1387,22 +1051,17 @@ function createMission(){
   renderAdmMissions();flash();
 }
 function renderAdmMissions(){
-  const ms=getMissions(),pl=getPlanets();
+  const ms=getMissions(),pl=getPlanets(),sys=getSolar();
   const list=document.getElementById('adm-mission-list');
-  if(!ms.length){list.innerHTML='<div class="empty-adm">NO MISSIONS YET</div>';return;}
+  if(!ms.length){list.innerHTML='<div class="empty-msg">NO MISSIONS YET</div>';return;}
   list.innerHTML=ms.map(m=>{
     const p=pl.find(x=>x.id===m.planetId);
-    return`<div class="amc"><div class="amc-info"><div class="amc-name">${m.id} — ${m.name} <span class="rbadge rank-${m.rank}">${m.rank}</span></div><div class="amc-meta">ZONE: ${p?p.name:'UNLINKED'} · CR: ${m.creds||0} · DIFF: ${m.diff}/5</div></div><div class="amc-acts"><button class="btn danger" style="padding:3px 8px;font-size:7px;" onclick="delMission('${m.id}')">DEL</button></div></div>`;
+    const s=p?sys.find(x=>x.id===p.solarId):null;
+    return`<div class="amc"><div class="amc-info"><div class="amc-name">${m.id} — ${m.name} <span style="font-size:9px;padding:1px 5px;border:1px solid;font-family:'Titillium Web',sans-serif;font-weight:600;" class="rank-${m.rank}">${m.rank}</span></div><div class="amc-meta">${s?s.name+' › ':''} ${p?p.name:'UNLINKED'} · CR: ${m.creds||0} · DIFF: ${m.diff}/5</div></div><div class="amc-acts"><button class="btn danger" style="padding:3px 8px;font-size:7px;" onclick="delMission('${m.id}')">DEL</button></div></div>`;
   }).join('');
 }
 function delMission(id){saveMissions(getMissions().filter(m=>m.id!==id));renderAdmMissions();}
-function renderAdmPlanets(){
-  const pl=getPlanets();
-  const list=document.getElementById('adm-planet-list');
-  if(!pl.length){list.innerHTML='<div class="empty-adm">NO ZONES YET</div>';return;}
-  list.innerHTML=pl.map(p=>`<div class="amc"><img src="${p.img}" style="width:55px;height:38px;object-fit:cover;border:1px solid var(--border);flex-shrink:0;filter:saturate(.4);"><div class="amc-info"><div class="amc-name">${p.name}</div><div class="amc-meta">${p.desc||'—'} · ${getMissions().filter(m=>m.planetId===p.id).length} missions</div></div><div class="amc-acts"><button class="btn danger" style="padding:3px 8px;font-size:7px;" onclick="delPlanet('${p.id}')">DEL</button></div></div>`).join('');
-}
-function delPlanet(id){savePlanets(getPlanets().filter(p=>p.id!==id));renderAdmPlanets();renderPlanets();}
+
 function renderAdmQueue(){
   const queue=getQueue();
   const pending=queue.filter(q=>q.status==='pending').length;
@@ -1410,28 +1069,29 @@ function renderAdmQueue(){
   badge.style.display=pending?'':'none';badge.textContent=pending?`[${pending}]`:'';
   const list=document.getElementById('adm-queue-list');
   list.innerHTML='';
-  if(!queue.length){list.innerHTML='<div class="empty-adm">NO SUBMISSIONS YET</div>';return;}
+  if(!queue.length){list.innerHTML='<div class="empty-msg">NO SUBMISSIONS YET</div>';return;}
   queue.slice().reverse().forEach(q=>{
     const card=document.createElement('div');card.className='pqc';
     const hd=document.createElement('div');hd.className='pqc-hd';
     hd.innerHTML=`<div class="pqc-title">${q.missionName} <span class="sb sb-${q.status}">${q.status.toUpperCase()}</span></div><div class="pqc-time">${new Date(q.timestamp).toLocaleString()}</div>`;
     const meta=document.createElement('div');meta.className='pqc-meta';
-    meta.innerHTML=`OPERATIVE: ${q.operative}<br>ZONE: ${q.planetName} · ${q.missionId} · ${q.creds} CR + ${q.xp} XP${q.notes?'<br>NOTES: '+q.notes:''}`;
+    meta.innerHTML=`OPERATIVE: ${q.operative}<br>${q.solarName?'SYSTEM: '+q.solarName+' › ':''}PLANET: ${q.planetName} · ${q.missionId}<br>REWARD: ${q.creds} CR + ${q.xp} XP${q.notes?'<br>NOTES: '+q.notes:''}`;
     const vidWrap=document.createElement('div');vidWrap.className='pqc-vid';
     if(_vids[q.id]){const v=document.createElement('video');v.src=_vids[q.id];v.controls=true;v.style.cssText='width:100%;height:100%;object-fit:contain;background:#000;';vidWrap.appendChild(v);}
-    else{vidWrap.innerHTML=`<div class="pqc-vid-lbl">📁 ${q.videoName||'VIDEO SUBMITTED'} — review this session</div>`;}
+    else{vidWrap.innerHTML=`<div class="pqc-vid-lbl">📁 ${q.videoName||'VIDEO'} — only viewable same session</div>`;}
     card.appendChild(hd);card.appendChild(meta);card.appendChild(vidWrap);
     if(q.status==='pending'){
       const acts=document.createElement('div');acts.className='pqc-acts';
       const ab=document.createElement('button');ab.className='btn ok';ab.style.cssText='padding:4px 10px;font-size:8px;';ab.textContent=`✓ APPROVE — GRANT ${q.creds} CR`;
-      ab.onclick=()=>{const queue2=getQueue();const e=queue2.find(x=>x.id===q.id);if(e){e.status='approved';saveQueue(queue2);renderAdmQueue();flash();}};
+      ab.onclick=()=>{const q2=getQueue();const e=q2.find(x=>x.id===q.id);if(e){e.status='approved';saveQueue(q2);renderAdmQueue();flash();}};
       const rb=document.createElement('button');rb.className='btn danger';rb.style.cssText='padding:4px 10px;font-size:8px;';rb.textContent='✕ REJECT';
-      rb.onclick=()=>{const queue2=getQueue();const e=queue2.find(x=>x.id===q.id);if(e){e.status='rejected';saveQueue(queue2);renderAdmQueue();}};
+      rb.onclick=()=>{const q2=getQueue();const e=q2.find(x=>x.id===q.id);if(e){e.status='rejected';saveQueue(q2);renderAdmQueue();}};
       acts.appendChild(ab);acts.appendChild(rb);card.appendChild(acts);
     }
     list.appendChild(card);
   });
 }
+
 function changePw(){
   const np=document.getElementById('new-pw').value;
   const cp=document.getElementById('conf-pw').value;
@@ -1440,8 +1100,15 @@ function changePw(){
   document.getElementById('new-pw').value='';document.getElementById('conf-pw').value='';
   const msg=document.getElementById('pw-msg');msg.style.display='block';setTimeout(()=>msg.style.display='none',3000);
 }
-function clearMissions(){saveMissions([]);renderAdmMissions();}
-function clearZones(){savePlanets([]);renderPlanets();renderAdmPlanets();}
+function clearAll(type){
+  if(type==='missions')saveMissions([]);
+  if(type==='planets')savePlanets([]);
+  if(type==='solar')saveSolar([]);
+  renderAdminAll();
+}
+
+// resize orbital canvas
+window.addEventListener('resize',()=>{if(curSolar&&document.getElementById('solarview').classList.contains('active'))renderSolarView();});
 
 loadAll().then(runBoot);
 </script>
